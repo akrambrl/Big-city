@@ -498,6 +498,44 @@ const MODULATEURS_PROFIL = {
   rurale: { population_pct: 1.5 },     // chaque départ pèse double
 };
 
+/* ------------------------------------------------------------
+   PROGRESSION — niveaux de maire et leurs titres
+   ------------------------------------------------------------ */
+const TITRES_MAIRE = [
+  'Stagiaire de la mairie',
+  'Adjoint au sous-adjoint',
+  'Maire débutant',
+  'Maire qui gère',
+  'Pro du béton armé',
+  'Star du canton',
+  'Baron local',
+  'Légende départementale',
+  'Ministre pressenti',
+  'Monument historique vivant',
+];
+
+/* Gaston, ton adjoint — il annonce tout, il ne décide de rien */
+const ADJOINT = { nom: 'Gaston', icone: '🧑‍💼' };
+const PHRASES_ADJOINT = {
+  courrier: [
+    'Un pli pour vous, patron !',
+    'Ça vient d\'arriver. Et c\'est signé.',
+    'Les habitants attendent une réponse. De préférence la bonne.',
+    'Encore du courrier. J\'ai pris la liberté de ne pas le perdre.',
+    'On vous demande à l\'accueil. Enfin, par écrit.',
+  ],
+  crise: [
+    'Patron… on a un GROS problème.',
+    'Restez calme. Moi je n\'y arrive pas, mais vous, restez calme.',
+    'J\'ai trois appels en attente et aucun n\'est une bonne nouvelle.',
+    'C\'est le genre de journée qui finit dans le journal.',
+  ],
+  evenement: [
+    'Vous vous souvenez de cette « affaire réglée » ? Elle est revenue.',
+    'Il paraît que rien n\'est jamais gratuit. Il paraît bien.',
+  ],
+};
+
 const SAISONS = ['hiver', 'hiver', 'printemps', 'printemps', 'printemps', 'ete', 'ete', 'ete', 'automne', 'automne', 'automne', 'hiver'];
 const NOMS_MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const MOIS_DEBUT_MANDAT = 3; // avril — lendemain des élections

@@ -73,6 +73,7 @@ const Engine = (() => {
       journal: [],
       notifications: [],         // { jour, icone, texte, type: 'alerte'|'info', action, lu }
       historiqueQuestions: [],   // { jour, icone, libelle, note }
+      xp: 0, niveau: 1,          // progression du maire
       epargneCumulee: 0,
       gameOver: null,            // { type, titre, texte }
     };
@@ -194,6 +195,7 @@ const Engine = (() => {
     if (def.proximite) S.cadre.proximite = clamp100(S.cadre.proximite + 6);
     const charge = def.entretien + def.energie - def.recettes;
     log(`🏗️ ${def.nom} : ${fmtEuro(cout)}. ${charge > 0 ? `Nouvelle charge de fonctionnement : ${fmtEuro(charge)}/mois, à vie.` : charge < 0 ? `Gain de fonctionnement : ${fmtEuro(-charge)}/mois.` : ''}`);
+    gagnerXP(25);
     return { ok: true };
   }
 
@@ -367,6 +369,7 @@ const Engine = (() => {
       S.effetsDifferes.push({ jour: S.jour + d.jours, effets: d.effets, evenement: d.evenement, note: d.note, source: crise.nom });
     }
     if (parDefaut || opt.defaut) S.crisesRatees++; else S.crisesGerees++;
+    gagnerXP(parDefaut || opt.defaut ? 5 : 40);
     S.criseActive = null;
     log(`${crise.icone} ${crise.nom} — option ${opt.cle} : « ${opt.libelle} ». Coût : ${fmtEuro(cout)}.${opt.capital ? ` Capital préfecture −${opt.capital}.` : ''}`);
     return { ok: true };
@@ -405,6 +408,7 @@ const Engine = (() => {
     log(`${q.icone} ${opt.libelle} — ${opt.note}`);
     S.historiqueQuestions.unshift({ jour: S.jour, icone: q.icone, libelle: opt.libelle, note: opt.note });
     if (S.historiqueQuestions.length > 30) S.historiqueQuestions.pop();
+    gagnerXP(15);
     return { ok: true, note: opt.note, icone: q.icone };
   }
 
@@ -566,6 +570,7 @@ const Engine = (() => {
     const migTxt = migration.delta === 0 ? 'population stable' : `${migration.delta > 0 ? '+' : ''}${fmtNb(migration.delta)} habitants`;
     log(`📅 Clôture de ${NOMS_MOIS[moisCalendaire()]} : solde ${solde >= 0 ? '+' : ''}${fmtEuro(solde)}, ${migTxt}.`);
     notifier('📅', `Bilan du mois : ${solde >= 0 ? '+' : '−'}${fmtEuro(Math.abs(solde))}, ${migTxt}.`);
+    gagnerXP(solde > 0 ? 20 : 10);
   }
 
   function majCadreDeVie() {
@@ -772,6 +777,24 @@ const Engine = (() => {
     return { taux: c.taux, mensualite: m, ...projeter({ gainImmediat: capital, deltaMensuel: -m }) };
   }
 
+  /* ---------- Progression du maire ---------- */
+
+  function xpPourNiveau(niveau) { return 150 + 50 * niveau; }
+
+  function titreMaire() {
+    return TITRES_MAIRE[Math.min(S.niveau - 1, TITRES_MAIRE.length - 1)];
+  }
+
+  function gagnerXP(pts) {
+    S.xp = (S.xp || 0) + pts;
+    while (S.xp >= xpPourNiveau(S.niveau)) {
+      S.xp -= xpPourNiveau(S.niveau);
+      S.niveau++;
+      log(`⭐ Niveau ${S.niveau} — te voilà « ${titreMaire()} » !`);
+      notifier('⭐', `Niveau ${S.niveau} : te voilà « ${titreMaire()} » !`);
+    }
+  }
+
   /* ---------- Note de la ville ---------- */
 
   function noteVille() {
@@ -828,6 +851,11 @@ const Engine = (() => {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return null;
       S = JSON.parse(raw);
+      /* migration des anciennes sauvegardes */
+      S.xp ??= 0; S.niveau ??= 1;
+      S.notifications ??= []; S.historiqueQuestions ??= [];
+      S.pileQuestions ??= []; S.prochaineQuestionJour ??= S.jour + 5;
+      S.questionActive ??= null; S.niveauEntretien ??= 'normal';
       return S;
     } catch (e) { return null; }
   }
@@ -844,6 +872,7 @@ const Engine = (() => {
     appliquerEffets(opt.effets, def.titre);
     S.effetsDifferes = S.effetsDifferes.filter(e => e !== evt);
     log(`📜 ${def.titre} — ${opt.libelle}. ${opt.note}`);
+    gagnerXP(10);
   }
 
   return {
@@ -857,6 +886,7 @@ const Engine = (() => {
     resoudreQuestion,
     faireMissionRedressement, missionRedressementDispo, joursRedressementRestants,
     noteVille, notifsNonLues, marquerNotifsLues,
+    titreMaire, xpPourNiveau,
     recettes, depenses, totalRecettes, depensesMensuelles, soldeMensuel,
     joursDeTresorerie, tauxEndettement, encoursDette, recettesAnnuelles,
     cadreDeVie, saturation, capaciteEquipements, capaciteInvestissement, reserveFonctionnement,

@@ -592,9 +592,71 @@ hr { border: none; border-top: 3px solid var(--bord); border-radius: 2px; margin
 .liste-effets { list-style: none; font-size: .92rem; margin: .5em 0; }
 .liste-effets li { padding: 2px 0; color: var(--encre-2); }
 
+/* ---------- Gaston, l'adjoint ---------- */
+.adjoint { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 1em; }
+.adjoint-avatar {
+  flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(180deg, #BFE3F7, #8FCBEE);
+  border: 2.5px solid var(--bord-fort);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; box-shadow: 0 3px 0 rgba(138, 93, 51, .25);
+}
+.adjoint-bulle {
+  position: relative; flex: 1;
+  background: #FFFDF4; border: 2px solid var(--bord-fort); border-radius: 14px;
+  padding: 9px 13px; font-size: .92rem;
+  font-family: var(--recit); font-style: italic;
+}
+.adjoint-bulle b { font-family: var(--jeu); font-style: normal; }
+.adjoint-bulle::before {
+  content: ''; position: absolute; left: -9px; top: 18px;
+  border: 8px solid transparent; border-right-color: var(--bord-fort); border-left: none;
+}
+
+/* ---------- Confettis & montants qui s'envolent ---------- */
+.confetti {
+  position: fixed; z-index: 95; pointer-events: none;
+  animation: envol 1.2s cubic-bezier(.2, .6, .4, 1) forwards;
+}
+@keyframes envol {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; }
+}
+.flottant {
+  position: fixed; z-index: 95; pointer-events: none; transform: translateX(-50%);
+  font-family: var(--jeu); font-weight: 700; font-size: 1.1rem;
+  text-shadow: 0 1px 0 #fff, 0 0 8px #fff;
+  transition: transform 1.2s ease-out, opacity 1.2s;
+  opacity: 1;
+}
+.flottant.gain { color: var(--vert); }
+.flottant.perte { color: var(--rouge); }
+.flottant.envol { transform: translateX(-50%) translateY(46px); opacity: 0; }
+
+/* ---------- Tremblement d'écran (crise !) ---------- */
+.secousse { animation: secousse .55s ease-out; }
+@keyframes secousse {
+  10% { transform: translate(-6px, 2px) rotate(-.4deg); }
+  25% { transform: translate(5px, -3px) rotate(.4deg); }
+  40% { transform: translate(-4px, 2px); }
+  55% { transform: translate(3px, -1px); }
+  70% { transform: translate(-2px, 1px); }
+  85% { transform: translate(1px, 0); }
+}
+
+/* ---------- Étoiles & rebonds ---------- */
+.note-etoile { font-size: .85rem; margin-right: 3px; }
+.etoiles { color: var(--soleil-ombre); letter-spacing: .06em; }
+.nav-btn.actif .nav-ic { animation: rebond .4s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes rebond {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.35) translateY(-3px); }
+  100% { transform: scale(1); }
+}
+
 /* ---------- Mouvement réduit ---------- */
 @media (prefers-reduced-motion: reduce) {
   .marqueur-crise { animation: none; box-shadow: 0 4px 0 var(--rouge-ombre), 0 0 0 8px rgba(232, 93, 74, .3); }
-  .modale { animation: none; }
-  .carte-profil, .onglet, .btn, .btn-temps, .carte.equip, .option-crise { transition: none; }
+  .modale, .panneau-notifs, .secousse, .nav-btn.actif .nav-ic, .confetti { animation: none; }
+  .carte-profil, .onglet, .btn, .btn-temps, .carte.equip, .option-crise, .flottant { transition: none; }
 }

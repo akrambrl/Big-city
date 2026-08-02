@@ -12,6 +12,17 @@ const UI = (() => {
   let vueActive = 'carte';
   let notifsOuvertes = false;
   let questionEnAttente = false; // « Plus tard » : la question reste due, mais on peut naviguer
+  let dernierNiveauVu = null;    // détection des passages de niveau
+  let communeSuivie = null;
+  let finJouee = false;
+
+  /* Gaston, l'adjoint : une bulle par-dessus les grands moments */
+  function bulleAdjoint(type) {
+    const phrases = PHRASES_ADJOINT[type] || PHRASES_ADJOINT.courrier;
+    const p = phrases[Math.floor(Math.random() * phrases.length)];
+    return `<div class="adjoint"><span class="adjoint-avatar">${ADJOINT.icone}</span>
+      <div class="adjoint-bulle"><b>${ADJOINT.nom}</b> — ${p}</div></div>`;
+  }
 
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const eur = E.fmtEuro, nb = E.fmtNb;
@@ -68,20 +79,32 @@ const UI = (() => {
     if (!S) return ecranAccueil();
     const note = E.noteVille();
     const nonLues = E.notifsNonLues();
-    const clNote = note.sur20 >= 12 ? 'bonne' : note.sur20 >= 8 ? 'moyenne' : 'mauvaise';
+    const sur5 = (note.note / 20).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const clNote = note.note >= 60 ? 'bonne' : note.note >= 40 ? 'moyenne' : 'mauvaise';
+
+    /* passage de niveau : fanfare et confettis */
+    if (communeSuivie !== S.commune) { communeSuivie = S.commune; dernierNiveauVu = S.niveau; finJouee = false; }
+    if (dernierNiveauVu !== null && S.niveau > dernierNiveauVu) {
+      FX.son('niveau');
+      FX.confettis(['⭐', '🎉', '✨']);
+      toast(`⭐ Niveau ${S.niveau} — te voilà « ${E.titreMaire()} » !`);
+    }
+    dernierNiveauVu = S.niveau;
+
     app().innerHTML = `
     <div class="coque">
       <header class="barre-haut">
         <button id="btn-note" class="badge-note ${clNote}" title="La note de ta ville — touche pour le détail">
-          <span class="note-val">${note.sur20}</span><span class="note-max">/20</span>
+          <span class="note-etoile">⭐</span><span class="note-val">${sur5}</span><span class="note-max">/5</span>
         </button>
         <div class="titre-app">
           <span class="nom-ville">${esc(S.commune)}</span>
-          <span class="date-app">${NOMS_MOIS[E.moisCalendaire()]} · j${S.jourDuMois} · an ${E.annee()}${S.tranquille ? ' · 🕊️' : ''}</span>
+          <span class="date-app">${NOMS_MOIS[E.moisCalendaire()]} · j${S.jourDuMois} · an ${E.annee()} · niv ${S.niveau}${S.tranquille ? ' · 🕊️' : ''}</span>
         </div>
         <div class="chips-haut">
           <span class="chip-ressource ${S.tresorerie < 0 ? 'alerte' : ''}" title="Trésorerie">💰 ${eurCourt(S.tresorerie)}</span>
           <span class="chip-ressource" title="Population">👥 ${nb(S.population)}</span>
+          <button id="btn-son" class="btn-cloche" title="${FX.muet ? 'Réactiver le son' : 'Couper le son'}">${FX.muet ? '🔇' : '🔊'}</button>
           <button id="btn-notifs" class="btn-cloche" title="Notifications">🔔${nonLues ? `<span class="pastille">${nonLues}</span>` : ''}</button>
         </div>
       </header>
@@ -378,10 +401,18 @@ const UI = (() => {
       ['✨ Attractivité', note.composantes.attractivite, 'ce qui fait venir'],
       ['🌳 Cadre de vie', note.composantes.cadre, 'ce qui fait rester'],
     ];
+    const etoiles = Math.round(note.note / 20);
     return `
     <div class="defilable">
       <section class="carte">
-        <h2>🏅 La note de ta ville : ${note.sur20}/20</h2>
+        <h2>⭐ Niveau ${S.niveau} — ${E.titreMaire()}</h2>
+        <div class="composante"><span class="comp-nom">Progression</span>
+          <div class="barre grande"><div class="barre-rempli pref" style="width:${Math.round(S.xp / E.xpPourNiveau(S.niveau) * 100)}%"></div></div>
+          <span class="comp-val">${S.xp}/${E.xpPourNiveau(S.niveau)}</span></div>
+        <p class="note">Réponds au courrier, gère les crises, construis, boucle les mois : tout rapporte de l'XP.</p>
+      </section>
+      <section class="carte">
+        <h2>🏅 La note de ta ville : <span class="etoiles">${'★'.repeat(etoiles)}${'☆'.repeat(5 - etoiles)}</span></h2>
         <div class="composantes">
           ${compo.map(([n, v, aide]) => `<div class="composante" title="${aide}">
             <span class="comp-nom">${n}</span>
@@ -498,7 +529,8 @@ const UI = (() => {
   function modaleIntro() {
     const S = E.etat;
     modale(`
-      <h2>👋 Bienvenue à ${esc(S.commune)}, M. le Maire !</h2>
+      <div class="adjoint"><span class="adjoint-avatar">${ADJOINT.icone}</span>
+        <div class="adjoint-bulle"><b>${ADJOINT.nom}</b>, ton adjoint — « Bienvenue patron ! Je m'occupe de la paperasse, toi des décisions. Quatre trucs à savoir : »</div></div>
       <ul class="regles">
         <li>🏗️ <b>Construis</b> pour attirer des habitants — mais chaque bâtiment coûte <b>tous les mois, pour toujours</b>.</li>
         <li>💰 <b>Garde de l'avance</b> : sous 15 jours de caisse, alerte. En négatif, 30 jours pour te rattraper.</li>
@@ -538,7 +570,7 @@ const UI = (() => {
     const q = QUESTIONS.find(x => x.id === S.questionActive);
     if (!q) return;
     modale(`
-      <h2>📬 Courrier du maire</h2>
+      ${bulleAdjoint('courrier')}
       <p class="crise-texte">${q.icone} ${q.texte}</p>
       <div class="crise-options">
         ${q.options.map((o, i) => {
@@ -553,8 +585,12 @@ const UI = (() => {
         <button class="btn-lien" id="question-plus-tard">⏳ Plus tard (le temps attendra ta réponse)</button>
       </div>`, { bloquant: true });
     modalRoot().querySelectorAll('.option-question').forEach(b => b.addEventListener('click', () => {
-      const res = E.resoudreQuestion(parseInt(b.dataset.i, 10));
+      const i = parseInt(b.dataset.i, 10);
+      const cout = q.options[i].effets.tresorerie || 0;
+      const res = E.resoudreQuestion(i);
       questionEnAttente = false;
+      FX.son(cout > 0 ? 'argent' : 'clic');
+      if (cout) FX.flotteEuro(signe(cout, eurCourt), cout > 0);
       fermerModale(); E.sauvegarder(); rendre();
       if (res.note) toast(`${res.icone} ${res.note}`);
     }));
@@ -570,6 +606,7 @@ const UI = (() => {
     const crise = CRISES.find(x => x.id === c.criseId);
     const joursRestants = CFG.CRISE_DELAI_JOURS - (S.jour - c.jourDebut);
     modale(`
+      ${bulleAdjoint('crise')}
       <h2>${crise.icone} CRISE — ${crise.nom}</h2>
       <p class="crise-texte">${crise.texte}</p>
       <p><b>Coût actuel : ${eur(c.coutCourant)}</b> — +${Math.round(CFG.CRISE_ESCALADE_JOUR * 100)} % par jour d'attente.
@@ -601,6 +638,7 @@ const UI = (() => {
   function modaleEvenementDiffere(evt) {
     const def = EVENEMENTS_DIFFERES[evt.evenement];
     modale(`
+      ${bulleAdjoint('evenement')}
       <h2>📜 ${def.titre}</h2>
       <p class="crise-texte">${def.texte}</p>
       <div class="crise-options">
@@ -639,6 +677,10 @@ const UI = (() => {
 
   function modaleFin(S) {
     const g = S.gameOver;
+    if (!finJouee) {
+      finJouee = true;
+      if (g.victoire) { FX.son('niveau'); FX.confettis(); } else FX.son('defaite');
+    }
     modale(`
       <h2>${g.victoire ? '🎖️' : '🏳️'} ${g.titre}</h2>
       <p class="crise-texte">${g.texte}</p>
@@ -654,17 +696,28 @@ const UI = (() => {
   function brancherEvenements(S) {
     const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
 
+    const sonDuJour = (avaitCrise, avaitQuestion) => {
+      if (!avaitCrise && E.etat.criseActive) { FX.son('crise'); FX.secouer(); }
+      else if (!avaitQuestion && E.etat.questionActive) FX.son('question');
+      else FX.son('jour');
+    };
     on('btn-jour', () => {
       if (E.etat.questionActive) questionEnAttente = false; // le temps n'avance pas sans réponse
-      E.avancerJour(); E.sauvegarder(); rendre();
+      const avaitCrise = !!E.etat.criseActive, avaitQuestion = !!E.etat.questionActive;
+      E.avancerJour();
+      sonDuJour(avaitCrise, avaitQuestion);
+      E.sauvegarder(); rendre();
     });
     on('btn-semaine', () => {
+      const avaitCrise = !!E.etat.criseActive, avaitQuestion = !!E.etat.questionActive;
       for (let i = 0; i < 7; i++) {
         if (E.etat.criseActive || E.etat.questionActive || E.etat.gameOver || E.evenementDu()) break;
         E.avancerJour();
       }
+      sonDuJour(avaitCrise, avaitQuestion);
       E.sauvegarder(); rendre();
     });
+    on('btn-son', () => { FX.basculerMuet(); FX.son('clic'); rendre(); });
     on('btn-nouvelle', () => { if (confirm('Abandonner cette ville et recommencer ?')) { E.effacerSauvegarde(); ecranAccueil(); } });
     on('btn-mission', () => { E.faireMissionRedressement(); E.sauvegarder(); rendre(); });
     on('btn-diag', () => modaleDiagnostic(S));
@@ -763,7 +816,13 @@ const UI = (() => {
           ...(p.def.chantier === 'eclairage' ? ['💡 Éclairage remis à neuf (92/100)'] : []),
         ],
         libelleOk: 'Construire',
-        onConfirme: () => { const r = E.construire(b.dataset.equip); if (!r.ok && r.msg) alert(r.msg); },
+        onConfirme: () => {
+          const r = E.construire(b.dataset.equip);
+          if (!r.ok && r.msg) { alert(r.msg); return; }
+          FX.son('construire');
+          FX.confettis(['🏗️', '🎉', '✨', p.def.icone]);
+          FX.flotteEuro('−' + eurCourt(p.cout), false);
+        },
       });
     }));
 
@@ -771,12 +830,17 @@ const UI = (() => {
     app().querySelectorAll('.btn-aide').forEach(b => b.addEventListener('click', () => {
       const r = E.aideEtat(b.dataset.aide);
       if (!r.ok && r.msg) alert(r.msg);
+      else FX.son('argent');
       E.sauvegarder(); rendre();
     }));
 
     /* Offres privées */
     app().querySelectorAll('.btn-offre-oui').forEach(b => b.addEventListener('click', () => {
-      E.accepterOffre(b.dataset.offre); E.sauvegarder(); rendre();
+      const o = OFFRES_PRIVEES.find(x => x.id === b.dataset.offre);
+      E.accepterOffre(b.dataset.offre);
+      FX.son('argent');
+      if (o) FX.flotteEuro('+' + eurCourt(o.montant), true);
+      E.sauvegarder(); rendre();
     }));
     app().querySelectorAll('.btn-offre-non').forEach(b => b.addEventListener('click', () => {
       E.refuserOffre(b.dataset.offre); E.sauvegarder(); rendre();
@@ -792,7 +856,12 @@ const UI = (() => {
         proj: p,
         effets: ['La mensualité reste dans tes dépenses jusqu\'au bout'],
         libelleOk: 'Signer',
-        onConfirme: () => { const r = E.emprunter(cap, 60); if (!r.ok && r.msg) alert(r.msg); },
+        onConfirme: () => {
+          const r = E.emprunter(cap, 60);
+          if (!r.ok && r.msg) { alert(r.msg); return; }
+          FX.son('argent');
+          FX.flotteEuro('+' + eurCourt(cap), true);
+        },
       });
     }));
   }
