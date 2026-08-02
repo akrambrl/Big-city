@@ -327,7 +327,7 @@ const CarteCommune = (() => {
     for (let i = 0; i < 350; i++) { ctx.fillRect(rng() * W, rng() * H, 1, 1); }
 
     /* 13. rose des vents */
-    ctx.font = '600 10px "Bricolage Grotesque", system-ui, sans-serif';
+    ctx.font = '600 10px "Fredoka", system-ui, sans-serif';
     ctx.fillStyle = COUL.encre; ctx.textAlign = 'center'; ctx.globalAlpha = 0.75;
     ctx.beginPath(); ctx.moveTo(W - 26, 34); ctx.lineTo(W - 22, 22); ctx.lineTo(W - 18, 34); ctx.closePath();
     ctx.fill();
@@ -354,7 +354,7 @@ const CarteCommune = (() => {
     ctx.font = `${taille}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(emoji, x, y + 1);
     if (label) {
-      ctx.font = '600 7.5px "Bricolage Grotesque", system-ui, sans-serif';
+      ctx.font = '600 7.5px "Fredoka", system-ui, sans-serif';
       ctx.fillStyle = COUL.encre;
       ctx.strokeStyle = 'rgba(237,231,213,0.85)'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
       ctx.strokeText(label, x, y + taille * 1.45);

@@ -119,17 +119,17 @@ const UI = (() => {
         style="left:${(posC.x * 100).toFixed(1)}%;top:${(posC.y * 100).toFixed(1)}%">${crise.icone}</button>` : ''}
     </div>
     <div class="jauges">
-        <div class="jauge ${clTreso}"><span class="jauge-nom">Trésorerie</span>
+        <div class="jauge ${clTreso}"><span class="jauge-nom">💰 Trésorerie</span>
           <span class="jauge-val">${eur(S.tresorerie)}</span>
           <span class="jauge-sub">${S.tresorerie < 0 ? '⚠ négative' : Math.round(jours) + ' jours'}</span></div>
-        <div class="jauge ${clPop}"><span class="jauge-nom">Population</span>
+        <div class="jauge ${clPop}"><span class="jauge-nom">👥 Population</span>
           <span class="jauge-val">${nb(S.population)}</span>
           <span class="jauge-sub">${S.dernierSoldeMigratoire === 0 ? 'stable' : signe(S.dernierSoldeMigratoire, nb) + ' le mois dernier'}</span></div>
-        ${jauge100('Popularité', S.popularite)}
-        ${jauge100('Attractivité', S.attractivite)}
-        ${jauge100('Cadre de vie', cadre)}
-        ${jauge100('Capital préfecture', S.capitalPrefecture, true)}
-        <div class="jauge"><span class="jauge-nom">Solde mensuel</span>
+        ${jauge100('❤️ Popularité', S.popularite)}
+        ${jauge100('✨ Attractivité', S.attractivite)}
+        ${jauge100('🌳 Cadre de vie', cadre)}
+        ${jauge100('🏛️ Capital préfecture', S.capitalPrefecture, true)}
+        <div class="jauge"><span class="jauge-nom">📈 Solde mensuel</span>
           <span class="jauge-val ${solde < 0 ? 'texte-rouge' : ''}">${signe(solde)}</span>
           <span class="jauge-sub">fonctionnement</span></div>
       </div>`;
