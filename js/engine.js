@@ -71,6 +71,8 @@ const Engine = (() => {
       dernierDiagnostic: null,
 
       journal: [],
+      notifications: [],         // { jour, icone, texte, type: 'alerte'|'info', action, lu }
+      historiqueQuestions: [],   // { jour, icone, libelle, note }
       epargneCumulee: 0,
       gameOver: null,            // { type, titre, texte }
     };
@@ -321,6 +323,7 @@ const Engine = (() => {
     S.derniereCriseJour = S.jour;
     S.crisesCooldown[crise.id] = S.jour + crise.cooldown;
     log(`🚨 CRISE — ${crise.nom}. Le coût augmente chaque jour sans décision (option par défaut sous ${CFG.CRISE_DELAI_JOURS} jours).`);
+    notifier(crise.icone, `Crise : ${crise.nom} ! Le coût grimpe chaque jour.`, { type: 'alerte', action: 'crise' });
   }
 
   function escaladerCrise() {
@@ -385,6 +388,7 @@ const Engine = (() => {
       if (q.saisons && !q.saisons.includes(sais)) continue;
       S.questionActive = id;
       log(`📬 Courrier du maire : « ${q.texte} »`);
+      notifier('📬', 'Nouveau courrier : les habitants attendent ta réponse.', { action: 'question' });
       return;
     }
   }
@@ -399,6 +403,8 @@ const Engine = (() => {
     S.questionActive = null;
     S.prochaineQuestionJour = S.jour + 6 + Math.floor(Math.random() * 7);
     log(`${q.icone} ${opt.libelle} — ${opt.note}`);
+    S.historiqueQuestions.unshift({ jour: S.jour, icone: q.icone, libelle: opt.libelle, note: opt.note });
+    if (S.historiqueQuestions.length > 30) S.historiqueQuestions.pop();
     return { ok: true, note: opt.note, icone: q.icone };
   }
 
@@ -464,7 +470,8 @@ const Engine = (() => {
       if (dispo.length) {
         const o = dispo[Math.floor(Math.random() * dispo.length)];
         S.offresEnCours.push({ id: o.id });
-        log(`💼 Offre privée : ${o.nom} propose ${fmtEuro(o.montant)}. Rien n'est jamais gratuit (voir Aides & finances).`);
+        log(`💼 Offre privée : ${o.nom} propose ${fmtEuro(o.montant)}. Rien n'est jamais gratuit.`);
+        notifier(o.icone, `${o.nom} te propose ${fmtEuro(o.montant)}. Rien n'est jamais gratuit…`, { action: 'business' });
       }
       S.prochaineOffreJour = S.jour + 60 + Math.floor(Math.random() * 40);
     }
@@ -558,6 +565,7 @@ const Engine = (() => {
     S.mois++;
     const migTxt = migration.delta === 0 ? 'population stable' : `${migration.delta > 0 ? '+' : ''}${fmtNb(migration.delta)} habitants`;
     log(`📅 Clôture de ${NOMS_MOIS[moisCalendaire()]} : solde ${solde >= 0 ? '+' : ''}${fmtEuro(solde)}, ${migTxt}.`);
+    notifier('📅', `Bilan du mois : ${solde >= 0 ? '+' : '−'}${fmtEuro(Math.abs(solde))}, ${migTxt}.`);
   }
 
   function majCadreDeVie() {
@@ -613,6 +621,7 @@ const Engine = (() => {
   function evaluerPaliers() {
     if (S.gameOver) return;
     const P = S.paliers;
+    const avantFin = P.fin, avantDemo = P.demo;
 
     /* Défaite n°1 — financière */
     const jours = joursDeTresorerie();
@@ -661,6 +670,16 @@ const Engine = (() => {
       P.demo = 'ok';
       if (perte < p2 - 1) P.declinApplique = false;
     }
+
+    /* notifications sur aggravation seulement */
+    if (P.fin === 'alerte' && avantFin === 'ok')
+      notifier('🟧', 'Alerte budgétaire : moins de 15 jours de caisse !', { type: 'alerte', action: 'business' });
+    if (P.fin === 'redressement' && avantFin !== 'redressement')
+      notifier('🟥', `Trésorerie négative ! ${CFG.REDRESSEMENT_JOURS} jours pour te rattraper, sinon tu perds la ville.`, { type: 'alerte', action: 'business' });
+    if (P.demo === 'alerte' && avantDemo === 'ok')
+      notifier('🟧', 'Les habitants commencent à partir (−5 %).', { type: 'alerte', action: 'diag' });
+    if (P.demo === 'declin' && avantDemo !== 'declin')
+      notifier('🟥', 'Exode ! Plus de 10 % de départs — à −15 %, c\'est fini.', { type: 'alerte', action: 'diag' });
   }
 
   function joursRedressementRestants() {
@@ -753,6 +772,41 @@ const Engine = (() => {
     return { taux: c.taux, mensualite: m, ...projeter({ gainImmediat: capital, deltaMensuel: -m }) };
   }
 
+  /* ---------- Note de la ville ---------- */
+
+  function noteVille() {
+    const jours = joursDeTresorerie();
+    const finances = S.tresorerie < 0 ? 0 : clamp100(jours / 45 * 100) * (tauxEndettement() > 1 ? 0.6 : 1);
+    const composantes = {
+      finances,
+      popularite: S.popularite,
+      attractivite: S.attractivite,
+      cadre: cadreDeVie(),
+    };
+    const note = clamp100(finances * 0.25 + S.popularite * 0.3 + S.attractivite * 0.2 + composantes.cadre * 0.25);
+    return { note, sur20: Math.round(note / 5), composantes };
+  }
+
+  /* ---------- Notifications ---------- */
+
+  function notifier(icone, texte, options = {}) {
+    S.notifications.unshift({
+      jour: S.jour, icone, texte,
+      type: options.type || 'info',
+      action: options.action || null,
+      lu: false,
+    });
+    if (S.notifications.length > 60) S.notifications.pop();
+  }
+
+  function notifsNonLues() {
+    return S.notifications.filter(n => !n.lu).length;
+  }
+
+  function marquerNotifsLues() {
+    for (const n of S.notifications) n.lu = true;
+  }
+
   /* ---------- Journal & format ---------- */
 
   function log(txt) {
@@ -802,6 +856,7 @@ const Engine = (() => {
     accepterOffre, refuserOffre, resoudreCrise, evenementDu, resoudreEvenement,
     resoudreQuestion,
     faireMissionRedressement, missionRedressementDispo, joursRedressementRestants,
+    noteVille, notifsNonLues, marquerNotifsLues,
     recettes, depenses, totalRecettes, depensesMensuelles, soldeMensuel,
     joursDeTresorerie, tauxEndettement, encoursDette, recettesAnnuelles,
     cadreDeVie, saturation, capaciteEquipements, capaciteInvestissement, reserveFonctionnement,

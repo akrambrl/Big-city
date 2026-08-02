@@ -30,13 +30,13 @@ La partie se sauvegarde automatiquement dans le navigateur (localStorage).
 - La carte vit : les équipements construits y apparaissent, le bâti suit la population (les départs laissent des maisons grises), les saisons teintent les champs, l'état de la voirie colore les routes, et les crises pulsent à l'endroit concerné.
 - Géographie par profil : rivière et bocage (ville moyenne), massif forestier (bourg rural), littoral avec plage et voiliers (station touristique).
 
-## L'interface, volontairement minimale
+## Une interface d'app mobile
 
-- **5 jetons** : 💰 Trésorerie (avec jours de réserve et solde), 👥 Population, ❤️ Popularité, ✨ Attractivité, 🌳 Cadre de vie.
-- **4 onglets** : 🏙️ Ma ville · 🏗️ Construire · 💶 Argent · 📜 Journal.
-- **Entretien de la ville en 3 niveaux** (Éco / Normal / Soigné) — pas de lignes budgétaires à régler.
-- **Emprunt en 3 tailles** (Petit / Moyen / Gros, 5 ans) — mensualité affichée avant de signer.
-- Le détail comptable existe pour les curieux, replié derrière « Voir le détail ».
+- **Header d'app** toujours visible : la **note de la ville** (badge /20 coloré, touche-le pour le détail : finances, popularité, attractivité, cadre de vie, courbes et diagnostic), 💰 l'argent, 👥 la population, et la cloche 🔔.
+- **Notifications** avec pastille de non-lus : crises (incendie, inondation…), alertes budget et exode, courrier, offres privées, bilan mensuel — chaque alerte a son bouton « Voir » qui ouvre le bon écran.
+- **Barre de navigation en bas** : 🗺️ Carte (plein écran) · 📬 Courrier (question en cours + tes dernières décisions) · 🏗️ Construire · 💼 Business (budget, impôts, entretien, emprunt, aides, offres privées).
+- **Pilule flottante** pour avancer le temps (▶ +1 jour / ⏩ +7), accessible depuis n'importe quelle vue.
+- **Entretien de la ville en 3 niveaux** (Éco / Normal / Soigné) et **emprunt en 3 tailles** — mensualité affichée avant de signer ; le détail comptable est replié derrière « Voir le détail ».
 
 ## Sous le capot (fidèle au module de conception)
 

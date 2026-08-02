@@ -1,18 +1,27 @@
 /* ============================================================
-   BIG CITY — Interface (version simplifiée)
-   4 onglets, 5 jetons, questions à choix multiples,
-   projections avant chaque décision qui engage l'argent.
+   BIG CITY — Interface « app »
+   Header : note de la ville, argent, population, notifications.
+   Barre du bas : Carte · Courrier · Construire · Business.
+   Pilule flottante pour avancer le temps.
    ============================================================ */
 
 const UI = (() => {
   const app = () => document.getElementById('app');
   const modalRoot = () => document.getElementById('modal-root');
   const E = Engine;
-  let ongletActif = 'ville';
+  let vueActive = 'carte';
+  let notifsOuvertes = false;
+  let questionEnAttente = false; // « Plus tard » : la question reste due, mais on peut naviguer
 
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const eur = E.fmtEuro, nb = E.fmtNb;
   const signe = (v, fmt = eur) => (v >= 0 ? '+' : '−') + fmt(Math.abs(v));
+  const eurCourt = (v) => {
+    const a = Math.abs(v);
+    if (a >= 1e6) return (v / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' M€';
+    if (a >= 1e4) return Math.round(v / 1000).toLocaleString('fr-FR') + ' k€';
+    return Math.round(v).toLocaleString('fr-FR') + ' €';
+  };
 
   /* ================= ÉCRAN D'ACCUEIL ================= */
 
@@ -46,6 +55,7 @@ const UI = (() => {
     app().querySelectorAll('.carte-profil').forEach(b => b.addEventListener('click', () => {
       E.nouvellePartie(b.dataset.profil, document.getElementById('mode-tranquille').checked);
       E.sauvegarder();
+      vueActive = 'carte';
       rendre();
       modaleIntro();
     }));
@@ -56,16 +66,43 @@ const UI = (() => {
   function rendre() {
     const S = E.etat;
     if (!S) return ecranAccueil();
+    const note = E.noteVille();
+    const nonLues = E.notifsNonLues();
+    const clNote = note.sur20 >= 12 ? 'bonne' : note.sur20 >= 8 ? 'moyenne' : 'mauvaise';
     app().innerHTML = `
-      ${htmlEntete(S)}
-      ${htmlBandeaux(S)}
-      <nav class="onglets">
-        ${[['ville', '🏙️ Ma ville'], ['construire', '🏗️ Construire'], ['argent', '💶 Argent'], ['journal', '📜 Journal']]
-          .map(([id, lbl]) => `<button class="onglet ${ongletActif === id ? 'actif' : ''}" data-onglet="${id}">${lbl}</button>`).join('')}
+    <div class="coque">
+      <header class="barre-haut">
+        <button id="btn-note" class="badge-note ${clNote}" title="La note de ta ville — touche pour le détail">
+          <span class="note-val">${note.sur20}</span><span class="note-max">/20</span>
+        </button>
+        <div class="titre-app">
+          <span class="nom-ville">${esc(S.commune)}</span>
+          <span class="date-app">${NOMS_MOIS[E.moisCalendaire()]} · j${S.jourDuMois} · an ${E.annee()}${S.tranquille ? ' · 🕊️' : ''}</span>
+        </div>
+        <div class="chips-haut">
+          <span class="chip-ressource ${S.tresorerie < 0 ? 'alerte' : ''}" title="Trésorerie">💰 ${eurCourt(S.tresorerie)}</span>
+          <span class="chip-ressource" title="Population">👥 ${nb(S.population)}</span>
+          <button id="btn-notifs" class="btn-cloche" title="Notifications">🔔${nonLues ? `<span class="pastille">${nonLues}</span>` : ''}</button>
+        </div>
+      </header>
+      ${htmlStripAlerte(S)}
+      <main class="vue vue-${vueActive}">${htmlVue(S)}</main>
+      <div class="pilule-temps">
+        <button id="btn-jour" class="btn-temps">▶ +1 jour</button>
+        <button id="btn-semaine" class="btn-temps">⏩ +7</button>
+      </div>
+      <nav class="barre-bas">
+        ${[['carte', '🗺️', 'Carte'], ['courrier', '📬', 'Courrier'], ['construire', '🏗️', 'Construire'], ['business', '💼', 'Business']]
+          .map(([id, ic, lbl]) => `<button class="nav-btn ${vueActive === id ? 'actif' : ''}" data-vue="${id}">
+            <span class="nav-ic">${ic}${id === 'courrier' && S.questionActive ? '<span class="pastille">1</span>' : ''}</span>
+            <span class="nav-lbl">${lbl}</span></button>`).join('')}
       </nav>
-      <main class="contenu">${htmlOnglet(S)}</main>`;
+      ${notifsOuvertes ? htmlPanneauNotifs(S) : ''}
+    </div>`;
 
-    app().querySelectorAll('.onglet').forEach(b => b.addEventListener('click', () => { ongletActif = b.dataset.onglet; rendre(); }));
+    app().querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => {
+      vueActive = b.dataset.vue; notifsOuvertes = false; rendre();
+    }));
     const carte = document.getElementById('carte');
     if (carte) {
       const placerMarqueur = () => {
@@ -79,13 +116,10 @@ const UI = (() => {
       CarteCommune.attacher(carte, S, placerMarqueur);
       CarteCommune.dessiner(carte, S);
     }
-    const marqueur = document.getElementById('btn-crise-carte');
-    if (marqueur) marqueur.addEventListener('click', () => modaleCrise(S));
     brancherEvenements(S);
     afficherModalesAutomatiques(S);
   }
 
-  /* la carte suit la largeur de la fenêtre */
   let minuteurRedim = null;
   window.addEventListener('resize', () => {
     clearTimeout(minuteurRedim);
@@ -97,30 +131,47 @@ const UI = (() => {
 
   const EMOJI_SAISON = { hiver: '❄️', printemps: '🌱', ete: '☀️', automne: '🍂' };
 
-  function htmlEntete(S) {
-    const jours = E.joursDeTresorerie();
-    const solde = E.soldeMensuel();
-    const cadre = E.cadreDeVie();
-    const clTreso = S.tresorerie < 0 ? 'rouge' : jours < 15 ? 'orange' : '';
-    const perte = (S.populationInitiale - S.population) / S.populationInitiale * 100;
-    const clPop = perte >= 10 ? 'rouge' : perte >= 5 ? 'orange' : '';
+  /* Bandeau fin sous le header : uniquement l'urgent */
+  function htmlStripAlerte(S) {
+    const morceaux = [];
+    if (S.criseActive) {
+      const c = CRISES.find(x => x.id === S.criseActive.criseId);
+      morceaux.push(`<span>🚨 ${c.nom} — ${eurCourt(S.criseActive.coutCourant)}</span><button id="btn-crise" class="btn-mini">Décider</button>`);
+    }
+    if (S.paliers.fin === 'redressement') {
+      morceaux.push(`<span>🟥 Redressement : ${E.joursRedressementRestants()} j restants</span>
+        ${E.missionRedressementDispo() ? `<button id="btn-mission" class="btn-mini">🗂️ Mission (+${eurCourt(CFG.MISSION_REDRESSEMENT)})</button>` : '<span class="fait">✓</span>'}`);
+    } else if (S.paliers.fin === 'alerte') {
+      morceaux.push(`<span>🟧 Caisse basse (${Math.max(0, Math.round(E.joursDeTresorerie()))} j)</span>`);
+    }
+    if (S.paliers.demo !== 'ok') {
+      morceaux.push(`<span>${S.paliers.demo === 'declin' ? '🟥 Exode' : '🟧 Départs'}</span><button id="btn-diag" class="btn-mini">Pourquoi ?</button>`);
+    }
+    return morceaux.length ? `<div class="strip-alerte">${morceaux.map(m => `<span class="strip-item">${m}</span>`).join('')}</div>` : '';
+  }
+
+  /* ================= VUES ================= */
+
+  function htmlVue(S) {
+    switch (vueActive) {
+      case 'carte': return htmlVueCarte(S);
+      case 'courrier': return htmlVueCourrier(S);
+      case 'construire': return htmlVueConstruire(S);
+      case 'business': return htmlVueBusiness(S);
+      case 'note': return htmlVueNote(S);
+    }
+  }
+
+  /* ---- 🗺️ Carte ---- */
+
+  function htmlVueCarte(S) {
     const saison = E.saison();
     const crise = S.criseActive ? CRISES.find(x => x.id === S.criseActive.criseId) : null;
     const posC = crise ? CarteCommune.posCrise(crise.id, S.profil) : null;
     return `
-    <header class="hud">
-      <h1>${esc(S.commune)}</h1>
-      <div class="date-jeu">Année ${E.annee()} · ${NOMS_MOIS[E.moisCalendaire()]} · jour ${S.jourDuMois}/30
-        <span class="mandat">— mois ${Math.min(S.mois, CFG.MANDAT_MOIS)}/${CFG.MANDAT_MOIS}${S.tranquille ? ' · 🕊️' : ''}</span></div>
-      <div class="controles-temps">
-        <button id="btn-jour" class="btn-temps">▶ +1 jour</button>
-        <button id="btn-semaine" class="btn-temps">⏩ +7 jours</button>
-        <button id="btn-nouvelle" class="btn-lien" title="Abandonner et recommencer">Nouvelle partie</button>
-      </div>
-    </header>
-    <div class="carte-monde">
+    <div class="carte-monde pleine">
       <canvas id="carte" role="img" aria-label="Plan de la commune de ${esc(S.commune)}"></canvas>
-      <span class="chip-carte">${EMOJI_SAISON[saison]} ${saison === 'ete' ? 'été' : saison} · ${NOMS_MOIS[E.moisCalendaire()]}, année ${E.annee()}</span>
+      <span class="chip-carte">${EMOJI_SAISON[saison]} ${saison === 'ete' ? 'été' : saison}</span>
       <div class="cartouche">
         <div class="surcart">Commune de</div>
         <div class="nomcart">${esc(S.commune)}</div>
@@ -131,172 +182,72 @@ const UI = (() => {
         <button id="zoom-moins" class="btn-zoom" title="Dézoomer — découvre les villes voisines">−</button>
         <button id="zoom-reset" class="btn-zoom" title="Recentrer sur ta commune">⌖</button>
       </div>
-      <span class="chip-aide">🖐️ glisse pour te balader · 🔍 molette ou pincement pour zoomer</span>
-      ${crise ? `<button class="marqueur-crise" id="btn-crise-carte" title="${crise.nom} — cliquer pour décider"
+      <span class="chip-aide">🖐️ glisse · 🔍 zoome · dézoome pour voir les villes voisines</span>
+      ${crise ? `<button class="marqueur-crise" id="btn-crise-carte" title="${crise.nom} — touche pour décider"
         style="left:${(posC.x * 100).toFixed(1)}%;top:${(posC.y * 100).toFixed(1)}%">${crise.icone}</button>` : ''}
-    </div>
-    <div class="jauges">
-      <div class="jauge ${clTreso}"><span class="jauge-nom">💰 Trésorerie</span>
-        <span class="jauge-val">${eur(S.tresorerie)}</span>
-        <span class="jauge-sub">${S.tresorerie < 0 ? '⚠ négative !' : Math.round(jours) + ' j de réserve · ' + signe(solde) + '/mois'}</span></div>
-      <div class="jauge ${clPop}"><span class="jauge-nom">👥 Population</span>
-        <span class="jauge-val">${nb(S.population)}</span>
-        <span class="jauge-sub">${S.dernierSoldeMigratoire === 0 ? 'stable' : signe(S.dernierSoldeMigratoire, nb) + ' le mois dernier'}</span></div>
-      ${jauge100('❤️ Popularité', S.popularite)}
-      ${jauge100('✨ Attractivité', S.attractivite)}
-      ${jauge100('🌳 Cadre de vie', cadre)}
     </div>`;
   }
 
-  function jauge100(nom, v, pref = false) {
-    const cl = v < 25 ? 'rouge' : v < 45 ? 'orange' : '';
-    return `<div class="jauge ${cl}"><span class="jauge-nom">${nom}</span>
-      <span class="jauge-val">${Math.round(v)}<span class="sur100">/100</span></span>
-      <div class="barre"><div class="barre-rempli ${pref ? 'pref' : ''}" style="width:${Math.round(v)}%"></div></div></div>`;
-  }
+  /* ---- 📬 Courrier ---- */
 
-  function htmlBandeaux(S) {
-    const b = [];
-    if (S.paliers.fin === 'alerte')
-      b.push(`<div class="bandeau orange">🟧 <b>Alerte budgétaire</b> — moins de 15 jours de caisse. Monte les impôts, gèle un chantier ou demande de l'aide (onglet 💶 Argent).</div>`);
-    if (S.paliers.fin === 'redressement') {
-      const j = E.joursRedressementRestants();
-      b.push(`<div class="bandeau rouge">🟥 <b>Plan de redressement</b> — ${j} jour(s) pour repasser au-dessus de zéro, sinon tu perds la ville. Constructions gelées, emprunt coupé, impôts plancher à 15 %.
-        ${E.missionRedressementDispo() ? `<button id="btn-mission" class="btn-mini">🗂️ Mission du jour (+${eur(CFG.MISSION_REDRESSEMENT)})</button>` : '<span class="fait">mission du jour faite ✓</span>'}</div>`);
-    }
-    if (S.paliers.demo === 'alerte')
-      b.push(`<div class="bandeau orange">🟧 <b>Les habitants commencent à partir</b> (−5 %). <button id="btn-diag" class="btn-mini">Voir pourquoi</button></div>`);
-    if (S.paliers.demo === 'declin')
-      b.push(`<div class="bandeau rouge">🟥 <b>Exode !</b> Plus de 10 % de départs — à −15 %, c'est fini. <button id="btn-diag" class="btn-mini">Voir pourquoi</button></div>`);
-    if (S.criseActive) {
-      const c = CRISES.find(x => x.id === S.criseActive.criseId);
-      b.push(`<div class="bandeau rouge">🚨 <b>Crise : ${c.nom}</b> — ${eur(S.criseActive.coutCourant)}, et ça grimpe chaque jour. <button id="btn-crise" class="btn-mini">Décider</button></div>`);
-    }
-    return b.length ? `<div class="bandeaux">${b.join('')}</div>` : '';
-  }
-
-  /* ================= ONGLETS ================= */
-
-  function htmlOnglet(S) {
-    switch (ongletActif) {
-      case 'ville': return htmlVille(S);
-      case 'construire': return htmlConstruire(S);
-      case 'argent': return htmlArgent(S);
-      case 'journal': return htmlJournal(S);
-    }
-  }
-
-  /* ---- Ma ville ---- */
-
-  function htmlVille(S) {
-    const solde = E.soldeMensuel();
-    const jours = E.joursDeTresorerie();
-    const dette = E.tauxEndettement() * 100;
-    const sat = E.saturation();
-    const mig = E.calculerMigration();
+  function htmlVueCourrier(S) {
+    const q = S.questionActive ? QUESTIONS.find(x => x.id === S.questionActive) : null;
     return `
-    <div class="grille-2">
+    <div class="defilable">
+      ${q ? `
+      <section class="carte courrier-actif">
+        <h2>📬 Nouveau courrier</h2>
+        <p class="crise-texte">${q.icone} ${q.texte}</p>
+        <button class="btn" id="btn-repondre">Répondre</button>
+      </section>` : `
       <section class="carte">
-        <h2>Les trois chiffres qui comptent</h2>
-        <div class="ratios">
-          ${ratio('Gagné / mois', signe(solde), solde < 0, 'recettes − dépenses, chaque mois')}
-          ${ratio('Jours de caisse', S.tresorerie < 0 ? '—' : Math.round(jours) + ' j', jours < 15, 'alerte sous 15 jours')}
-          ${ratio('Dette', dette.toFixed(0) + ' %', dette > 100, 'emprunt coupé au-delà de 100 %')}
-        </div>
-      </section>
+        <h2>📬 Boîte aux lettres</h2>
+        <p class="note">Rien à signer pour l'instant. Avance les jours, le courrier arrive tout seul — et il n'attend jamais longtemps.</p>
+      </section>`}
+      ${S.historiqueQuestions.length ? `
       <section class="carte">
-        <h2>Qui arrive, qui s'en va</h2>
-        <p>Tendance : <b>${signe(Math.round(S.population * mig.diagnostic.soldePct / 100), nb)} hab./mois</b></p>
-        <p>Place disponible : <b>${nb(E.capaciteEquipements())} hab.</b>
-           ${sat > 0 ? `<span class="texte-orange">Ta ville déborde (+${sat.toFixed(0)} %) — construis école, eau ou parking !</span>` : '— ça va.'}</p>
-        <button class="btn" id="btn-diag2">🔎 Pourquoi les gens partent ?</button>
-      </section>
-    </div>
-    <div class="grille-2">
-      <section class="carte">
-        <h2>Trésorerie</h2>
-        ${graphique(S.historique.map(h => h.tresorerie), '#3F97DB', v => eur(v), S.tresorerie)}
-      </section>
-      <section class="carte">
-        <h2>Population</h2>
-        ${graphique(S.historique.map(h => h.populationFin), '#62B857', v => nb(v) + ' hab.', S.population)}
-      </section>
-    </div>
-    <section class="carte">
-      <h2>Cadre de vie — ce qui fait rester les habitants</h2>
-      ${composantesCadre(S)}
-    </section>`;
-  }
-
-  function ratio(nom, val, alerte, aide) {
-    return `<div class="ratio ${alerte ? 'alerte' : ''}" title="${aide}">
-      <span class="ratio-val">${val}</span><span class="ratio-nom">${nom}</span></div>`;
-  }
-
-  function composantesCadre(S) {
-    const comp = [
-      ['💡 Éclairage', S.cadre.eclairage], ['🛣️ Voirie', S.cadre.voirie],
-      ['🧹 Propreté', S.cadre.proprete], ['🏠 Logement', S.cadre.logement],
-      ['🏪 Commerces & services', S.cadre.proximite],
-    ];
-    return `<div class="composantes">${comp.map(([n, v]) => `
-      <div class="composante"><span class="comp-nom">${n}</span>
-        <div class="barre grande"><div class="barre-rempli ${v < 40 ? 'basse' : ''}" style="width:${Math.round(v)}%"></div></div>
-        <span class="comp-val">${Math.round(v)}</span></div>`).join('')}</div>`;
-  }
-
-  /* Petit graphique SVG mono-série */
-  function graphique(valeurs, couleur, fmt, valActuelle) {
-    if (valeurs.length < 2) return `<p class="note">Valeur actuelle : <b>${fmt(valActuelle)}</b> — la courbe se dessine à partir du 2ᵉ mois.</p>`;
-    const W = 420, H = 120, P = 6;
-    const min = Math.min(...valeurs, 0), max = Math.max(...valeurs);
-    const y = v => H - P - (max === min ? 0.5 : (v - min) / (max - min)) * (H - 2 * P);
-    const x = i => P + i * (W - 2 * P) / (valeurs.length - 1);
-    const pts = valeurs.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-    const zeroY = min < 0 ? y(0) : null;
-    const der = valeurs[valeurs.length - 1];
-    const baseY = (H - P).toFixed(1);
-    return `<svg viewBox="0 0 ${W} ${H}" class="graph" role="img" aria-label="Évolution : dernière valeur ${fmt(der)}">
-      <polygon points="${x(0).toFixed(1)},${baseY} ${pts} ${x(valeurs.length - 1).toFixed(1)},${baseY}" fill="${couleur}" opacity="0.15"/>
-      ${zeroY !== null ? `<line x1="${P}" x2="${W - P}" y1="${zeroY}" y2="${zeroY}" class="graph-zero"/>` : ''}
-      <polyline points="${pts}" fill="none" stroke="${couleur}" stroke-width="2.5" stroke-linejoin="round"/>
-      <circle cx="${x(valeurs.length - 1)}" cy="${y(der)}" r="4" fill="${couleur}"/>
-    </svg>
-    <p class="graph-legende">Fin du mois dernier : <b>${fmt(der)}</b> · ${valeurs.length} mois</p>`;
-  }
-
-  /* ---- Construire ---- */
-
-  function htmlConstruire(S) {
-    return `
-    <p class="avert">⚠️ <b>Chaque bâtiment coûte tous les mois, pour toujours.</b> Tu verras la projection avant de valider.</p>
-    <div class="grille-cartes">
-      ${EQUIPEMENTS.map(def => {
-        const test = E.peutConstruire(def);
-        const charge = def.entretien + def.energie - def.recettes;
-        const dejaN = S.equipements.filter(e => e.type === def.id).length;
-        return `<div class="carte equip ${test.ok ? '' : 'grise'}">
-          <h3>${def.icone} ${def.nom} ${dejaN ? `<span class="badge">×${dejaN}</span>` : ''}</h3>
-          <p class="equip-desc">${def.desc}</p>
-          <div class="equip-chiffres">
-            <span>💰 <b>${eur(def.cout)}</b></span>
-            <span>${charge > 0 ? '📉' : '📈'} <b class="${charge > 0 ? 'texte-rouge' : 'texte-vert'}">${charge >= 0 ? '−' : '+'}${eur(Math.abs(charge))}/mois</b></span>
-            ${def.capacite ? `<span>👥 +${nb(def.capacite)} de place</span>` : ''}
-            ${def.effets.attractivite ? `<span>✨ +${def.effets.attractivite}</span>` : ''}
-            ${def.effets.popularite ? `<span>❤️ +${def.effets.popularite}</span>` : ''}
-          </div>
-          <div class="equip-actions">
-            <button class="btn btn-construire" data-equip="${def.id}" ${test.ok ? '' : 'disabled'}>Construire</button>
-          </div>
-          ${!test.ok ? `<p class="note-inline">${test.msg}</p>` : ''}
-        </div>`;
-      }).join('')}
+        <h2>Tes dernières décisions</h2>
+        <ul class="liste-decisions">
+          ${S.historiqueQuestions.map(h => `<li><span class="jour-tag">J${h.jour}</span> ${h.icone} <b>${h.libelle}</b><br><span class="decision-note">${h.note}</span></li>`).join('')}
+        </ul>
+      </section>` : ''}
     </div>`;
   }
 
-  /* ---- Argent ---- */
+  /* ---- 🏗️ Construire ---- */
 
-  function htmlArgent(S) {
+  function htmlVueConstruire(S) {
+    return `
+    <div class="defilable">
+      <p class="avert">⚠️ <b>Chaque bâtiment coûte tous les mois, pour toujours.</b> Tu verras la projection avant de valider.</p>
+      <div class="grille-cartes">
+        ${EQUIPEMENTS.map(def => {
+          const test = E.peutConstruire(def);
+          const charge = def.entretien + def.energie - def.recettes;
+          const dejaN = S.equipements.filter(e => e.type === def.id).length;
+          return `<div class="carte equip ${test.ok ? '' : 'grise'}">
+            <h3>${def.icone} ${def.nom} ${dejaN ? `<span class="badge">×${dejaN}</span>` : ''}</h3>
+            <p class="equip-desc">${def.desc}</p>
+            <div class="equip-chiffres">
+              <span>💰 <b>${eur(def.cout)}</b></span>
+              <span>${charge > 0 ? '📉' : '📈'} <b class="${charge > 0 ? 'texte-rouge' : 'texte-vert'}">${charge >= 0 ? '−' : '+'}${eur(Math.abs(charge))}/mois</b></span>
+              ${def.capacite ? `<span>👥 +${nb(def.capacite)}</span>` : ''}
+              ${def.effets.attractivite ? `<span>✨ +${def.effets.attractivite}</span>` : ''}
+              ${def.effets.popularite ? `<span>❤️ +${def.effets.popularite}</span>` : ''}
+            </div>
+            <div class="equip-actions">
+              <button class="btn btn-construire" data-equip="${def.id}" ${test.ok ? '' : 'disabled'}>Construire</button>
+            </div>
+            ${!test.ok ? `<p class="note-inline">${test.msg}</p>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  /* ---- 💼 Business ---- */
+
+  function htmlVueBusiness(S) {
     const r = E.recettes(), d = E.depenses();
     const rec = r.fiscalite + r.dotation + r.services;
     const dep = d.personnel + d.energie + d.entretien + d.dette;
@@ -312,30 +263,7 @@ const UI = (() => {
       ['Gros', arrondi50k(S.population * 160)],
     ];
     return `
-    <div class="grille-2">
-      <section class="carte">
-        <h2>💶 Impôts locaux</h2>
-        <p class="note">Ton levier principal. Modifiable une fois par mois, effet le mois d'après.</p>
-        <div class="ligne-taux">
-          <input type="range" id="slider-taux" min="${CFG.TAUX_MIN}" max="${CFG.TAUX_MAX}" step="1"
-            value="${S.tauxProchain ?? S.taux}" ${S.tauxChangeCeMois ? 'disabled' : ''}>
-          <span id="taux-affiche" class="taux-val">${S.tauxProchain ?? S.taux} %</span>
-        </div>
-        <div id="apercu-taux" class="apercu"></div>
-        <button class="btn" id="btn-taux" ${S.tauxChangeCeMois ? 'disabled' : ''}>
-          ${S.tauxChangeCeMois ? (S.tauxProchain !== null ? `Voté : ${S.tauxProchain} % au mois prochain` : 'Déjà modifié ce mois-ci') : 'Voter ce taux'}
-        </button>
-        <hr>
-        <h2>🧹 Entretien de la ville</h2>
-        <div class="presets">
-          ${Object.entries(E.NIVEAUX_ENTRETIEN).map(([id, n]) => `
-            <button class="preset btn-entretien ${S.niveauEntretien === id ? 'actif' : ''}" data-niveau="${id}">
-              <span class="preset-nom">${n.nom}</span>
-              <span class="preset-detail">${eur(coutNiveau(S, n.facteur))}/mois</span>
-              <span class="preset-note">${id === 'eco' ? 'la ville se dégrade doucement' : id === 'normal' ? 'ça tient la route' : 'propre et nickel'}</span>
-            </button>`).join('')}
-        </div>
-      </section>
+    <div class="defilable">
       <section class="carte">
         <h2>📊 Le budget, en bref</h2>
         <table class="table-budget">
@@ -359,21 +287,43 @@ const UI = (() => {
               ${chargesEquip.map(([def, net]) => `<tr><td>${def.icone} ${def.nom}</td><td class="mont">${net > 0 ? '−' : '+'}${eur(Math.abs(net))}</td></tr>`).join('')}` : ''}
           </table>
         </details>
-        <p class="note-inline">Dispo pour construire : ${eur(E.capaciteInvestissement())} (15 jours de caisse toujours gardés de côté).</p>
+        <p class="note-inline">Dispo pour construire : ${eur(E.capaciteInvestissement())} (15 jours de caisse gardés de côté).</p>
       </section>
-    </div>
-    <div class="grille-2">
+      <section class="carte">
+        <h2>💶 Impôts locaux</h2>
+        <p class="note">Ton levier principal. Une fois par mois, effet le mois d'après.</p>
+        <div class="ligne-taux">
+          <input type="range" id="slider-taux" min="${CFG.TAUX_MIN}" max="${CFG.TAUX_MAX}" step="1"
+            value="${S.tauxProchain ?? S.taux}" ${S.tauxChangeCeMois ? 'disabled' : ''}>
+          <span id="taux-affiche" class="taux-val">${S.tauxProchain ?? S.taux} %</span>
+        </div>
+        <div id="apercu-taux" class="apercu"></div>
+        <button class="btn" id="btn-taux" ${S.tauxChangeCeMois ? 'disabled' : ''}>
+          ${S.tauxChangeCeMois ? (S.tauxProchain !== null ? `Voté : ${S.tauxProchain} % au mois prochain` : 'Déjà modifié ce mois-ci') : 'Voter ce taux'}
+        </button>
+      </section>
+      <section class="carte">
+        <h2>🧹 Entretien de la ville</h2>
+        <div class="presets">
+          ${Object.entries(E.NIVEAUX_ENTRETIEN).map(([id, n]) => `
+            <button class="preset btn-entretien ${S.niveauEntretien === id ? 'actif' : ''}" data-niveau="${id}">
+              <span class="preset-nom">${n.nom}</span>
+              <span class="preset-detail">${eur(coutNiveau(S, n.facteur))}/mois</span>
+              <span class="preset-note">${id === 'eco' ? 'la ville se dégrade doucement' : id === 'normal' ? 'ça tient la route' : 'propre et nickel'}</span>
+            </button>`).join('')}
+        </div>
+      </section>
       <section class="carte">
         <h2>🏦 Emprunter</h2>
         ${c.bloque ? '<p class="avert">Emprunt indisponible (dette trop élevée ou plan de redressement).</p>' : `
-        <p class="note">L'argent tout de suite, une mensualité pour 5 ans. Taux actuel : ${(c.taux * 100).toFixed(1)} %.</p>
+        <p class="note">L'argent tout de suite, une mensualité pour 5 ans. Taux : ${(c.taux * 100).toFixed(1)} %.</p>
         <div class="presets">
           ${presetsEmprunt.map(([lbl, cap]) => {
             const possible = cap <= c.capaciteMax;
             return `<button class="preset btn-emprunt" data-capital="${cap}" ${possible ? '' : 'disabled'}>
               <span class="preset-nom">${lbl}</span>
               <span class="preset-detail">${eur(cap)}</span>
-              <span class="preset-note">−${eur(E.mensualite(cap, c.taux, 60))}/mois pendant 60 mois</span>
+              <span class="preset-note">−${eur(E.mensualite(cap, c.taux, 60))}/mois × 60</span>
             </button>`;
           }).join('')}
         </div>`}
@@ -392,22 +342,22 @@ const UI = (() => {
             <button class="btn btn-aide" data-aide="${a.id}" ${S.capitalPrefecture < a.capital ? 'disabled' : ''}>Demander</button>
           </div>`).join('')}
       </section>
-    </div>
-    <section class="carte">
-      <h2>💼 Offres privées</h2>
-      ${S.offresEnCours.length ? S.offresEnCours.map(oe => {
-        const o = OFFRES_PRIVEES.find(x => x.id === oe.id);
-        return `<div class="offre">
-          <p><b>${o.icone} ${o.nom}</b> — ${o.texte}</p>
-          <p>💰 <b>${eur(o.montant)}</b> tout de suite · 🎁 contrepartie surprise dans <b>${o.delai} jours</b></p>
-          <button class="btn btn-offre-oui" data-offre="${o.id}">Prendre l'argent</button>
-          <button class="btn-lien btn-offre-non" data-offre="${o.id}">Décliner</button>
-        </div>`;
-      }).join('') : '<p class="note">Rien pour l\'instant. Les mécènes ont un flair certain pour les mairies fauchées — ils reviendront.</p>'}
-      ${S.effetsDifferes.filter(e => e.evenement).length ? `<h3>Ce que tu dois encore…</h3>
-        <ul class="liste-simple">${S.effetsDifferes.filter(e => e.evenement).map(e =>
-          `<li>⏳ ${esc(e.source || 'Contrepartie')} — dans ${e.jour - S.jour} jour(s)</li>`).join('')}</ul>` : ''}
-    </section>`;
+      <section class="carte">
+        <h2>💼 Offres privées</h2>
+        ${S.offresEnCours.length ? S.offresEnCours.map(oe => {
+          const o = OFFRES_PRIVEES.find(x => x.id === oe.id);
+          return `<div class="offre">
+            <p><b>${o.icone} ${o.nom}</b> — ${o.texte}</p>
+            <p>💰 <b>${eur(o.montant)}</b> tout de suite · 🎁 contrepartie surprise dans <b>${o.delai} jours</b></p>
+            <button class="btn btn-offre-oui" data-offre="${o.id}">Prendre l'argent</button>
+            <button class="btn-lien btn-offre-non" data-offre="${o.id}">Décliner</button>
+          </div>`;
+        }).join('') : '<p class="note">Rien pour l\'instant. Les mécènes ont un flair certain pour les mairies fauchées — ils reviendront.</p>'}
+        ${S.effetsDifferes.filter(e => e.evenement).length ? `<h3>Ce que tu dois encore…</h3>
+          <ul class="liste-simple">${S.effetsDifferes.filter(e => e.evenement).map(e =>
+            `<li>⏳ ${esc(e.source || 'Contrepartie')} — dans ${e.jour - S.jour} jour(s)</li>`).join('')}</ul>` : ''}
+      </section>
+    </div>`;
   }
 
   function coutNiveau(S, facteur) {
@@ -415,25 +365,114 @@ const UI = (() => {
   }
   function arrondi50k(v) { return Math.max(100000, Math.round(v / 50000) * 50000); }
 
-  /* ---- Journal ---- */
+  /* ---- 🏅 Note de la ville (via le badge du header) ---- */
 
-  function htmlJournal(S) {
+  function htmlVueNote(S) {
+    const note = E.noteVille();
+    const solde = E.soldeMensuel();
+    const jours = E.joursDeTresorerie();
+    const dette = E.tauxEndettement() * 100;
+    const compo = [
+      ['💰 Finances', note.composantes.finances, 'jours de caisse et dette'],
+      ['❤️ Popularité', note.composantes.popularite, 'ce que pensent les habitants'],
+      ['✨ Attractivité', note.composantes.attractivite, 'ce qui fait venir'],
+      ['🌳 Cadre de vie', note.composantes.cadre, 'ce qui fait rester'],
+    ];
     return `
-    <div class="grille-2">
+    <div class="defilable">
       <section class="carte">
-        <h2>📜 La vie de la commune</h2>
-        <ul class="journal">${S.journal.map(l => `<li><span class="jour-tag">J${l.jour}</span> ${l.txt}</li>`).join('')}</ul>
+        <h2>🏅 La note de ta ville : ${note.sur20}/20</h2>
+        <div class="composantes">
+          ${compo.map(([n, v, aide]) => `<div class="composante" title="${aide}">
+            <span class="comp-nom">${n}</span>
+            <div class="barre grande"><div class="barre-rempli ${v < 40 ? 'basse' : ''}" style="width:${Math.round(v)}%"></div></div>
+            <span class="comp-val">${Math.round(v)}</span></div>`).join('')}
+        </div>
       </section>
       <section class="carte">
-        <h2>📊 Mois par mois</h2>
-        ${S.historique.length ? `<div class="table-scroll"><table class="table-budget serree">
-          <tr class="entete-table"><td>Mois</td><td class="mont">Solde</td><td class="mont">Population</td></tr>
-          ${[...S.historique].reverse().map(h =>
-            `<tr><td>${h.nomMois} A${h.annee}</td>
-              <td class="mont ${h.solde < 0 ? 'texte-rouge' : ''}">${signe(h.solde)}</td>
-              <td class="mont">${nb(h.populationFin)} (${signe(h.soldeMigratoire, nb)})</td></tr>`).join('')}
-        </table></div>` : '<p class="note">Premier bilan à la fin du mois.</p>'}
+        <h2>Les trois chiffres qui comptent</h2>
+        <div class="ratios">
+          ${ratio('Gagné / mois', signe(solde), solde < 0)}
+          ${ratio('Jours de caisse', S.tresorerie < 0 ? '—' : Math.round(jours) + ' j', jours < 15)}
+          ${ratio('Dette', dette.toFixed(0) + ' %', dette > 100)}
+        </div>
+        <p style="margin-top:.8em"><button class="btn" id="btn-diag2">🔎 Pourquoi les gens partent ?</button></p>
       </section>
+      <section class="carte">
+        <h2>Trésorerie</h2>
+        ${graphique(S.historique.map(h => h.tresorerie), '#3F97DB', v => eur(v), S.tresorerie)}
+      </section>
+      <section class="carte">
+        <h2>Population</h2>
+        ${graphique(S.historique.map(h => h.populationFin), '#62B857', v => nb(v) + ' hab.', S.population)}
+      </section>
+      <section class="carte">
+        <h2>Cadre de vie — le détail</h2>
+        ${composantesCadre(S)}
+      </section>
+      <section class="carte">
+        <h2>⚙️ Partie</h2>
+        <p class="note">Mandat : mois ${Math.min(S.mois, CFG.MANDAT_MOIS)}/${CFG.MANDAT_MOIS}${S.tranquille ? ' · mode chill 🕊️' : ''}.</p>
+        <button class="btn-lien" id="btn-nouvelle">Abandonner et recommencer</button>
+      </section>
+    </div>`;
+  }
+
+  function ratio(nom, val, alerte) {
+    return `<div class="ratio ${alerte ? 'alerte' : ''}">
+      <span class="ratio-val">${val}</span><span class="ratio-nom">${nom}</span></div>`;
+  }
+
+  function composantesCadre(S) {
+    const comp = [
+      ['💡 Éclairage', S.cadre.eclairage], ['🛣️ Voirie', S.cadre.voirie],
+      ['🧹 Propreté', S.cadre.proprete], ['🏠 Logement', S.cadre.logement],
+      ['🏪 Commerces & services', S.cadre.proximite],
+    ];
+    return `<div class="composantes">${comp.map(([n, v]) => `
+      <div class="composante"><span class="comp-nom">${n}</span>
+        <div class="barre grande"><div class="barre-rempli ${v < 40 ? 'basse' : ''}" style="width:${Math.round(v)}%"></div></div>
+        <span class="comp-val">${Math.round(v)}</span></div>`).join('')}</div>`;
+  }
+
+  function graphique(valeurs, couleur, fmt, valActuelle) {
+    if (valeurs.length < 2) return `<p class="note">Valeur actuelle : <b>${fmt(valActuelle)}</b> — la courbe se dessine à partir du 2ᵉ mois.</p>`;
+    const W = 420, H = 120, P = 6;
+    const min = Math.min(...valeurs, 0), max = Math.max(...valeurs);
+    const y = v => H - P - (max === min ? 0.5 : (v - min) / (max - min)) * (H - 2 * P);
+    const x = i => P + i * (W - 2 * P) / (valeurs.length - 1);
+    const pts = valeurs.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    const zeroY = min < 0 ? y(0) : null;
+    const der = valeurs[valeurs.length - 1];
+    const baseY = (H - P).toFixed(1);
+    return `<svg viewBox="0 0 ${W} ${H}" class="graph" role="img" aria-label="Évolution : dernière valeur ${fmt(der)}">
+      <polygon points="${x(0).toFixed(1)},${baseY} ${pts} ${x(valeurs.length - 1).toFixed(1)},${baseY}" fill="${couleur}" opacity="0.15"/>
+      ${zeroY !== null ? `<line x1="${P}" x2="${W - P}" y1="${zeroY}" y2="${zeroY}" class="graph-zero"/>` : ''}
+      <polyline points="${pts}" fill="none" stroke="${couleur}" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="${x(valeurs.length - 1)}" cy="${y(der)}" r="4" fill="${couleur}"/>
+    </svg>
+    <p class="graph-legende">Fin du mois dernier : <b>${fmt(der)}</b> · ${valeurs.length} mois</p>`;
+  }
+
+  /* ---- 🔔 Panneau de notifications ---- */
+
+  function htmlPanneauNotifs(S) {
+    return `
+    <div class="voile-notifs" id="voile-notifs">
+      <aside class="panneau-notifs">
+        <div class="panneau-tete">
+          <h2>🔔 Notifications</h2>
+          <button class="btn-lien" id="fermer-notifs">Fermer</button>
+        </div>
+        <ul class="liste-notifs">
+          ${S.notifications.length ? S.notifications.map((n, i) => `
+            <li class="notif ${n.type === 'alerte' ? 'alerte' : ''} ${n.lu ? '' : 'non-lue'}">
+              <span class="notif-ic">${n.icone}</span>
+              <span class="notif-texte">${n.texte}<br><span class="jour-tag">J${n.jour}</span></span>
+              ${n.action ? `<button class="btn-mini btn-notif-action" data-action="${n.action}">Voir</button>` : ''}
+            </li>`).join('') : '<li class="notif"><span class="notif-texte">Rien pour l\'instant. Profite du calme, il ne durera pas.</span></li>'}
+        </ul>
+      </aside>
     </div>`;
   }
 
@@ -456,7 +495,6 @@ const UI = (() => {
     setTimeout(() => { t.classList.remove('visible'); setTimeout(() => t.remove(), 400); }, 3600);
   }
 
-  /* Tutoriel express au premier lancement */
   function modaleIntro() {
     const S = E.etat;
     modale(`
@@ -465,13 +503,12 @@ const UI = (() => {
         <li>🏗️ <b>Construis</b> pour attirer des habitants — mais chaque bâtiment coûte <b>tous les mois, pour toujours</b>.</li>
         <li>💰 <b>Garde de l'avance</b> : sous 15 jours de caisse, alerte. En négatif, 30 jours pour te rattraper.</li>
         <li>👥 <b>Retiens tes habitants</b> : si 15 % s'en vont, tu perds la ville.</li>
-        <li>📬 <b>Réponds au courrier</b> et gère les crises. L'État peut aider… avec modération.</li>
+        <li>🔔 <b>Surveille les notifs</b> : courrier, crises, alertes — tout arrive là-haut, à la cloche.</li>
       </ul>
       <div class="modale-boutons"><button class="btn" id="btn-intro-ok">C'est parti !</button></div>`, { bloquant: true });
     document.getElementById('btn-intro-ok').addEventListener('click', fermerModale);
   }
 
-  /* L'écran de projection — toujours avant de payer */
   function modaleProjection({ titre, lignesFixes = [], proj, effets = [], onConfirme, libelleOk = 'Valider' }) {
     const fJours = v => isFinite(v) ? Math.max(0, Math.round(v)) + ' j' : '—';
     modale(`
@@ -497,7 +534,6 @@ const UI = (() => {
     document.getElementById('modale-ok').addEventListener('click', () => { fermerModale(); onConfirme(); E.sauvegarder(); rendre(); });
   }
 
-  /* Courrier du maire : question à choix multiples */
   function modaleQuestion(S) {
     const q = QUESTIONS.find(x => x.id === S.questionActive);
     if (!q) return;
@@ -512,16 +548,25 @@ const UI = (() => {
             ${cout ? `<span class="opt-cout ${cout > 0 ? 'texte-vert' : ''}">${signe(cout)}</span>` : ''}
           </button>`;
         }).join('')}
+      </div>
+      <div class="modale-boutons">
+        <button class="btn-lien" id="question-plus-tard">⏳ Plus tard (le temps attendra ta réponse)</button>
       </div>`, { bloquant: true });
     modalRoot().querySelectorAll('.option-question').forEach(b => b.addEventListener('click', () => {
       const res = E.resoudreQuestion(parseInt(b.dataset.i, 10));
+      questionEnAttente = false;
       fermerModale(); E.sauvegarder(); rendre();
       if (res.note) toast(`${res.icone} ${res.note}`);
     }));
+    document.getElementById('question-plus-tard').addEventListener('click', () => {
+      questionEnAttente = true;
+      fermerModale();
+    });
   }
 
   function modaleCrise(S) {
     const c = S.criseActive;
+    if (!c) return;
     const crise = CRISES.find(x => x.id === c.criseId);
     const joursRestants = CFG.CRISE_DELAI_JOURS - (S.jour - c.jourDebut);
     modale(`
@@ -571,7 +616,7 @@ const UI = (() => {
   function modaleDiagnostic(S) {
     const d = E.calculerMigration().diagnostic;
     const causes = [
-      ['💶 Impôts trop hauts (> 18 %)', d.fiscalite, 'Redescends le taux dans l\'onglet Argent.'],
+      ['💶 Impôts trop hauts (> 18 %)', d.fiscalite, 'Redescends le taux (Business).'],
       ['🌳 Cadre de vie dégradé', d.cadreDeVie, 'Passe l\'entretien en « Soigné », construis des services.'],
       ['🏙️ Ville saturée', d.saturation, 'École, réseau d\'eau, parking : il manque de la place.'],
       ['⏳ Suites d\'événements', d.evenements, 'Ça passera — si rien d\'autre ne casse.'],
@@ -609,7 +654,10 @@ const UI = (() => {
   function brancherEvenements(S) {
     const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
 
-    on('btn-jour', () => { E.avancerJour(); E.sauvegarder(); rendre(); });
+    on('btn-jour', () => {
+      if (E.etat.questionActive) questionEnAttente = false; // le temps n'avance pas sans réponse
+      E.avancerJour(); E.sauvegarder(); rendre();
+    });
     on('btn-semaine', () => {
       for (let i = 0; i < 7; i++) {
         if (E.etat.criseActive || E.etat.questionActive || E.etat.gameOver || E.evenementDu()) break;
@@ -622,6 +670,28 @@ const UI = (() => {
     on('btn-diag', () => modaleDiagnostic(S));
     on('btn-diag2', () => modaleDiagnostic(S));
     on('btn-crise', () => modaleCrise(S));
+    on('btn-crise-carte', () => modaleCrise(S));
+    on('btn-repondre', () => modaleQuestion(S));
+    on('btn-note', () => { vueActive = vueActive === 'note' ? 'carte' : 'note'; rendre(); });
+
+    /* notifications */
+    on('btn-notifs', () => {
+      notifsOuvertes = !notifsOuvertes;
+      if (notifsOuvertes) E.marquerNotifsLues();
+      E.sauvegarder(); rendre();
+    });
+    on('fermer-notifs', () => { notifsOuvertes = false; rendre(); });
+    const voileN = document.getElementById('voile-notifs');
+    if (voileN) voileN.addEventListener('click', (e) => { if (e.target.id === 'voile-notifs') { notifsOuvertes = false; rendre(); } });
+    app().querySelectorAll('.btn-notif-action').forEach(b => b.addEventListener('click', () => {
+      notifsOuvertes = false;
+      const action = b.dataset.action;
+      if (action === 'crise') { rendre(); modaleCrise(S); }
+      else if (action === 'question') { rendre(); if (S.questionActive) modaleQuestion(S); else { vueActive = 'courrier'; rendre(); } }
+      else if (action === 'diag') { rendre(); modaleDiagnostic(S); }
+      else if (action === 'business') { vueActive = 'business'; rendre(); }
+      else rendre();
+    }));
 
     /* zoom de la carte */
     const carte = document.getElementById('carte');
@@ -727,7 +797,6 @@ const UI = (() => {
     }));
   }
 
-  /* Projection simple pour un delta mensuel */
   function projSimple(deltaMensuel) {
     const soldeAvant = E.soldeMensuel();
     const soldeApres = soldeAvant + deltaMensuel;
@@ -745,7 +814,7 @@ const UI = (() => {
     const evt = E.evenementDu();
     if (evt) return modaleEvenementDiffere(evt);
     if (S.criseActive && S.jour === S.criseActive.jourDebut) return modaleCrise(S);
-    if (S.questionActive) return modaleQuestion(S);
+    if (S.questionActive && !questionEnAttente) return modaleQuestion(S);
   }
 
   return { rendre, ecranAccueil };
