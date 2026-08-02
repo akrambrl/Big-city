@@ -41,12 +41,24 @@ La partie se sauvegarde automatiquement dans le navigateur (localStorage).
 - **Capital préfecture** : par commune.
 - **Mode « ville tranquille »** : disponible à la création — les alertes restent affichées, les fins de mandat anticipées sont désactivées.
 
+## La carte communale
+
+Le tableau de bord s'ouvre sur une **carte procédurale de la commune**, déterministe (graine = nom de la commune) et vivante :
+
+- géographie par profil : rivière et bocage (ville moyenne), massif forestier au nord (bourg rural), littoral avec plage, jetée et voiliers (station touristique) ;
+- les **équipements construits apparaissent sur la carte**, le bâti se densifie avec la population et les départs laissent des maisons grises ;
+- les **crises se matérialisent** par un marqueur pulsant à l'endroit concerné (le feu dans le massif, l'inondation sur la rivière…) ;
+- les **saisons teintent les parcelles** (blés d'été, ocres d'automne, neige en hiver) et l'état de la voirie se lit à la couleur des routes ;
+- habillage « planche d'atlas » : cartouche, échelle, rose des vents, courbes de niveau, grain de papier.
+
 ## Structure du code
 
 ```
 index.html        point d'entrée
-css/style.css     style « papier de mairie »
+css/style.css     direction artistique « atlas communal » (HUD nuit + laiton)
+fonts/            Bricolage Grotesque (titres) et Newsreader italique (récits)
 js/data.js        constantes, profils, équipements, crises, aides (les catalogues)
+js/map.js         carte communale procédurale (canvas 2D, déterministe)
 js/engine.js      moteur : budget, migration, paliers, crises, projections, sauvegarde
 js/ui.js          rendu des écrans et des modales (projection, crise, diagnostic)
 js/main.js        démarrage

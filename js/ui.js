@@ -18,14 +18,15 @@ const UI = (() => {
   function ecranAccueil() {
     app().innerHTML = `
     <div class="accueil">
-      <h1>🏛️ Big City</h1>
-      <p class="sous-titre">Monsieur le Maire, la commune vous attend.<br>
-      Chaque équipement construit coûte pour toujours. Chaque aide se paie un jour. Vous étiez prévenu.</p>
+      <p class="surtitre">République française · Atlas communal</p>
+      <h1>Big <span class="filet">City</span></h1>
+      <p class="sous-titre">Monsieur le Maire, la commune vous attend.
+      Chaque équipement construit coûte pour toujours, chaque aide se paie un jour. Vous étiez prévenu.</p>
       <div class="profils">
         ${Object.entries(PROFILS).map(([id, p]) => `
           <button class="carte-profil" data-profil="${id}">
-            <span class="profil-icone">${p.icone}</span>
-            <span class="profil-label">${p.label}</span>
+            <canvas class="mini-carte" data-profil-carte="${id}"></canvas>
+            <span class="profil-label">${p.icone} ${p.label}</span>
             <span class="profil-nom">${p.nom} — ${nb(p.population)} hab.</span>
             <span class="profil-desc">${p.desc}</span>
           </button>`).join('')}
@@ -33,6 +34,15 @@ const UI = (() => {
       <label class="tranquille"><input type="checkbox" id="mode-tranquille">
         Mode « ville tranquille » — sans condition de défaite (les alertes restent affichées)</label>
     </div>`;
+    /* aperçu cartographique de chaque profil */
+    app().querySelectorAll('.mini-carte').forEach(cv => {
+      const id = cv.dataset.profilCarte, p = PROFILS[id];
+      CarteCommune.dessiner(cv, {
+        commune: p.nom, profil: id, mois: 1, equipements: [],
+        population: p.population, populationInitiale: p.population,
+        cadre: { voirie: 70 },
+      });
+    });
     app().querySelectorAll('.carte-profil').forEach(b => b.addEventListener('click', () => {
       E.nouvellePartie(b.dataset.profil, document.getElementById('mode-tranquille').checked);
       E.sauvegarder();
@@ -56,9 +66,25 @@ const UI = (() => {
       <main class="contenu">${htmlOnglet(S)}</main>`;
 
     app().querySelectorAll('.onglet').forEach(b => b.addEventListener('click', () => { ongletActif = b.dataset.onglet; rendre(); }));
+    const carte = document.getElementById('carte');
+    if (carte) CarteCommune.dessiner(carte, S);
+    const marqueur = document.getElementById('btn-crise-carte');
+    if (marqueur) marqueur.addEventListener('click', () => modaleCrise(S));
     brancherEvenements(S);
     afficherModalesAutomatiques(S);
   }
+
+  /* la carte suit la largeur de la fenêtre */
+  let minuteurRedim = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(minuteurRedim);
+    minuteurRedim = setTimeout(() => {
+      const carte = document.getElementById('carte');
+      if (carte && E.etat) CarteCommune.dessiner(carte, E.etat);
+    }, 150);
+  });
+
+  const EMOJI_SAISON = { hiver: '❄️', printemps: '🌱', ete: '☀️', automne: '🍂' };
 
   function htmlEntete(S) {
     const jours = E.joursDeTresorerie();
@@ -67,19 +93,32 @@ const UI = (() => {
     const clTreso = S.tresorerie < 0 ? 'rouge' : jours < 15 ? 'orange' : '';
     const perte = (S.populationInitiale - S.population) / S.populationInitiale * 100;
     const clPop = perte >= 10 ? 'rouge' : perte >= 5 ? 'orange' : '';
+    const saison = E.saison();
+    const crise = S.criseActive ? CRISES.find(x => x.id === S.criseActive.criseId) : null;
+    const posC = crise ? CarteCommune.posCrise(crise.id, S.profil) : null;
     return `
-    <header class="entete">
-      <div class="titre-ligne">
-        <h1>${PROFILS[S.profil].icone} ${esc(S.commune)}</h1>
-        <div class="date-jeu">Année ${E.annee()} · ${NOMS_MOIS[E.moisCalendaire()]} · jour ${S.jourDuMois}/30
-          <span class="mandat">— mandat : mois ${Math.min(S.mois, CFG.MANDAT_MOIS)}/${CFG.MANDAT_MOIS}${S.tranquille ? ' · 🕊️ ville tranquille' : ''}</span></div>
-        <div class="controles-temps">
-          <button id="btn-jour" class="btn-temps">▶ +1 jour</button>
-          <button id="btn-semaine" class="btn-temps">⏩ +7 jours</button>
-          <button id="btn-nouvelle" class="btn-lien" title="Abandonner et recommencer">Nouvelle partie</button>
-        </div>
+    <header class="hud">
+      <h1>${esc(S.commune)}</h1>
+      <div class="date-jeu">Année ${E.annee()} · ${NOMS_MOIS[E.moisCalendaire()]} · jour ${S.jourDuMois}/30
+        <span class="mandat">— mandat : mois ${Math.min(S.mois, CFG.MANDAT_MOIS)}/${CFG.MANDAT_MOIS}${S.tranquille ? ' · 🕊️ ville tranquille' : ''}</span></div>
+      <div class="controles-temps">
+        <button id="btn-jour" class="btn-temps">▶ +1 jour</button>
+        <button id="btn-semaine" class="btn-temps">⏩ +7 jours</button>
+        <button id="btn-nouvelle" class="btn-lien" title="Abandonner et recommencer">Nouvelle partie</button>
       </div>
-      <div class="jauges">
+    </header>
+    <div class="carte-monde">
+      <canvas id="carte" role="img" aria-label="Plan de la commune de ${esc(S.commune)}"></canvas>
+      <span class="chip-carte">${EMOJI_SAISON[saison]} ${saison === 'ete' ? 'été' : saison} · ${NOMS_MOIS[E.moisCalendaire()]}, année ${E.annee()}</span>
+      <div class="cartouche">
+        <div class="surcart">Commune de</div>
+        <div class="nomcart">${esc(S.commune)}</div>
+        <div class="echelle">500 m</div>
+      </div>
+      ${crise ? `<button class="marqueur-crise" id="btn-crise-carte" title="${crise.nom} — cliquer pour décider"
+        style="left:${(posC.x * 100).toFixed(1)}%;top:${(posC.y * 100).toFixed(1)}%">${crise.icone}</button>` : ''}
+    </div>
+    <div class="jauges">
         <div class="jauge ${clTreso}"><span class="jauge-nom">Trésorerie</span>
           <span class="jauge-val">${eur(S.tresorerie)}</span>
           <span class="jauge-sub">${S.tresorerie < 0 ? '⚠ négative' : Math.round(jours) + ' jours'}</span></div>
@@ -93,8 +132,7 @@ const UI = (() => {
         <div class="jauge"><span class="jauge-nom">Solde mensuel</span>
           <span class="jauge-val ${solde < 0 ? 'texte-rouge' : ''}">${signe(solde)}</span>
           <span class="jauge-sub">fonctionnement</span></div>
-      </div>
-    </header>`;
+      </div>`;
   }
 
   function jauge100(nom, v, pref = false) {
@@ -166,11 +204,11 @@ const UI = (() => {
     <div class="grille-2">
       <section class="carte">
         <h2>Trésorerie (fin de mois)</h2>
-        ${graphique(S.historique.map(h => h.tresorerie), '#2f6fb6', v => eur(v), S.tresorerie)}
+        ${graphique(S.historique.map(h => h.tresorerie), '#7FB7E8', v => eur(v), S.tresorerie)}
       </section>
       <section class="carte">
         <h2>Population (fin de mois)</h2>
-        ${graphique(S.historique.map(h => h.populationFin), '#2e7d52', v => nb(v) + ' hab.', S.population)}
+        ${graphique(S.historique.map(h => h.populationFin), '#74C89A', v => nb(v) + ' hab.', S.population)}
       </section>
     </div>
     <section class="carte">
@@ -207,7 +245,9 @@ const UI = (() => {
     const pts = valeurs.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
     const zeroY = min < 0 ? y(0) : null;
     const der = valeurs[valeurs.length - 1];
+    const baseY = (H - P).toFixed(1);
     return `<svg viewBox="0 0 ${W} ${H}" class="graph" role="img" aria-label="Évolution : dernière valeur ${fmt(der)}">
+      <polygon points="${x(0).toFixed(1)},${baseY} ${pts} ${x(valeurs.length - 1).toFixed(1)},${baseY}" fill="${couleur}" opacity="0.13"/>
       ${zeroY !== null ? `<line x1="${P}" x2="${W - P}" y1="${zeroY}" y2="${zeroY}" class="graph-zero"/>` : ''}
       <polyline points="${pts}" fill="none" stroke="${couleur}" stroke-width="2" stroke-linejoin="round"/>
       <circle cx="${x(valeurs.length - 1)}" cy="${y(der)}" r="3.5" fill="${couleur}"/>
