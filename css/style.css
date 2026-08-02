@@ -180,6 +180,27 @@ h3 { font-size: .95rem; font-weight: 600; margin: 1em 0 .45em; color: var(--encr
   box-shadow: 0 2px 0 rgba(138, 93, 51, .25);
 }
 
+.zoom-controles {
+  position: absolute; right: 14px; bottom: 14px; z-index: 2;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.btn-zoom {
+  width: 42px; height: 42px; border-radius: 12px; cursor: pointer;
+  background: var(--creme); border: 2.5px solid var(--bord-fort);
+  font-size: 1.25rem; font-weight: 700; color: var(--encre); line-height: 1;
+  box-shadow: 0 3px 0 rgba(138, 93, 51, .35);
+}
+.btn-zoom:hover { background: #FFF4DA; }
+.btn-zoom:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(138, 93, 51, .35); }
+
+.chip-aide {
+  position: absolute; top: 12px; right: 14px; z-index: 2;
+  background: rgba(255, 255, 255, .8); color: var(--encre-2);
+  border-radius: 999px; padding: 3px 12px; font-size: .72rem; font-weight: 500;
+  pointer-events: none;
+}
+@media (max-width: 700px) { .chip-aide { display: none; } }
+
 .marqueur-crise {
   position: absolute; z-index: 3; transform: translate(-50%, -50%);
   width: 50px; height: 50px; border-radius: 50%; cursor: pointer;
@@ -301,6 +322,50 @@ h3 { font-size: .95rem; font-weight: 600; margin: 1em 0 .45em; color: var(--encr
 .btn-lien { background: none; border: none; color: var(--eau); text-decoration: underline; cursor: pointer; font-size: .86rem; padding: 4px; font-weight: 500; }
 .btn-lien:hover { color: var(--eau-ombre); }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--eau); outline-offset: 2px; }
+
+/* ---------- Presets (entretien, emprunt) ---------- */
+.presets { display: flex; gap: 10px; flex-wrap: wrap; }
+.preset {
+  flex: 1; min-width: 120px; text-align: center; cursor: pointer;
+  background: #FFFDF4; border: 2.5px solid var(--bord-fort); border-radius: 14px;
+  padding: 10px 8px; display: flex; flex-direction: column; gap: 2px;
+  box-shadow: 0 3px 0 rgba(138, 93, 51, .22);
+  transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
+}
+.preset:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--soleil); }
+.preset:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 rgba(138, 93, 51, .22); }
+.preset:disabled { opacity: .5; cursor: not-allowed; }
+.preset.actif {
+  background: linear-gradient(180deg, #FFF0CE, #FFE3AE);
+  border-color: var(--soleil); box-shadow: 0 3px 0 var(--soleil-ombre);
+}
+.preset-nom { font-weight: 700; font-size: 1rem; }
+.preset-detail { font-weight: 600; font-size: .86rem; color: var(--bois-fonce); font-variant-numeric: tabular-nums; }
+.preset-note { font-size: .74rem; color: var(--encre-3); }
+
+/* ---------- Détail repliable du budget ---------- */
+.details-budget { margin-top: .6em; }
+.details-budget summary {
+  cursor: pointer; font-weight: 600; color: var(--eau); font-size: .88rem;
+  list-style-position: inside;
+}
+.details-budget summary:hover { color: var(--eau-ombre); }
+
+/* ---------- Règles du tutoriel ---------- */
+.regles { list-style: none; display: flex; flex-direction: column; gap: 10px; margin: .8em 0; }
+.regles li { background: #FFFDF4; border: 2px solid var(--bord); border-radius: 12px; padding: 10px 14px; font-size: .95rem; }
+
+/* ---------- Toast (résultat d'une décision) ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 20px); z-index: 90;
+  background: var(--encre); color: #FFF6E3; border-radius: 14px; padding: 11px 20px;
+  font-family: var(--recit); font-style: italic; font-size: 1rem; max-width: min(540px, 90vw);
+  box-shadow: 0 8px 24px rgba(30, 60, 90, .4);
+  opacity: 0; transition: opacity .3s, transform .3s;
+  pointer-events: none;
+}
+.toast.visible { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .toast { transition: opacity .3s; transform: translate(-50%, 0); } }
 
 /* ---------- Tables ---------- */
 .table-budget { width: 100%; border-collapse: collapse; font-size: .9rem; }

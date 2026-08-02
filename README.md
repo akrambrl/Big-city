@@ -1,67 +1,64 @@
-# 🏛️ Big City — Monsieur le Maire
+# 🏛️ Big City — Deviens maire
 
-Jeu de gestion communale en français, implémentation jouable du **MODULE — Budget, fiscalité, crises & défaite**.
+Jeu de gestion communale en français, pensé pour un public **20-35 ans** : des décisions rapides, une carte vivante, zéro comptabilité imposée. Adapté du MODULE — Budget, fiscalité, crises & défaite.
 
-Vous êtes maire. Chaque équipement construit crée une dépense de fonctionnement **à vie**. Chaque aide se paie un jour. Vous étiez prévenu.
+Tu es maire. Chaque bâtiment coûte **tous les mois, pour toujours**. Chaque aide se paie un jour. Tu étais prévenu.
 
 ## Lancer le jeu
 
-Aucune dépendance, aucun build : c'est du HTML/CSS/JS pur.
+Aucune dépendance, aucun build : HTML/CSS/JS pur.
 
 ```bash
-# au choix :
 open index.html                     # double-clic suffit
-python3 -m http.server 8000         # ou servir le dossier
+# ou : python3 -m http.server 8000
 ```
 
 La partie se sauvegarde automatiquement dans le navigateur (localStorage).
 
-## Ce qui est implémenté (fidèle au module)
+## La boucle de jeu
 
-| Section du module | Implémentation |
-|---|---|
-| §1 Structure du budget | Fonctionnement (fiscalité `pop × 1 850 € × taux/12`, dotation `187 €/hab/an`, services / personnel incompressible `pop × 0,012 × 2 400 €`, énergie, entretien, dette) + section investissement séparée : 15 jours de fonctionnement sont sanctuarisés, on ne finance jamais l'un avec l'autre. |
-| §1 Le piège récurrent | Chaque équipement inscrit sa ligne d'entretien + énergie − recettes, à vie, visible dans l'onglet Budget. |
-| §1 Ratios | Solde mensuel, jours de trésorerie (< 15 j), taux d'endettement (> 100 %) — les trois, pas plus. |
-| §2 Jauges | Trésorerie, Population, Popularité, Attractivité, **Cadre de vie** (5 composantes pondérées : éclairage 20 %, voirie 25 %, propreté 20 %, logements 15 %, proximité 20 %). Pas de jauge « sécurité ». |
-| §3 Fiscalité | Taux 8–30 %, défaut 15 %, une modification par mois, application au mois suivant, effet popularité `−(Δtaux) × 1,8`, pressions migratoires fiscales aux formules du module. Le taux de crise à 26 % est une stratégie valide. |
-| §4 Migration | Calcul mensuel unique, un seul chiffre affiché, plafond ±3 %/mois, saturation `max(0, pop/capacité − 1) × 100`. |
-| §5 Aides | **État** : capital préfecture (60 → +8/mois, −3 en alerte), dotation de solidarité (35), fonds de catastrophe (50, résolution 72 h avec dégâts), avance de trésorerie (25), soutien exceptionnel (60, une fois). **Département/Région/Europe** : dossiers de subvention 50 %, ~20 j d'instruction, 75 % de succès, jamais pour une crise. **Privé** : 3 offres avec créance différée (naming J+45, exonération J+60, terrain J+90). **Emprunt** : 24/60/120 mois, `taux = 3,5 % + 2 % × endettement`, mensualité définitive, coupé au-delà de 100 %. |
-| §6 Crises | 7 crises apolitiques (feu de forêt, inondation, canicule, tempête, neige, fuite d'eau, fermeture d'usine), escalade du coût par jour d'attente, option par défaut toujours survivable, 1 crise majeure max par 30 jours, modulateurs de profil (touristique ×2 sur l'attractivité, rurale ×1,5 sur la population). |
-| §7 Défaite | **Financière** : alerte (< 15 j) → plan de redressement (30 j, investissements gelés, emprunt coupé, taux plancher 15 %, mission quotidienne rémunérée) → tutelle. **Démographique** : −5 % alerte + diagnostic → −10 % déclin → −15 % désertification. Perdre = perdre la commune, jamais la progression. |
-| §7 Diagnostic | Écran « pourquoi les gens partent » : les causes triées, la principale en tête, un conseil par cause. |
-| §8 Projection | **Avant toute décision budgétaire** (construction, taux, emprunt, budgets d'entretien) : solde, trésorerie et jours de trésorerie avant → après à 30 jours. Un joueur qui coule doit pouvoir dire « je savais ». |
-| §9 `degrader_voirie` | Seule dégradation automatique du jeu : −1,5 pt/mois max, annoncée, évitable en budgétant l'entretien. |
-| §10 Calibrage | Commune de 12 000 hab. à 15 % : solde ≈ +53 k€/mois, une médiathèque tous les ~17 mois en autofinancement. |
+1. **Avance les jours** (▶ +1 jour / ⏩ +7 jours).
+2. **📬 Le courrier du maire** tombe régulièrement : une situation du quotidien, 2-3 réponses possibles, chacune avec ses effets (façon QCM à la Destiny Eleven) — food-truck contre kebab, nid-de-poule star des réseaux, banc de Madame Rosa, sapin de Noël ou sobriété…
+3. **🚨 Les crises** frappent plus rarement mais plus fort : feu de forêt, inondation, tempête… Le coût grimpe chaque jour d'attente, l'option par défaut est toujours survivable.
+4. **🏗️ Construis** pour attirer des habitants — la projection à 30 jours s'affiche avant chaque dépense : tu sauras toujours ce que tu signes.
+5. Tiens 36 mois, garde la caisse pleine et tes habitants… ou perds la ville (jamais ta progression).
 
-## Points tranchés (§11)
+## La carte explorable
 
-- **Temps** : jeu au tour par tour — un clic = un jour, un mois de jeu = 30 jours, mandat = 36 mois (prototype). La protection hors-ligne du module (trésorerie figée à zéro, 48 h avant décompte) est sans objet ici : le temps n'avance que quand vous jouez — vous ne perdrez jamais une ville en dormant, par construction.
-- **Trésorerie** : une par commune (une seule commune dans ce prototype).
-- **Capital préfecture** : par commune.
-- **Mode « ville tranquille »** : disponible à la création — les alertes restent affichées, les fins de mandat anticipées sont désactivées.
+- **Balade-toi** : glisser à la souris ou au doigt, zoom à la molette, au pincement ou aux boutons +/−, recentrage en un clic.
+- En dézoomant, tu découvres **la région et les autres villes du jeu** : cinq villages voisins et les deux autres communes jouables, reliés par des routes.
+- La carte vit : les équipements construits y apparaissent, le bâti suit la population (les départs laissent des maisons grises), les saisons teintent les champs, l'état de la voirie colore les routes, et les crises pulsent à l'endroit concerné.
+- Géographie par profil : rivière et bocage (ville moyenne), massif forestier (bourg rural), littoral avec plage et voiliers (station touristique).
 
-## La carte communale
+## L'interface, volontairement minimale
 
-Le tableau de bord s'ouvre sur une **carte procédurale de la commune**, déterministe (graine = nom de la commune) et vivante :
+- **5 jetons** : 💰 Trésorerie (avec jours de réserve et solde), 👥 Population, ❤️ Popularité, ✨ Attractivité, 🌳 Cadre de vie.
+- **4 onglets** : 🏙️ Ma ville · 🏗️ Construire · 💶 Argent · 📜 Journal.
+- **Entretien de la ville en 3 niveaux** (Éco / Normal / Soigné) — pas de lignes budgétaires à régler.
+- **Emprunt en 3 tailles** (Petit / Moyen / Gros, 5 ans) — mensualité affichée avant de signer.
+- Le détail comptable existe pour les curieux, replié derrière « Voir le détail ».
 
-- géographie par profil : rivière et bocage (ville moyenne), massif forestier au nord (bourg rural), littoral avec plage, jetée et voiliers (station touristique) ;
-- les **équipements construits apparaissent sur la carte**, le bâti se densifie avec la population et les départs laissent des maisons grises ;
-- les **crises se matérialisent** par un marqueur pulsant à l'endroit concerné (le feu dans le massif, l'inondation sur la rivière…) ;
-- les **saisons teintent les parcelles** (blés d'été, ocres d'automne, neige en hiver) et l'état de la voirie se lit à la couleur des routes ;
-- habillage « planche d'atlas » : cartouche, échelle, rose des vents, courbes de niveau, grain de papier.
+## Sous le capot (fidèle au module de conception)
+
+- Budget fonctionnement/investissement séparés : 15 jours de dépenses sont sanctuarisés, on ne finance jamais l'un avec l'autre. Chaque équipement inscrit sa charge mensuelle à vie.
+- Fiscalité : taux communal 8-30 %, une modification par mois, application le mois suivant, effets popularité et migration (`−Δtaux × 1,8`, pressions fiscales du §3). Monter à 26 % en crise puis redescendre est une stratégie valide.
+- Migration mensuelle plafonnée à ±3 %, saturation des services (`pop/capacité − 1`), diagnostic des départs (cause principale en tête).
+- Aides : capital préfecture (60 au départ, +8/mois, aides de crise et de trésorerie), offres privées à contrepartie différée (naming J+45, exonération J+60, terrain J+90), emprunt à taux `3,5 % + 2 % × endettement`, coupé au-delà de 100 %.
+- 7 crises apolitiques avec escalade (+12 %/jour) et cooldown de 30 jours ; ~18 questions de courrier du maire, pioche sans remise, certaines saisonnières.
+- Défaites en paliers annoncés : financière (alerte < 15 j → redressement 30 j → tutelle) et démographique (−5 % → −10 % → −15 % de la population initiale). Mode « chill » sans défaite.
+- Calibrage §10 respecté : commune de 12 000 hab. à 15 % → solde ≈ +52 900 €/mois.
 
 ## Structure du code
 
 ```
 index.html        point d'entrée
-css/style.css     direction artistique « atlas communal » (HUD nuit + laiton)
-fonts/            Bricolage Grotesque (titres) et Newsreader italique (récits)
-js/data.js        constantes, profils, équipements, crises, aides (les catalogues)
-js/map.js         carte communale procédurale (canvas 2D, déterministe)
-js/engine.js      moteur : budget, migration, paliers, crises, projections, sauvegarde
-js/ui.js          rendu des écrans et des modales (projection, crise, diagnostic)
+css/style.css     habillage « city-builder » (ciel, crème, boutons 3D)
+fonts/            Fredoka (interface) et Newsreader italique (récits)
+js/data.js        constantes, profils, équipements, crises, questions, aides
+js/map.js         carte du monde explorable (canvas 2D, caméra pan/zoom, villes voisines)
+js/engine.js      moteur : budget, migration, paliers, crises, questions, projections
+js/ui.js          rendu des écrans, modales (QCM, crise, projection), toasts
 js/main.js        démarrage
 ```
 
-Le schéma SQL du §9 décrit la version serveur multi-joueurs ; ce prototype est 100 % client, l'état de jeu reprend les mêmes champs (`population_initiale`, `taux_communal`, `capital_prefecture`, `palier_alerte_fin`, journal `budget_mensuel`…) pour faciliter un portage ultérieur.
+Simplifications volontaires par rapport au module : pas de dossiers de subvention (retirés pour la lisibilité), temps au tour par tour (un clic = un jour, mandat = 36 mois), une trésorerie et un capital préfecture par commune.

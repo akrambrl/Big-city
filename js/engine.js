@@ -34,6 +34,7 @@ const Engine = (() => {
       tauxChangeCeMois: false,
       exonerationMois: 0,
 
+      niveauEntretien: 'normal',
       budgetVoirie: Math.round(pop * COEF.VOIRIE_PLEIN),
       budgetProprete: Math.round(pop * 1.0),
 
@@ -41,10 +42,13 @@ const Engine = (() => {
       emprunts: [],
       avanceTreso: null,         // { mensualite, moisRestants }
       effetsDifferes: [],        // { jour, effets?|evenement?, note?, source }
-      subventions: [],           // { equipId, jourVerdict, statut }
       offresEnCours: [],         // offres privées disponibles
       offresRefusees: [],
       prochaineOffreJour: 40 + Math.floor(Math.random() * 30),
+
+      questionActive: null,      // id de la question du courrier du maire
+      pileQuestions: [],         // pioche mélangée, retirée sans remise
+      prochaineQuestionJour: 4 + Math.floor(Math.random() * 4),
 
       criseActive: null,         // { criseId, jourDebut, coutCourant }
       derniereCriseJour: -999,
@@ -163,22 +167,13 @@ const Engine = (() => {
 
   /* ---------- Construction ---------- */
 
-  function subventionAccordee(equipId) {
-    return S.subventions.find(s => s.equipId === equipId && s.statut === 'accordee');
-  }
-
-  function coutNet(def) {
-    const sub = subventionAccordee(def.id);
-    return sub ? Math.round(def.cout * (1 - CFG.SUBVENTION_TAUX)) : def.cout;
-  }
-
   function peutConstruire(def) {
     if (S.paliers.fin === 'redressement') return { ok: false, msg: 'Investissements gelés (plan de redressement).' };
     if (!def.repetable && !def.chantier && S.equipements.some(e => e.type === def.id))
       return { ok: false, msg: 'Déjà construit.' };
     if (def.chantier === 'eclairage' && S.equipements.some(e => e.type === def.id))
       return { ok: false, msg: 'Déjà réalisé.' };
-    if (coutNet(def) > capaciteInvestissement())
+    if (def.cout > capaciteInvestissement())
       return { ok: false, msg: 'Capacité d\'investissement insuffisante (15 jours de fonctionnement sanctuarisés).' };
     return { ok: true };
   }
@@ -187,9 +182,7 @@ const Engine = (() => {
     const def = defEquip(equipId);
     const test = peutConstruire(def);
     if (!test.ok) return test;
-    const cout = coutNet(def);
-    const sub = subventionAccordee(equipId);
-    if (sub) { sub.statut = 'consommee'; S.moisCourant.recSubventions += def.cout - cout; }
+    const cout = def.cout;
     S.tresorerie -= cout;
     S.equipements.push({ type: equipId, mois: S.mois });
     if (def.chantier === 'voirie') S.cadre.voirie = 95;
@@ -198,17 +191,38 @@ const Engine = (() => {
     if (def.effets.popularite) S.popularite = clamp100(S.popularite + def.effets.popularite);
     if (def.proximite) S.cadre.proximite = clamp100(S.cadre.proximite + 6);
     const charge = def.entretien + def.energie - def.recettes;
-    log(`🏗️ ${def.nom} : ${fmtEuro(cout)}${sub ? ' (subvention déduite)' : ''}. ${charge > 0 ? `Nouvelle charge de fonctionnement : ${fmtEuro(charge)}/mois, à vie.` : charge < 0 ? `Gain de fonctionnement : ${fmtEuro(-charge)}/mois.` : ''}`);
+    log(`🏗️ ${def.nom} : ${fmtEuro(cout)}. ${charge > 0 ? `Nouvelle charge de fonctionnement : ${fmtEuro(charge)}/mois, à vie.` : charge < 0 ? `Gain de fonctionnement : ${fmtEuro(-charge)}/mois.` : ''}`);
     return { ok: true };
   }
 
-  /* ---------- Subventions (département / région / Europe) ---------- */
+  /* ---------- Entretien de la ville : trois niveaux, c'est tout ---------- */
 
-  function deposerDossier(equipId) {
-    if (S.subventions.some(s => s.equipId === equipId && (s.statut === 'instruction' || s.statut === 'accordee')))
-      return { ok: false, msg: 'Un dossier existe déjà pour cet équipement.' };
-    S.subventions.push({ equipId, jourVerdict: S.jour + CFG.SUBVENTION_DELAI_JOURS, statut: 'instruction' });
-    log(`📁 Dossier de subvention déposé pour « ${defEquip(equipId).nom} ». Verdict sous ${CFG.SUBVENTION_DELAI_JOURS} jours.`);
+  const NIVEAUX_ENTRETIEN = {
+    eco:    { facteur: 0.5, nom: 'Éco' },
+    normal: { facteur: 1.0, nom: 'Normal' },
+    soigne: { facteur: 1.6, nom: 'Soigné' },
+  };
+
+  function budgetsEntretien(niveau, pop) {
+    const f = NIVEAUX_ENTRETIEN[niveau].facteur;
+    return {
+      voirie: Math.round(pop * COEF.VOIRIE_PLEIN * f),
+      proprete: Math.round(pop * 1.0 * f),
+    };
+  }
+
+  function coutEntretien(niveau) {
+    const b = budgetsEntretien(niveau, S.population);
+    return b.voirie + b.proprete;
+  }
+
+  function reglerEntretien(niveau) {
+    if (!NIVEAUX_ENTRETIEN[niveau]) return { ok: false };
+    S.niveauEntretien = niveau;
+    const b = budgetsEntretien(niveau, S.population);
+    S.budgetVoirie = b.voirie;
+    S.budgetProprete = b.proprete;
+    log(`🧹 Entretien de la ville réglé sur « ${NIVEAUX_ENTRETIEN[niveau].nom} » (${fmtEuro(b.voirie + b.proprete)}/mois).`);
     return { ok: true };
   }
 
@@ -355,6 +369,39 @@ const Engine = (() => {
     return { ok: true };
   }
 
+  /* ---------- Courrier du maire (questions à choix multiples) ---------- */
+
+  function tirerQuestion() {
+    if (S.questionActive || S.criseActive || S.gameOver) return;
+    if (S.jour < S.prochaineQuestionJour) return;
+    const sais = saison();
+    // on repioche dans le paquet mélangé ; on saute les questions hors saison
+    for (let essais = 0; essais < QUESTIONS.length + 1; essais++) {
+      if (!S.pileQuestions.length) {
+        S.pileQuestions = QUESTIONS.map(q => q.id).sort(() => Math.random() - 0.5);
+      }
+      const id = S.pileQuestions.pop();
+      const q = QUESTIONS.find(x => x.id === id);
+      if (q.saisons && !q.saisons.includes(sais)) continue;
+      S.questionActive = id;
+      log(`📬 Courrier du maire : « ${q.texte} »`);
+      return;
+    }
+  }
+
+  function resoudreQuestion(indexOption) {
+    const q = QUESTIONS.find(x => x.id === S.questionActive);
+    if (!q) return { ok: false };
+    const opt = q.options[indexOption];
+    const effets = { ...opt.effets };
+    if (effets.tresorerie) effets.tresorerie = Math.round(effets.tresorerie * facteurPopulation());
+    appliquerEffets(effets, 'courrier du maire');
+    S.questionActive = null;
+    S.prochaineQuestionJour = S.jour + 6 + Math.floor(Math.random() * 7);
+    log(`${q.icone} ${opt.libelle} — ${opt.note}`);
+    return { ok: true, note: opt.note, icone: q.icone };
+  }
+
   /* ---------- Effets génériques ---------- */
 
   function appliquerEffets(eff, source) {
@@ -363,6 +410,7 @@ const Engine = (() => {
     if (eff.popularite) S.popularite = clamp100(S.popularite + eff.popularite);
     if (eff.attractivite) S.attractivite = clamp100(S.attractivite + eff.attractivite);
     if (eff.cadre_voirie) S.cadre.voirie = clamp100(S.cadre.voirie + eff.cadre_voirie);
+    if (eff.cadre_eclairage) S.cadre.eclairage = clamp100(S.cadre.eclairage + eff.cadre_eclairage);
     if (eff.cadre_logement) S.cadre.logement = clamp100(S.cadre.logement + eff.cadre_logement);
     if (eff.cadre_proprete) S.cadre.proprete = clamp100(S.cadre.proprete + eff.cadre_proprete);
     if (eff.capacite) S.capaciteMalus = (S.capaciteMalus || 0) + eff.capacite;
@@ -377,7 +425,8 @@ const Engine = (() => {
   /* ---------- Tick quotidien ---------- */
 
   function avancerJour() {
-    if (S.gameOver || S.criseActive) return; // une crise bloque le temps tant qu'on n'a pas tranché (ou reporté)
+    // une crise ou une question en attente bloque le temps tant qu'on n'a pas répondu
+    if (S.gameOver || S.criseActive || S.questionActive) return;
     tickInterne();
   }
 
@@ -408,19 +457,6 @@ const Engine = (() => {
     S.effetsDifferes = S.effetsDifferes.filter(e => e.jour > S.jour || e.evenement);
     // (les événements différés à choix sont présentés par l'UI via evenementDu())
 
-    // subventions : verdicts
-    for (const s of S.subventions) {
-      if (s.statut === 'instruction' && s.jourVerdict <= S.jour) {
-        if (Math.random() < CFG.SUBVENTION_SUCCES) {
-          s.statut = 'accordee';
-          log(`✅ Subvention accordée pour « ${defEquip(s.equipId).nom} » : ${Math.round(CFG.SUBVENTION_TAUX * 100)} % du coût pris en charge.`);
-        } else {
-          s.statut = 'refusee';
-          log(`❌ Dossier de subvention refusé pour « ${defEquip(s.equipId).nom} ». « Dossier incomplet », paraît-il.`);
-        }
-      }
-    }
-
     // offres privées : apparition
     if (S.jour >= S.prochaineOffreJour && S.offresEnCours.length === 0) {
       const dispo = OFFRES_PRIVEES.filter(o => !S.offresRefusees.includes(o.id) &&
@@ -436,6 +472,9 @@ const Engine = (() => {
     // crises
     escaladerCrise();
     tenterCrise();
+
+    // courrier du maire (jamais en même temps qu'une crise)
+    tirerQuestion();
 
     // paliers
     evaluerPaliers();
@@ -487,6 +526,13 @@ const Engine = (() => {
       log('🏛️ Avance de trésorerie de l\'État intégralement remboursée.');
     }
     if (S.exonerationMois > 0) S.exonerationMois--;
+
+    // l'entretien suit la population au niveau choisi
+    if (S.niveauEntretien) {
+      const b = budgetsEntretien(S.niveauEntretien, S.population);
+      S.budgetVoirie = b.voirie;
+      S.budgetProprete = b.proprete;
+    }
 
     // capital préfecture
     let regen = CFG.CAPITAL_PREF_REGEN;
@@ -680,7 +726,7 @@ const Engine = (() => {
   function projeterConstruction(equipId) {
     const def = defEquip(equipId);
     const delta = -(def.entretien + def.energie) + def.recettes;
-    return { def, cout: coutNet(def), ...projeter({ coutImmediat: coutNet(def), deltaMensuel: delta }) };
+    return { def, cout: def.cout, ...projeter({ coutImmediat: def.cout, deltaMensuel: delta }) };
   }
 
   function projeterTaux(nouveau) {
@@ -750,9 +796,11 @@ const Engine = (() => {
     get etat() { return S; },
     nouvellePartie, charger, sauvegarder, effacerSauvegarde,
     avancerJour, reporterCrise,
-    changerTaux, construire, peutConstruire, deposerDossier, subventionAccordee, coutNet,
+    changerTaux, construire, peutConstruire,
+    reglerEntretien, coutEntretien, NIVEAUX_ENTRETIEN,
     emprunter, conditionsEmprunt, mensualite, aideEtat,
     accepterOffre, refuserOffre, resoudreCrise, evenementDu, resoudreEvenement,
+    resoudreQuestion,
     faireMissionRedressement, missionRedressementDispo, joursRedressementRestants,
     recettes, depenses, totalRecettes, depensesMensuelles, soldeMensuel,
     joursDeTresorerie, tauxEndettement, encoursDette, recettesAnnuelles,
