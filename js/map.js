@@ -437,9 +437,24 @@ const CarteCommune = (() => {
     if (apresDessin) apresDessin();
   }
 
-  /* Villes voisines : cinq villages + les deux autres communes jouables */
+  /* Villes voisines. Si la partie connaît les VRAIES communes du
+     département (S.voisines), ce sont elles qu'on pose sur la carte ;
+     sinon, villages fictifs + les deux autres profils. */
   function bourgsVoisins(S) {
     const geo = geometrie(S.profil);
+    const emplacements = [...VILLAGES.map(v => ({ x: v.x, y: v.y })), ...ANCRES_JOUABLES];
+
+    if (S.voisines && S.voisines.length) {
+      return S.voisines.slice(0, emplacements.length).map((v, i) => ({
+        x: emplacements[i].x,
+        y: ajusterY(emplacements[i].y, geo),
+        nom: v.nom,
+        population: v.pop,
+        icone: v.pop >= 20000 ? '🏙️' : '⛪',
+        taille: Math.max(12, Math.min(70, Math.round(v.pop / 120))),
+      }));
+    }
+
     const bourgs = VILLAGES.map(v => {
       const rngV = mulberry32(graine(v.nom));
       return { ...v, y: ajusterY(v.y, geo), population: 400 + Math.floor(rngV() * 2600) };

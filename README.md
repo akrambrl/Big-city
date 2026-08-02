@@ -15,6 +15,10 @@ open index.html                     # double-clic suffit
 
 La partie se sauvegarde automatiquement dans le navigateur (localStorage).
 
+## Ta vraie ville
+
+Le jeu embarque **les 34 957 communes de France** (population INSEE, via geo.api.gouv.fr) : cherche la tienne avec l'autocomplétion, ou tente une commune au hasard. La population de départ est la vraie, le budget est mis à l'échelle (une médiathèque de métropole ne coûte pas le prix d'une médiathèque de village), et **les villes voisines sur la carte sont de vraies communes de ton département**. Le décor de la carte (campagne, classique, littoral) reste stylisé et se choisit au démarrage — ce n'est pas un plan réel.
+
 ## La boucle de jeu
 
 1. **Avance les jours** (▶ +1 jour / ⏩ +7 jours).

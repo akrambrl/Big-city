@@ -36,40 +36,99 @@ const UI = (() => {
 
   /* ================= ÉCRAN D'ACCUEIL ================= */
 
+  const DEPTS_LITTORAL = new Set(['06', '83', '13', '34', '30', '11', '66', '2A', '2B',
+    '17', '85', '44', '56', '29', '22', '35', '50', '14', '76', '80', '62', '59', '33', '40', '64',
+    '971', '972', '973', '974', '976']);
+
+  function suggererAmbiance(v) {
+    if (DEPTS_LITTORAL.has(v.dept)) return 'touristique';
+    if (v.pop < 3500) return 'rurale';
+    return 'moyenne';
+  }
+
   function ecranAccueil() {
+    let villeChoisie = null;
+    let ambiance = 'moyenne';
     app().innerHTML = `
     <div class="accueil">
-      <p class="surtitre">Deviens maire · Fais grandir ta ville</p>
+      <p class="surtitre">Deviens maire · De ta vraie ville</p>
       <h1>Big <span class="filet">City</span></h1>
-      <p class="sous-titre">Construis, réponds aux habitants, survis aux crises.
+      <p class="sous-titre">Les ${COMMUNES_FR.nombre.toLocaleString('fr-FR')} communes de France t'attendent — la tienne aussi.
       Chaque bâtiment coûte pour toujours, chaque aide se paie un jour. Tu étais prévenu.</p>
-      <div class="profils">
-        ${Object.entries(PROFILS).map(([id, p]) => `
-          <button class="carte-profil" data-profil="${id}">
-            <canvas class="mini-carte" data-profil-carte="${id}"></canvas>
-            <span class="profil-label">${p.icone} ${p.label}</span>
-            <span class="profil-nom">${p.nom} — ${nb(p.population)} hab.</span>
-            <span class="profil-desc">${p.desc}</span>
-          </button>`).join('')}
+      <div class="recherche-bloc">
+        <input type="search" id="recherche-ville" placeholder="🔎 Cherche ta ville… (Lyon, Guingamp, Aubervilliers…)"
+          autocomplete="off" spellcheck="false">
+        <div id="resultats-villes" class="resultats" role="listbox"></div>
+        <button id="ville-hasard" class="btn-lien">🎲 Une commune au hasard</button>
       </div>
-      <label class="tranquille"><input type="checkbox" id="mode-tranquille">
-        Mode chill — impossible de perdre (les alertes restent)</label>
+      <div id="etape-ambiance" class="etape-ambiance" hidden>
+        <p class="ville-choisie" id="ville-choisie-txt"></p>
+        <p class="note">Choisis ton décor — la carte du jeu est stylisée, pas un plan réel :</p>
+        <div class="profils" id="choix-ambiance"></div>
+        <label class="tranquille"><input type="checkbox" id="mode-tranquille">
+          Mode chill — impossible de perdre (les alertes restent)</label>
+        <p style="margin-top:1em"><button class="btn btn-grand" id="btn-demarrer"></button></p>
+      </div>
     </div>`;
-    app().querySelectorAll('.mini-carte').forEach(cv => {
-      const id = cv.dataset.profilCarte, p = PROFILS[id];
-      CarteCommune.dessiner(cv, {
-        commune: p.nom, profil: id, mois: 1, equipements: [],
-        population: p.population, populationInitiale: p.population,
-        cadre: { voirie: 70 },
+
+    const champ = document.getElementById('recherche-ville');
+    const resultats = document.getElementById('resultats-villes');
+    const etape = document.getElementById('etape-ambiance');
+
+    function afficherResultats() {
+      const villes = COMMUNES_FR.chercher(champ.value);
+      resultats.innerHTML = villes.map((v, i) =>
+        `<button class="resultat-ville" data-i="${i}" role="option">
+          <b>${esc(v.nom)}</b> <span class="badge">${esc(v.dept)}</span>
+          <span class="resultat-pop">${nb(v.pop)} hab.</span>
+        </button>`).join('');
+      resultats.querySelectorAll('.resultat-ville').forEach(b =>
+        b.addEventListener('click', () => choisir(villes[parseInt(b.dataset.i, 10)])));
+    }
+    champ.addEventListener('input', afficherResultats);
+    document.getElementById('ville-hasard').addEventListener('click', () => choisir(COMMUNES_FR.auHasard()));
+
+    function choisir(v) {
+      villeChoisie = v;
+      ambiance = suggererAmbiance(v);
+      champ.value = `${v.nom} (${v.dept})`;
+      resultats.innerHTML = '';
+      etape.hidden = false;
+      document.getElementById('ville-choisie-txt').innerHTML =
+        `🏛️ <b>${esc(v.nom)}</b> (${esc(v.dept)}) — ${nb(v.pop)} habitants, et bientôt un maire.`;
+      const de = /^[aeiouyhéèêàâîôû]/i.test(v.nom) ? 'd\'' : 'de ';
+      document.getElementById('btn-demarrer').textContent = `Devenir maire ${de}${v.nom}`;
+      const choix = document.getElementById('choix-ambiance');
+      choix.innerHTML = Object.entries(PROFILS).map(([id, p]) => `
+        <button class="carte-profil ambiance ${id === ambiance ? 'choisie' : ''}" data-profil="${id}">
+          <canvas class="mini-carte" data-profil-carte="${id}"></canvas>
+          <span class="profil-label">${p.icone} ${p.label}</span>
+        </button>`).join('');
+      choix.querySelectorAll('.mini-carte').forEach(cv => {
+        CarteCommune.dessiner(cv, {
+          commune: v.nom, profil: cv.dataset.profilCarte, mois: 1, equipements: [],
+          population: v.pop, populationInitiale: v.pop, cadre: { voirie: 70 },
+        });
       });
-    });
-    app().querySelectorAll('.carte-profil').forEach(b => b.addEventListener('click', () => {
-      E.nouvellePartie(b.dataset.profil, document.getElementById('mode-tranquille').checked);
+      choix.querySelectorAll('.carte-profil').forEach(b => b.addEventListener('click', () => {
+        ambiance = b.dataset.profil;
+        choix.querySelectorAll('.carte-profil').forEach(x => x.classList.toggle('choisie', x === b));
+      }));
+      etape.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    document.getElementById('btn-demarrer').addEventListener('click', () => {
+      if (!villeChoisie) return;
+      E.nouvellePartie(ambiance, document.getElementById('mode-tranquille').checked, {
+        nom: villeChoisie.nom, dept: villeChoisie.dept, pop: villeChoisie.pop,
+        voisines: COMMUNES_FR.voisines(villeChoisie.dept, villeChoisie.nom, 7),
+      });
       E.sauvegarder();
       vueActive = 'carte';
+      FX.son('niveau');
       rendre();
       modaleIntro();
-    }));
+    });
   }
 
   /* ================= RENDU PRINCIPAL ================= */
@@ -163,7 +222,7 @@ const UI = (() => {
     }
     if (S.paliers.fin === 'redressement') {
       morceaux.push(`<span>🟥 Redressement : ${E.joursRedressementRestants()} j restants</span>
-        ${E.missionRedressementDispo() ? `<button id="btn-mission" class="btn-mini">🗂️ Mission (+${eurCourt(CFG.MISSION_REDRESSEMENT)})</button>` : '<span class="fait">✓</span>'}`);
+        ${E.missionRedressementDispo() ? `<button id="btn-mission" class="btn-mini">🗂️ Mission (+${eurCourt(E.montantMission())})</button>` : '<span class="fait">✓</span>'}`);
     } else if (S.paliers.fin === 'alerte') {
       morceaux.push(`<span>🟧 Caisse basse (${Math.max(0, Math.round(E.joursDeTresorerie()))} j)</span>`);
     }
@@ -246,15 +305,16 @@ const UI = (() => {
       <div class="grille-cartes">
         ${EQUIPEMENTS.map(def => {
           const test = E.peutConstruire(def);
-          const charge = def.entretien + def.energie - def.recettes;
+          const dim = E.dimEquip(def);
+          const charge = dim.entretien + dim.energie - dim.recettes;
           const dejaN = S.equipements.filter(e => e.type === def.id).length;
           return `<div class="carte equip ${test.ok ? '' : 'grise'}">
             <h3>${def.icone} ${def.nom} ${dejaN ? `<span class="badge">×${dejaN}</span>` : ''}</h3>
             <p class="equip-desc">${def.desc}</p>
             <div class="equip-chiffres">
-              <span>💰 <b>${eur(def.cout)}</b></span>
+              <span>💰 <b>${eur(dim.cout)}</b></span>
               <span>${charge > 0 ? '📉' : '📈'} <b class="${charge > 0 ? 'texte-rouge' : 'texte-vert'}">${charge >= 0 ? '−' : '+'}${eur(Math.abs(charge))}/mois</b></span>
-              ${def.capacite ? `<span>👥 +${nb(def.capacite)}</span>` : ''}
+              ${dim.capacite ? `<span>👥 +${nb(dim.capacite)}</span>` : ''}
               ${def.effets.attractivite ? `<span>✨ +${def.effets.attractivite}</span>` : ''}
               ${def.effets.popularite ? `<span>❤️ +${def.effets.popularite}</span>` : ''}
             </div>
@@ -278,7 +338,8 @@ const UI = (() => {
     const c = E.conditionsEmprunt();
     const chargesEquip = S.equipements.map(e => {
       const def = E.defEquip(e.type);
-      return [def, def.entretien + def.energie - def.recettes];
+      const dim = E.dimEquip(def);
+      return [def, dim.entretien + dim.energie - dim.recettes];
     }).filter(([, net]) => net !== 0);
     const presetsEmprunt = [
       ['Petit', arrondi50k(S.population * 40)],
@@ -371,7 +432,7 @@ const UI = (() => {
           const o = OFFRES_PRIVEES.find(x => x.id === oe.id);
           return `<div class="offre">
             <p><b>${o.icone} ${o.nom}</b> — ${o.texte}</p>
-            <p>💰 <b>${eur(o.montant)}</b> tout de suite · 🎁 contrepartie surprise dans <b>${o.delai} jours</b></p>
+            <p>💰 <b>${eur(E.montantOffre(o))}</b> tout de suite · 🎁 contrepartie surprise dans <b>${o.delai} jours</b></p>
             <button class="btn btn-offre-oui" data-offre="${o.id}">Prendre l'argent</button>
             <button class="btn-lien btn-offre-non" data-offre="${o.id}">Décliner</button>
           </div>`;
@@ -386,7 +447,7 @@ const UI = (() => {
   function coutNiveau(S, facteur) {
     return Math.round(S.population * COEF.VOIRIE_PLEIN * facteur) + Math.round(S.population * 1.0 * facteur);
   }
-  function arrondi50k(v) { return Math.max(100000, Math.round(v / 50000) * 50000); }
+  function arrondi50k(v) { return Math.max(20000, Math.round(v / 10000) * 10000); }
 
   /* ---- 🏅 Note de la ville (via le badge du header) ---- */
 
@@ -837,9 +898,10 @@ const UI = (() => {
     /* Offres privées */
     app().querySelectorAll('.btn-offre-oui').forEach(b => b.addEventListener('click', () => {
       const o = OFFRES_PRIVEES.find(x => x.id === b.dataset.offre);
+      const montant = o ? E.montantOffre(o) : 0;
       E.accepterOffre(b.dataset.offre);
       FX.son('argent');
-      if (o) FX.flotteEuro('+' + eurCourt(o.montant), true);
+      if (montant) FX.flotteEuro('+' + eurCourt(montant), true);
       E.sauvegarder(); rendre();
     }));
     app().querySelectorAll('.btn-offre-non').forEach(b => b.addEventListener('click', () => {

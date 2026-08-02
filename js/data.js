@@ -43,17 +43,17 @@ const COEF = {
 
 const PROFILS = {
   rurale: {
-    nom: 'Saint-Aubin-le-Bourg', label: 'Bourg rural', icone: '🌾',
+    nom: 'Saint-Aubin-le-Bourg', label: 'Campagne', icone: '🌾',
     population: 2800, attractivite: 48, popularite: 58,
     desc: 'Petit budget, petites crises. La moindre dépense compte, mais tout est plus lent.',
   },
   moyenne: {
-    nom: 'Villeneuve-sur-Sarthe', label: 'Ville moyenne', icone: '🏘️',
+    nom: 'Villeneuve-sur-Sarthe', label: 'Classique', icone: '🏘️',
     population: 12000, attractivite: 52, popularite: 55,
     desc: 'Le profil de référence. Marges correctes, patrimoine déjà lourd à entretenir.',
   },
   touristique: {
-    nom: 'Port-Miran', label: 'Station touristique', icone: '⛱️',
+    nom: 'Port-Miran', label: 'Littoral', icone: '⛱️',
     population: 8500, attractivite: 62, popularite: 52,
     desc: 'Attractive mais exposée : les crises y coûtent cher en image, surtout en saison.',
   },

@@ -11,13 +11,15 @@ const Engine = (() => {
 
   /* ---------- Création de partie ---------- */
 
-  function nouvellePartie(profilId, tranquille) {
+  function nouvellePartie(profilId, tranquille, ville) {
     const p = PROFILS[profilId];
-    const pop = p.population;
+    const pop = ville ? ville.pop : p.population;
     S = {
       version: 1,
       profil: profilId,
-      commune: p.nom,
+      commune: ville ? ville.nom : p.nom,
+      dept: ville ? ville.dept : null,
+      voisines: ville && ville.voisines ? ville.voisines : null,
       tranquille: !!tranquille,
       jour: 1, jourDuMois: 1, mois: 1,
 
@@ -78,7 +80,7 @@ const Engine = (() => {
       gameOver: null,            // { type, titre, texte }
     };
     S.tresorerie = Math.round(depensesMensuelles() * COEF.TRESO_INIT_MOIS);
-    log(`🎉 Vous voilà maire de ${p.nom} (${fmtNb(pop)} hab.). Le conseil municipal vous souhaite « bon courage », avec un sourire en coin.`);
+    log(`🎉 Te voilà maire de ${S.commune} (${fmtNb(pop)} hab.). Le conseil municipal te souhaite « bon courage », avec un sourire en coin.`);
     log(`💶 Trésorerie de départ : ${fmtEuro(S.tresorerie)}. Taux communal : ${S.taux} %.`);
     return S;
   }
@@ -107,7 +109,7 @@ const Engine = (() => {
     if (S.exonerationMois > 0) fisc *= 0.95;
     const dotation = S.population * CFG.DOTATION_HAB_AN / 12;
     let services = S.population * COEF.SERVICES_BASE;
-    for (const e of S.equipements) services += defEquip(e.type).recettes;
+    for (const e of S.equipements) services += dimEquip(defEquip(e.type)).recettes;
     return { fiscalite: Math.round(fisc), dotation: Math.round(dotation), services: Math.round(services) };
   }
 
@@ -116,7 +118,7 @@ const Engine = (() => {
     let energie = S.population * COEF.ENERGIE_BASE;
     let entretien = S.population * COEF.ENTRETIEN_BASE + S.budgetVoirie + S.budgetProprete;
     for (const e of S.equipements) {
-      const d = defEquip(e.type);
+      const d = dimEquip(defEquip(e.type));
       energie += d.energie;
       entretien += d.entretien;
     }
@@ -136,7 +138,7 @@ const Engine = (() => {
 
   function capaciteEquipements() {
     let cap = S.populationInitiale * COEF.CAPACITE_BASE;
-    for (const e of S.equipements) cap += defEquip(e.type).capacite;
+    for (const e of S.equipements) cap += dimEquip(defEquip(e.type)).capacite;
     cap += S.capaciteMalus || 0;
     return Math.max(1, cap);
   }
@@ -150,6 +152,25 @@ const Engine = (() => {
   function capaciteInvestissement() { return Math.max(0, S.tresorerie - reserveFonctionnement()); }
 
   function defEquip(id) { return EQUIPEMENTS.find(e => e.id === id); }
+
+  /* Les équipements sont calibrés pour 12 000 hab. : on les met à
+     l'échelle de la ville réelle (une médiathèque de métropole n'est
+     pas une médiathèque de village). */
+  function echelleVille() {
+    return clamp(S.populationInitiale / 12000, 0.12, 40);
+  }
+
+  function dimEquip(def) {
+    const k = echelleVille();
+    return {
+      ...def,
+      cout: Math.max(20000, Math.round(def.cout * k / 10000) * 10000),
+      entretien: Math.round(def.entretien * k / 100) * 100,
+      energie: Math.round(def.energie * k / 100) * 100,
+      recettes: Math.round(def.recettes * k / 100) * 100,
+      capacite: Math.round(def.capacite * k / 100) * 100,
+    };
+  }
 
   /* ---------- Fiscalité ---------- */
 
@@ -176,7 +197,7 @@ const Engine = (() => {
       return { ok: false, msg: 'Déjà construit.' };
     if (def.chantier === 'eclairage' && S.equipements.some(e => e.type === def.id))
       return { ok: false, msg: 'Déjà réalisé.' };
-    if (def.cout > capaciteInvestissement())
+    if (dimEquip(def).cout > capaciteInvestissement())
       return { ok: false, msg: 'Capacité d\'investissement insuffisante (15 jours de fonctionnement sanctuarisés).' };
     return { ok: true };
   }
@@ -185,7 +206,7 @@ const Engine = (() => {
     const def = defEquip(equipId);
     const test = peutConstruire(def);
     if (!test.ok) return test;
-    const cout = def.cout;
+    const cout = dimEquip(def).cout;
     S.tresorerie -= cout;
     S.equipements.push({ type: equipId, mois: S.mois });
     if (def.chantier === 'voirie') S.cadre.voirie = 95;
@@ -282,15 +303,20 @@ const Engine = (() => {
 
   /* ---------- Offres privées ---------- */
 
+  function montantOffre(o) {
+    return Math.max(20000, Math.round(o.montant * echelleVille() / 10000) * 10000);
+  }
+
   function accepterOffre(offreId) {
     const i = S.offresEnCours.findIndex(o => o.id === offreId);
     if (i < 0) return { ok: false };
     const o = OFFRES_PRIVEES.find(x => x.id === offreId);
+    const montant = montantOffre(o);
     S.offresEnCours.splice(i, 1);
-    S.tresorerie += o.montant;
-    S.moisCourant.recSubventions += o.montant;
+    S.tresorerie += montant;
+    S.moisCourant.recSubventions += montant;
     S.effetsDifferes.push({ jour: S.jour + o.delai, evenement: o.evenement, source: o.nom });
-    log(`💼 ${o.nom} : ${fmtEuro(o.montant)} encaissés. Une créance est inscrite dans la file des effets différés (J+${o.delai}).`);
+    log(`💼 ${o.nom} : ${fmtEuro(montant)} encaissés. La contrepartie arrivera à J+${o.delai}.`);
     return { ok: true };
   }
 
@@ -303,7 +329,7 @@ const Engine = (() => {
 
   /* ---------- Crises ---------- */
 
-  function facteurPopulation() { return clamp(S.population / 12000, 0.35, 2.5); }
+  function facteurPopulation() { return clamp(S.population / 12000, 0.15, 40); }
 
   function tenterCrise() {
     if (S.criseActive || S.gameOver) return;
@@ -416,7 +442,11 @@ const Engine = (() => {
 
   function appliquerEffets(eff, source) {
     if (!eff) return;
-    if (eff.tresorerie) { S.tresorerie += eff.tresorerie; if (eff.tresorerie < 0) S.moisCourant.depExceptionnel -= eff.tresorerie; }
+    if (eff.tresorerie) {
+      const v = Math.round(eff.tresorerie * (Math.abs(eff.tresorerie) >= 100000 ? echelleVille() : 1));
+      S.tresorerie += v;
+      if (v < 0) S.moisCourant.depExceptionnel -= v;
+    }
     if (eff.popularite) S.popularite = clamp100(S.popularite + eff.popularite);
     if (eff.attractivite) S.attractivite = clamp100(S.attractivite + eff.attractivite);
     if (eff.cadre_voirie) S.cadre.voirie = clamp100(S.cadre.voirie + eff.cadre_voirie);
@@ -475,7 +505,7 @@ const Engine = (() => {
         const o = dispo[Math.floor(Math.random() * dispo.length)];
         S.offresEnCours.push({ id: o.id });
         log(`💼 Offre privée : ${o.nom} propose ${fmtEuro(o.montant)}. Rien n'est jamais gratuit.`);
-        notifier(o.icone, `${o.nom} te propose ${fmtEuro(o.montant)}. Rien n'est jamais gratuit…`, { action: 'business' });
+        notifier(o.icone, `${o.nom} te propose ${fmtEuro(montantOffre(o))}. Rien n'est jamais gratuit…`, { action: 'business' });
       }
       S.prochaineOffreJour = S.jour + 60 + Math.floor(Math.random() * 40);
     }
@@ -699,10 +729,15 @@ const Engine = (() => {
   function faireMissionRedressement() {
     if (!missionRedressementDispo()) return { ok: false };
     S.missionFaiteJour = S.jour;
-    S.tresorerie += CFG.MISSION_REDRESSEMENT;
-    S.moisCourant.recSubventions += CFG.MISSION_REDRESSEMENT;
-    log(`🗂️ Mission de redressement accomplie : +${fmtEuro(CFG.MISSION_REDRESSEMENT)}.`);
+    const gain = montantMission();
+    S.tresorerie += gain;
+    S.moisCourant.recSubventions += gain;
+    log(`🗂️ Mission de redressement accomplie : +${fmtEuro(gain)}.`);
     return { ok: true };
+  }
+
+  function montantMission() {
+    return Math.round(CFG.MISSION_REDRESSEMENT * echelleVille() / 100) * 100;
   }
 
   function defaite(type, titre, texte) {
@@ -748,7 +783,7 @@ const Engine = (() => {
   }
 
   function projeterConstruction(equipId) {
-    const def = defEquip(equipId);
+    const def = dimEquip(defEquip(equipId));
     const delta = -(def.entretien + def.energie) + def.recettes;
     return { def, cout: def.cout, ...projeter({ coutImmediat: def.cout, deltaMensuel: delta }) };
   }
@@ -891,7 +926,8 @@ const Engine = (() => {
     joursDeTresorerie, tauxEndettement, encoursDette, recettesAnnuelles,
     cadreDeVie, saturation, capaciteEquipements, capaciteInvestissement, reserveFonctionnement,
     projeterConstruction, projeterTaux, projeterEmprunt, penalitePopularite,
-    calculerMigration, moisCalendaire, saison, annee, defEquip,
+    calculerMigration, moisCalendaire, saison, annee, defEquip, dimEquip, montantMission,
+    montantOffre,
     fmtEuro, fmtNb,
   };
 })();
