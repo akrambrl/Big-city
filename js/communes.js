@@ -1,37 +1,38 @@
 /* ============================================================
    BIG CITY — Toutes les communes de France
    Source : geo.api.gouv.fr (nom, departement, population INSEE).
-   Format compact "nom|dept|population", triees par population
-   pour que la recherche classe naturellement les grandes villes.
+   Format compact "nom|dept|population[|L]" — le L final marque les
+   communes littorales (distance au trait de cote ou outre-mer),
+   triees par population pour le classement de la recherche.
    ============================================================ */
 
 const COMMUNES_FR = (() => {
   const BRUT = `Paris|75|2103778
-Marseille|13|886040
+Marseille|13|886040|L
 Lyon|69|519127
 Toulouse|31|514819
-Nice|06|357737
+Nice|06|357737|L
 Nantes|44|327734
 Montpellier|34|310240
 Strasbourg|67|293771
 Bordeaux|33|267991
 Lille|59|238246
 Rennes|35|230890
-Toulon|83|179116
+Toulon|83|179116|L
 Reims|51|177674
 Saint-Étienne|42|173136
-Le Havre|76|166687
+Le Havre|76|166687|L
 Villeurbanne|69|163684
 Dijon|21|161830
 Angers|49|159022
 Grenoble|38|156140
-Saint-Denis|974|155634
+Saint-Denis|974|155634|L
 Nîmes|30|151839
 Aix-en-Provence|13|149695
 Saint-Denis|93|149077
 Clermont-Ferrand|63|146351
 Le Mans|72|146249
-Brest|29|142346
+Brest|29|142346|L
 Tours|37|139259
 Amiens|80|136449
 Annecy|74|132117
@@ -44,7 +45,7 @@ Rouen|76|117662
 Orléans|45|116357
 Montreuil|93|111934
 Caen|14|109400
-Saint-Paul|974|108088
+Saint-Paul|974|108088|L
 Argenteuil|95|106130
 Mulhouse|68|104978
 Nancy|54|103671
@@ -59,32 +60,32 @@ Colombes|92|91053
 Poitiers|86|89916
 Aubervilliers|93|88365
 Aulnay-sous-Bois|93|87599
-Dunkerque|59|86263
+Dunkerque|59|86263|L
 Nouméa|988|85976
-Saint-Pierre|974|85038
+Saint-Pierre|974|85038|L
 Versailles|78|84095
 Courbevoie|92|82902
 Rueil-Malmaison|92|82874
-Le Tampon|974|82579
+Le Tampon|974|82579|L
 Béziers|34|81545
 Pau|64|80441
-La Rochelle|17|79851
-Cherbourg-en-Cotentin|50|78258
+La Rochelle|17|79851|L
+Cherbourg-en-Cotentin|50|78258|L
 Mérignac|33|78090
 Champigny-sur-Marne|94|78072
-Antibes|06|77637
+Antibes|06|77637|L
 Saint-Maur-des-Fossés|94|76572
-Ajaccio|2A|76320
-Fort-de-France|972|75506
-Saint-Nazaire|44|74568
-Cannes|06|74350
+Ajaccio|2A|76320|L
+Fort-de-France|972|75506|L
+Saint-Nazaire|44|74568|L
+Cannes|06|74350|L
 Noisy-le-Grand|93|72978
 Drancy|93|72390
-Mamoudzou|976|71437
+Mamoudzou|976|71437|L
 Cergy|95|70906
 Levallois-Perret|92|68092
 Issy-les-Moulineaux|92|67669
-Calais|62|67571
+Calais|62|67571|L
 Pessac|33|67339
 Colmar|68|66970
 Évry-Courcouronnes|91|66919
@@ -95,7 +96,7 @@ Clichy|92|64410
 Quimper|29|64385
 Antony|92|64263
 Bourges|18|64186
-La Seyne-sur-Mer|83|63732
+La Seyne-sur-Mer|83|63732|L
 Montauban|82|62945
 Villeneuve-d'Ascq|59|62868
 Cayenne|973|62675
@@ -105,29 +106,29 @@ Pantin|93|61929
 Villejuif|94|60183
 Chambéry|73|59964
 Niort|79|59854
-Fréjus|83|59719
+Fréjus|83|59719|L
 Neuilly-sur-Seine|92|59538
 Sarcelles|95|59173
-Saint-André|974|58885
+Saint-André|974|58885|L
 Clamart|92|58576
-Lorient|56|58329
+Lorient|56|58329|L
 Narbonne|11|57587
 Bobigny|93|56927
 Meaux|77|56905
 Maisons-Alfort|94|56799
-Hyères|83|55858
-Vannes|56|55790
+Hyères|83|55858|L
+Vannes|56|55790|L
 Beauvais|60|55550
-Saint-Louis|974|54941
+Saint-Louis|974|54941|L
 La Roche-sur-Yon|85|54849
 Chelles|77|54620
 Corbeil-Essonnes|91|54471
 Saint-Laurent-du-Maroni|973|54429
 Cholet|49|54404
-Bayonne|64|54306
+Bayonne|64|54306|L
 Fontenay-sous-Bois|94|53757
 Saint-Ouen-sur-Seine|93|53615
-Cagnes-sur-Mer|06|53354
+Cagnes-sur-Mer|06|53354|L
 Vaulx-en-Velin|69|53069
 Épinay-sur-Seine|93|52833
 Saint-Quentin|02|52813
@@ -136,26 +137,26 @@ Sevran|93|52535
 Arles|13|51811
 Massy|91|51729
 Albi|81|51290
-Les Abymes|971|51055
+Les Abymes|971|51055|L
 Gennevilliers|92|50979
 Saint-Herblain|44|50973
 Grasse|06|50970
 Bondy|93|50595
-Les Sables-d'Olonne|85|49603
+Les Sables-d'Olonne|85|49603|L
 Laval|53|49400
 Évreux|27|49360
 Saint-Priest|69|49229
 Suresnes|92|48956
-Martigues|13|48298
+Martigues|13|48298|L
 Vincennes|94|48193
-Aubagne|13|47529
-Saint-Malo|35|47439
+Aubagne|13|47529|L
+Saint-Malo|35|47439|L
 Livry-Gargan|93|47228
 Blois|41|47219
 Rosny-sous-Bois|93|47180
 La Courneuve|93|47167
 Brive-la-Gaillarde|19|47095
-Bastia|2B|46867
+Bastia|2B|46867|L
 Talence|33|46338
 Meudon|92|46334
 Montrouge|92|46324
@@ -168,11 +169,11 @@ Belfort|90|45912
 Charleville-Mézières|08|45560
 Alfortville|94|45531
 Noisy-le-Sec|93|45510
-Sète|34|45337
+Sète|34|45337|L
 Chalon-sur-Saône|71|45102
 Bagneux|92|44572
 Tarbes|65|44399
-Saint-Brieuc|22|44364
+Saint-Brieuc|22|44364|L
 Istres|13|44292
 Salon-de-Provence|13|44194
 Puteaux|92|44002
@@ -180,7 +181,7 @@ Caluire-et-Cuire|69|43597
 Rezé|44|43556
 Mantes-la-Jolie|78|43526
 Valenciennes|59|43468
-Anglet|64|43271
+Anglet|64|43271|L
 Bagnolet|93|43086
 Bron|69|42982
 Châlons-en-Champagne|51|42971
@@ -191,7 +192,7 @@ Villenave-d'Ornon|33|42545
 Castres|81|42505
 Bourg-en-Bresse|01|42372
 Gagny|93|42313
-Le Cannet|06|41938
+Le Cannet|06|41938|L
 Angoulême|16|41908
 Garges-lès-Gonesse|95|41791
 Villepinte|93|41470
@@ -203,15 +204,15 @@ Wattrelos|59|40847
 Draguignan|83|40826
 Compiègne|60|40761
 Montélimar|26|40595
-Boulogne-sur-Mer|62|40539
+Boulogne-sur-Mer|62|40539|L
 Douai|59|40250
 Marcq-en-Barœul|59|40184
 Neuilly-sur-Marne|93|39800
-Le Lamentin|972|39400
-Saint-Joseph|974|39207
+Le Lamentin|972|39400|L
+Saint-Joseph|974|39207|L
 Pontault-Combault|77|39096
-Saint-Benoît|974|38604
-La Ciotat|13|38477
+Saint-Benoît|974|38604|L
+La Ciotat|13|38477|L
 Joué-lès-Tours|37|38423
 Tremblay-en-France|93|38348
 Chartres|28|38324
@@ -224,22 +225,22 @@ Savigny-sur-Orge|91|37601
 Échirolles|38|37491
 Palaiseau|91|37471
 Romainville|93|37152
-Saint-Raphaël|83|37113
-Six-Fours-les-Plages|83|37109
-Sainte-Marie|974|37093
+Saint-Raphaël|83|37113|L
+Six-Fours-les-Plages|83|37109|L
+Sainte-Marie|974|37093|L
 Conflans-Sainte-Honorine|78|36958
 Vitrolles|13|36758
 Châtillon|92|36705
 Meyzieu|69|36687
 Athis-Mons|91|36613
-La Possession|974|36568
+La Possession|974|36568|L
 Matoury|973|36512
 Bezons|95|36434
 Haguenau|67|36391
 Creil|60|36301
 Villeneuve-Saint-Georges|94|36221
 Villefranche-sur-Saône|69|36172
-Saint-Leu|974|36163
+Saint-Leu|974|36163|L
 Châtenay-Malabry|92|35825
 Saint-Chamond|42|35646
 Sainte-Geneviève-des-Bois|91|35438
@@ -252,7 +253,7 @@ Schiltigheim|67|34708
 Trappes|78|34689
 Les Mureaux|78|34632
 Houilles|78|33983
-Le Port|974|33969
+Le Port|974|33969|L
 Marignane|13|33692
 Romans-sur-Isère|26|33464
 Villiers-sur-Marne|94|33162
@@ -266,8 +267,8 @@ Montigny-le-Bretonneux|78|32465
 Nogent-sur-Marne|94|32455
 Aix-les-Bains|73|32406
 Épinal|88|32251
-Saint-Laurent-du-Var|06|32172
-Koungou|976|32156
+Saint-Laurent-du-Var|06|32172|L
+Koungou|976|32156|L
 Pontoise|95|31970
 Bègles|33|31831
 Plaisir|78|31811
@@ -286,10 +287,10 @@ Savigny-le-Temple|77|31148
 Cambrai|59|31134
 Cachan|94|31103
 Châtellerault|86|31003
-Baie-Mahault|971|30924
+Baie-Mahault|971|30924|L
 Viry-Châtillon|91|30838
 Le Chesnay-Rocquencourt|78|30689
-Menton|06|30604
+Menton|06|30604|L
 Chatou|78|30598
 Malakoff|92|30557
 La Garenne-Colombes|92|30197
@@ -299,7 +300,7 @@ Draveil|91|30098
 Liévin|62|30063
 Villiers-le-Bel|95|30053
 Vandœuvre-lès-Nancy|54|29942
-Agde|34|29939
+Agde|34|29939|L
 Décines-Charpieu|69|29877
 Saint-Cloud|92|29855
 Faaa|987|29826
@@ -310,7 +311,7 @@ Fresnes|94|29528
 Saint-Étienne-du-Rouvray|76|29518
 Ermont|95|29489
 Clichy-sous-Bois|93|29354
-Vallauris|06|29259
+Vallauris|06|29259|L
 Périgueux|24|29055
 Sotteville-lès-Rouen|76|29003
 Bois-Colombes|92|28909
@@ -322,19 +323,19 @@ Montfermeil|93|28703
 Vanves|92|28622
 Saint-Sébastien-sur-Loire|44|28596
 Orvault|44|28534
-Dieppe|76|28496
+Dieppe|76|28496|L
 Soissons|02|28046
 Yerres|91|27906
 Illkirch-Graffenstaden|67|27872
 Sucy-en-Brie|94|27764
-Le Gosier|971|27757
+Le Gosier|971|27757|L
 Rambouillet|78|27724
 Remire-Montjoly|973|27723
 Gonesse|95|27707
 Païta|988|27609
 Blagnac|31|27604
 Taverny|95|27593
-La Teste-de-Buch|33|27566
+La Teste-de-Buch|33|27566|L
 Bussy-Saint-Georges|77|27498
 Champs-sur-Marne|77|27451
 Limeil-Brévannes|94|27406
@@ -352,13 +353,13 @@ Cenon|33|26834
 Brétigny-sur-Orge|91|26658
 Papeete|987|26654
 Lunel|34|26623
-La Garde|83|26476
+La Garde|83|26476|L
 Élancourt|78|26365
 Saumur|49|26241
 Vertou|44|26227
 Aurillac|15|26214
 Eaubonne|95|26211
-Biarritz|64|26206
+Biarritz|64|26206|L
 Miramas|13|26203
 Muret|31|26079
 Castelnau-le-Lez|34|26058
@@ -372,7 +373,7 @@ Hénin-Beaumont|62|25688
 Brunoy|91|25643
 Cavaillon|84|25636
 Saint-Ouen-l'Aumône|95|25578
-Sainte-Suzanne|974|25551
+Sainte-Suzanne|974|25551|L
 Alençon|61|25490
 Saintes|17|25363
 Le Mont-Dore|988|25303
@@ -385,32 +386,32 @@ Libourne|33|25036
 Eysines|33|24825
 Kourou|973|24824
 Montbéliard|25|24672
-Petit-Bourg|971|24665
+Petit-Bourg|971|24665|L
 Orly|94|24658
 Laon|02|24220
-Frontignan|34|24136
+Frontignan|34|24136|L
 Le Kremlin-Bicêtre|94|24110
 Couëron|44|24103
 Fontenay-aux-Roses|92|24070
 Montgeron|91|24022
 Beaupréau-en-Mauges|49|23989
 Rodez|12|23981
-Sainte-Anne|971|23973
+Sainte-Anne|971|23973|L
 Les Lilas|93|23843
 Dole|39|23840
-La Valette-du-Var|83|23719
+La Valette-du-Var|83|23719|L
 Dammarie-les-Lys|77|23559
 Olivet|45|23507
 Hérouville-Saint-Clair|14|23470
-Rochefort|17|23460
+Rochefort|17|23460|L
 Combs-la-Ville|77|23350
-Lanester|56|23263
+Lanester|56|23263|L
 Roissy-en-Brie|77|23229
 Tassin-la-Demi-Lune|69|23200
 Saint-Jean-de-Braye|45|23147
 Deuil-la-Barre|95|23099
 Maisons-Laffitte|78|23093
-Le Moule|971|23014
+Le Moule|971|23014|L
 Vélizy-Villacoublay|78|23011
 Challans|85|22943
 Saint-Dizier|52|22858
@@ -449,9 +450,9 @@ Montmorency|95|21763
 Montigny-lès-Metz|57|21718
 Sainte-Foy-lès-Lyon|69|21692
 Morsang-sur-Orge|91|21667
-Mandelieu-la-Napoule|06|21640
+Mandelieu-la-Napoule|06|21640|L
 Gardanne|13|21597
-Le Robert|972|21553
+Le Robert|972|21553|L
 Lagny-sur-Marne|77|21461
 Allauch|13|21443
 Bruay-la-Buissière|62|21424
@@ -469,11 +470,11 @@ Bourg-la-Reine|92|21019
 Villeneuve-le-Roi|94|21000
 Carquefou|44|20921
 Sceaux|92|20884
-Concarneau|29|20845
+Concarneau|29|20845|L
 Chaumont|52|20827
 Lingolsheim|67|20826
 Carrières-sous-Poissy|78|20825
-Coudekerque-Branche|59|20787
+Coudekerque-Branche|59|20787|L
 Wasquehal|59|20726
 Halluin|59|20715
 La Chapelle-sur-Erdre|44|20690
@@ -490,10 +491,10 @@ La Celle-Saint-Cloud|78|20460
 Mitry-Mory|77|20456
 Chilly-Mazarin|91|20443
 Beaune|21|20352
-Lannion|22|20315
+Lannion|22|20315|L
 Fougères|35|20307
 L'Isle-sur-la-Sorgue|84|20244
-Grande-Synthe|59|20239
+Grande-Synthe|59|20239|L
 Mont-Saint-Aignan|76|20165
 Sarreguemines|57|20143
 Cahors|46|20050
@@ -507,17 +508,17 @@ Vence|06|19917
 Macouria|973|19899
 Chevilly-Larue|94|19826
 Ronchin|59|19787
-Mougins|06|19782
+Mougins|06|19782|L
 Bruz|35|19683
 Lisieux|14|19645
 Sélestat|67|19589
-La Crau|83|19556
+La Crau|83|19556|L
 Pertuis|84|19548
 Le Mée-sur-Seine|77|19527
-Schœlcher|972|19478
+Schœlcher|972|19478|L
 Saint-Lô|50|19471
 Villefontaine|38|19445
-Royan|17|19425
+Royan|17|19425|L
 Vitré|35|19365
 Juvisy-sur-Orge|91|19292
 Saint-Fons|69|19285
@@ -525,24 +526,24 @@ Saint-Dié-des-Vosges|88|19251
 Moulins|03|19206
 Sorgues|84|19006
 Brie-Comte-Robert|77|19003
-Ploemeur|56|18872
+Ploemeur|56|18872|L
 Riom|63|18820
 Meylan|38|18770
 Cesson-Sévigné|35|18761
-Pornic|44|18745
+Pornic|44|18745|L
 Chennevières-sur-Marne|94|18710
 Louviers|27|18705
 Mauges-sur-Loire|49|18695
-Lamentin|971|18628
+Lamentin|971|18628|L
 Faches-Thumesnil|59|18619
 Hem|59|18582
 Bischheim|67|18558
 Le Puy-en-Velay|43|18540
-Sanary-sur-Mer|83|18538
+Sanary-sur-Mer|83|18538|L
 Cognac|16|18532
 Moissy-Cramayel|77|18511
 Bry-sur-Marne|94|18503
-Châteauneuf-les-Martigues|13|18455
+Châteauneuf-les-Martigues|13|18455|L
 Éragny-sur-Oise|95|18436
 Le Pontet|84|18386
 Romorantin-Lanthenay|41|18373
@@ -551,8 +552,8 @@ Bonneuil-sur-Marne|94|18270
 Lunéville|54|18262
 Moorea-Maiao|987|18201
 Bagnols-sur-Cèze|30|18112
-Ducos|972|18105
-Hendaye|64|18102
+Ducos|972|18105|L
+Hendaye|64|18102|L
 Pontarlier|25|18067
 Soisy-sous-Montmorency|95|18008
 Saint-Égrève|38|17986
@@ -564,26 +565,26 @@ Saint-Maximin-la-Sainte-Baume|83|17896
 Limay|78|17885
 Jouy-le-Moutier|95|17854
 Brignoles|83|17850
-Dzaoudzi|976|17831
+Dzaoudzi|976|17831|L
 Cluses|74|17795
 Balma|31|17772
 Garches|92|17743
-Sainte-Rose|971|17700
-Capesterre-Belle-Eau|971|17684
+Sainte-Rose|971|17700|L
+Capesterre-Belle-Eau|971|17684|L
 Segré-en-Anjou Bleu|49|17667
 Ambarès-et-Lagrave|33|17644
-Villeneuve-Loubet|06|17548
+Villeneuve-Loubet|06|17548|L
 L'Isle-d'Abeau|38|17515
 Chamalières|63|17509
 Vire Normandie|14|17457
 Avion|62|17435
 Yutz|57|17391
-Lattes|34|17351
+Lattes|34|17351|L
 Marmande|47|17328
 Boissy-Saint-Léger|94|17325
 Sallanches|74|17319
 Saran|45|17316
-Fécamp|76|17313
+Fécamp|76|17313|L
 Annonay|07|17274
 Lamballe-Armor|22|17241
 Viroflay|78|17237
@@ -593,9 +594,9 @@ Montceau-les-Mines|71|17064
 Firminy|42|17060
 Saint-Cyr-sur-Loire|37|17029
 Le Pré-Saint-Gervais|93|16993
-La Baule-Escoublac|44|16912
+La Baule-Escoublac|44|16912|L
 Verdun|55|16890
-Guérande|44|16804
+Guérande|44|16804|L
 Les Clayes-sous-Bois|78|16804
 Saint-Jean-de-la-Ruelle|45|16768
 Loire-Authion|49|16765
@@ -607,7 +608,7 @@ Lons-le-Saunier|39|16618
 Bois-d'Arcy|78|16586
 Château-Gontier-sur-Mayenne|53|16584
 Châteaurenard|13|16545
-Mauguio|34|16522
+Mauguio|34|16522|L
 Les Herbiers|85|16521
 Orsay|91|16498
 Pamiers|09|16473
@@ -618,8 +619,8 @@ Coulommiers|77|16374
 Landerneau|29|16363
 Trélazé|49|16333
 Verneuil-sur-Seine|78|16280
-Saint-Joseph|972|16258
-Morne-à-l'Eau|971|16228
+Saint-Joseph|972|16258|L
+Morne-à-l'Eau|971|16228|L
 Saint-Julien-en-Genevois|74|16222
 Gaillac|81|16162
 Saint-Leu-la-Forêt|95|16138
@@ -635,12 +636,12 @@ Le Bourget|93|15925
 Lucé|28|15921
 Hennebont|56|15910
 Saint-Pierre-des-Corps|37|15898
-Fos-sur-Mer|13|15862
-Dembeni|976|15848
-Biscarrosse|40|15836
+Fos-sur-Mer|13|15862|L
+Dembeni|976|15848|L
+Biscarrosse|40|15836|L
 Hayange|57|15806
-Port-de-Bouc|13|15802
-Le François|972|15778
+Port-de-Bouc|13|15802|L
+Le François|972|15778|L
 Toul|54|15768
 Saint-Just-Saint-Rambert|42|15764
 Vendôme|41|15758
@@ -653,11 +654,11 @@ Francheville|69|15604
 Fontainebleau|77|15583
 Le Vésinet|78|15554
 Wittenheim|68|15553
-Guipavas|29|15538
+Guipavas|29|15538|L
 Wattignies|59|15525
-Montivilliers|76|15478
+Montivilliers|76|15478|L
 Elbeuf|76|15474
-Roquebrune-sur-Argens|83|15442
+Roquebrune-sur-Argens|83|15442|L
 Tarascon|13|15396
 Bouc-Bel-Air|13|15381
 Castanet-Tolosan|31|15317
@@ -674,20 +675,20 @@ Haubourdin|59|15074
 Lognes|77|15074
 Saint-Brice-sous-Forêt|95|15063
 Verrières-le-Buisson|91|15057
-Pointe-à-Pitre|971|15040
+Pointe-à-Pitre|971|15040|L
 Arnouville|95|15023
 Saint-Avertin|37|14999
 Woippy|57|14967
 Romilly-sur-Seine|10|14959
 La Flèche|72|14947
 Illzach|68|14923
-Saint-Jean-de-Luz|64|14857
+Saint-Jean-de-Luz|64|14857|L
 Montargis|45|14825
 Carrières-sur-Seine|78|14791
 Fameck|57|14788
 Laxou|54|14771
 Dinan|22|14764
-Sainte-Marie|972|14756
+Sainte-Marie|972|14756|L
 Saint-Avold|57|14755
 Le Raincy|93|14735
 Saint-Gilles|30|14734
@@ -697,16 +698,16 @@ Saint-Orens-de-Gameville|31|14646
 Pontivy|56|14640
 Mahina|987|14623
 Bar-le-Duc|55|14607
-Ollioules|83|14568
+Ollioules|83|14568|L
 Montesson|78|14549
-Saint-Brevin-les-Pins|44|14541
+Saint-Brevin-les-Pins|44|14541|L
 Bois-Guillaume|76|14539
 Saint-Maurice|94|14506
 Saint-Paul-lès-Dax|40|14481
-L'Étang-Salé|974|14464
+L'Étang-Salé|974|14464|L
 Saint-Genis-Pouilly|01|14432
 Flers|61|14432
-Plérin|22|14425
+Plérin|22|14425|L
 Valenton|94|14406
 Canteleu|76|14402
 Billère|64|14384
@@ -717,15 +718,15 @@ Crépy-en-Valois|60|14351
 Castelsarrasin|82|14343
 Montataire|60|14257
 Chenôve|21|14244
-Auray|56|14207
+Auray|56|14207|L
 Pont-à-Mousson|54|14190
 Hautmont|59|14152
 Saint-Martin-de-Crau|13|14145
 Morangis|91|14129
-Sainte-Maxime|83|14118
+Sainte-Maxime|83|14118|L
 Roncq|59|14075
 Audincourt|25|14071
-Douarnenez|29|14068
+Douarnenez|29|14068|L
 Pirae|987|14068
 Fontenay-le-Comte|85|14059
 Juvignac|34|14055
@@ -733,10 +734,10 @@ Lys-lez-Lannoy|59|14050
 Bollène|84|14024
 Lieusaint|77|14017
 Belleville-en-Beaujolais|69|14016
-Bandraboua|976|13989
+Bandraboua|976|13989|L
 Ostwald|67|13946
-Saint-François|971|13942
-Tsingoni|976|13934
+Saint-François|971|13942|L
+Tsingoni|976|13934|L
 Vaires-sur-Marne|77|13931
 Méru|60|13897
 Thouars|79|13891
@@ -754,10 +755,10 @@ Gex|01|13627
 Lons|64|13606
 Taiarapu-Est|987|13602
 Amilly|45|13582
-Plouzané|29|13567
+Plouzané|29|13567|L
 Argentan|61|13527
 Gien|45|13459
-Plougastel-Daoulas|29|13434
+Plougastel-Daoulas|29|13434|L
 Genas|69|13421
 Moissac|82|13419
 Tulle|19|13401
@@ -774,24 +775,24 @@ Lourdes|65|13266
 Seclin|59|13261
 Val-de-Reuil|27|13245
 Saint-André-lez-Lille|59|13233
-Canet-en-Roussillon|66|13227
+Canet-en-Roussillon|66|13227|L
 Anzin|59|13183
 Autun|71|13172
 Les Ponts-de-Cé|49|13149
 Villeneuve-lès-Avignon|30|13148
-Outreau|62|13138
+Outreau|62|13138|L
 Graulhet|81|13129
-Saint-Hilaire-de-Riez|85|13074
-Petite-Île|974|13067
+Saint-Hilaire-de-Riez|85|13074|L
+Petite-Île|974|13067|L
 Tergnier|02|13045
 Auriol|13|13037
-Bras-Panon|974|13012
+Bras-Panon|974|13012|L
 Noyon|60|12971
 Betton|35|12964
-Tarnos|40|12957
+Tarnos|40|12957|L
 Guéret|23|12955
 Fonsorbes|31|12954
-Berck|62|12951
+Berck|62|12951|L
 Amboise|37|12937
 Yzeure|03|12897
 Nemours|77|12889
@@ -799,12 +800,12 @@ Mayenne|53|12883
 Châteaudun|28|12830
 Moret-Loing-et-Orvanne|77|12810
 Saint-André-les-Vergers|10|12806
-Pornichet|44|12800
+Pornichet|44|12800|L
 Paea|987|12756
 Comines|59|12731
 Aubergenville|78|12723
 Chambray-lès-Tours|37|12720
-Andernos-les-Bains|33|12710
+Andernos-les-Bains|33|12710|L
 Châlette-sur-Loing|45|12677
 Mèze|34|12669
 Bayeux|14|12659
@@ -821,19 +822,19 @@ Solliès-Pont|83|12521
 Granville|50|12510
 Brignais|69|12503
 L'Isle-Adam|95|12493
-Saint-Avé|56|12470
-Quimperlé|29|12469
+Saint-Avé|56|12470|L
+Quimperlé|29|12469|L
 Mende|48|12464
 Aubenas|07|12416
 Pont-du-Château|63|12412
 Gisors|27|12410
 Pont-Sainte-Maxence|60|12361
-Guidel|56|12338
+Guidel|56|12338|L
 Sablé-sur-Sarthe|72|12326
 Oissel-sur-Seine|76|12317
 Le Chambon-Feugerolles|42|12314
 Vernouillet|28|12310
-Cogolin|83|12301
+Cogolin|83|12301|L
 Châteaubriant|44|12260
 Creutzwald|57|12254
 Harnes|62|12247
@@ -849,25 +850,25 @@ Saint-Gaudens|31|12139
 Ferney-Voltaire|01|12094
 Craponne|69|12084
 Onet-le-Château|12|12080
-Saint-Cyprien|66|12068
+Saint-Cyprien|66|12068|L
 La Motte-Servolex|73|12067
 Cernay|68|12057
 Mios|33|12043
-Roquebrune-Cap-Martin|06|12037
+Roquebrune-Cap-Martin|06|12037|L
 Florange|57|12035
 Barentin|76|12022
 Septèmes-les-Vallons|13|11995
 Marly|59|11995
 Saint-Pierre-du-Perray|91|11993
 Vedène|84|11974
-Valbonne|06|11939
+Valbonne|06|11939|L
 Ifs|14|11937
-Beausoleil|06|11936
+Beausoleil|06|11936|L
 Villepreux|78|11931
 Dammartin-en-Goële|77|11907
-Le Relecq-Kerhuon|29|11897
+Le Relecq-Kerhuon|29|11897|L
 Talant|21|11896
-Rivière-Salée|972|11829
+Rivière-Salée|972|11829|L
 Somain|59|11766
 Papara|987|11743
 Hœnheim|67|11742
@@ -877,7 +878,7 @@ Pacé|35|11703
 Dugny|93|11700
 Arpajon|91|11698
 Vauvert|30|11671
-Saint-Cyr-sur-Mer|83|11658
+Saint-Cyr-sur-Mer|83|11658|L
 Villecresnes|94|11647
 Sassenage|38|11646
 Bruay-sur-l'Escaut|59|11644
@@ -889,25 +890,25 @@ Saint-Germain-lès-Arpajon|91|11623
 Méricourt|62|11619
 Pia|66|11615
 Épinay-sous-Sénart|91|11611
-Rivière-Pilote|972|11604
+Rivière-Pilote|972|11604|L
 Ancenis-Saint-Géréon|44|11600
 Chauny|02|11596
 Nœux-les-Mines|62|11590
 Bolbec|76|11590
 Maizières-lès-Metz|57|11580
-Les Avirons|974|11536
-Ploufragan|22|11507
-La Hague|50|11484
+Les Avirons|974|11536|L
+Ploufragan|22|11507|L
+La Hague|50|11484|L
 Pontchâteau|44|11474
 Vaux-le-Pénil|77|11474
 Saverne|67|11460
-La Trinité|972|11454
+La Trinité|972|11454|L
 Fourmies|59|11449
-Pamandzi|976|11442
+Pamandzi|976|11442|L
 Yvetot|76|11438
 Enghien-les-Bains|95|11432
 Biganos|33|11431
-Gravelines|59|11430
+Gravelines|59|11430|L
 Gaillard|74|11423
 Saint-Junien|87|11415
 Dourdan|91|11415
@@ -926,19 +927,19 @@ Guebwiller|68|11243
 Guilherand-Granges|07|11235
 Cesson|77|11222
 Chassieu|69|11208
-Porto-Vecchio|2A|11198
+Porto-Vecchio|2A|11198|L
 Issoudun|36|11159
-Sada|976|11156
+Sada|976|11156|L
 Riorges|42|11139
 Chevigny-Saint-Sauveur|21|11108
-Arcachon|33|11092
+Arcachon|33|11092|L
 Ville-d'Avray|92|11089
 Pélissanne|13|11085
 Le Taillan-Médoc|33|11073
 Villeneuve-Tolosane|31|11044
 Doué-en-Anjou|49|11029
 La Chapelle-Saint-Mesmin|45|11017
-Mouans-Sartoux|06|11015
+Mouans-Sartoux|06|11015|L
 Croissy-sur-Seine|78|11013
 Wambrechies|59|11012
 Thouaré-sur-Loire|44|11004
@@ -954,13 +955,13 @@ Fondettes|37|10954
 Vétraz-Monthoux|74|10949
 Saint-Saulve|59|10947
 Trets|13|10946
-Le Pradet|83|10933
+Le Pradet|83|10933|L
 Tarare|69|10893
-Saint-Martin-Boulogne|62|10888
+Saint-Martin-Boulogne|62|10888|L
 Orthez|64|10881
 Brissac Loire Aubance|49|10878
 Amnéville|57|10875
-Villeneuve-lès-Maguelone|34|10872
+Villeneuve-lès-Maguelone|34|10872|L
 Chanteloup-les-Vignes|78|10861
 Passy|74|10856
 Annœullin|59|10847
@@ -969,7 +970,7 @@ Teva I Uta|987|10837
 Igny|91|10833
 Déville-lès-Rouen|76|10802
 Erstein|67|10790
-Dinard|35|10772
+Dinard|35|10772|L
 Tinqueux|51|10771
 Bondoufle|91|10767
 Boulazac Isle Manoire|24|10759
@@ -977,12 +978,12 @@ Bora-Bora|987|10758
 Allonnes|72|10739
 Beaumont|63|10728
 Épinay-sur-Orge|91|10722
-Étaples|62|10710
+Étaples|62|10710|L
 Oloron-Sainte-Marie|64|10684
 Parempuyre|33|10672
 Léognan|33|10670
 Chantepie|35|10670
-Urrugne|64|10661
+Urrugne|64|10661|L
 Saint-Barthélemy|977|10660
 Wittelsheim|68|10645
 Mainvilliers|28|10629
@@ -990,8 +991,8 @@ Voisins-le-Bretonneux|78|10624
 Héricourt|70|10621
 Vieux-Condé|59|10617
 Port-Jérôme-sur-Seine|76|10617
-Argelès-sur-Mer|66|10616
-La Trinité|06|10602
+Argelès-sur-Mer|66|10616|L
+La Trinité|06|10602|L
 Treillières|44|10600
 Chantilly|60|10591
 La Londe-les-Maures|83|10584
@@ -1001,7 +1002,7 @@ Longuenesse|62|10548
 Charvieu-Chavagneux|38|10547
 Seysses|31|10539
 Limoux|11|10532
-Biot|06|10511
+Biot|06|10511|L
 Pernes-les-Fontaines|84|10504
 Valentigney|25|10501
 Brumath|67|10499
@@ -1011,45 +1012,45 @@ La Riche|37|10487
 Portes-lès-Valence|26|10477
 Caudebec-lès-Elbeuf|76|10476
 Saint-Gély-du-Fesc|34|10472
-Marck|62|10467
-Cabestany|66|10465
+Marck|62|10467|L
+Cabestany|66|10465|L
 Divonne-les-Bains|01|10464
 Aubière|63|10459
 Auterive|31|10456
 Thorigny-sur-Marne|77|10440
-Fouesnant|29|10436
+Fouesnant|29|10436|L
 Andrézieux-Bouthéon|42|10425
 Miribel|01|10395
 Blain|44|10376
 Aizenay|85|10365
 Lézignan-Corbières|11|10343
-Gignac-la-Nerthe|13|10343
+Gignac-la-Nerthe|13|10343|L
 Fuveau|13|10337
 Gerzat|63|10335
 Mondeville|14|10331
 Serris|77|10326
 Oignies|62|10323
-Saint-Esprit|972|10322
+Saint-Esprit|972|10322|L
 Arue|987|10322
 Pfastatt|68|10314
-Borgo|2B|10311
+Borgo|2B|10311|L
 Apatou|973|10306
 Feyzin|69|10304
 Villebon-sur-Yvette|91|10291
 Sainte-Savine|10|10289
 Buxerolles|86|10289
 Marly|57|10286
-Bandrele|976|10282
+Bandrele|976|10282|L
 La Ferté-sous-Jouarre|77|10254
 Cabriès|13|10240
 Beaumont-sur-Oise|95|10232
-Le Beausset|83|10219
-Carentan-les-Marais|50|10218
-Ouangani|976|10203
+Le Beausset|83|10219|L
+Carentan-les-Marais|50|10218|L
+Ouangani|976|10203|L
 Hitiaa O Te Ra|987|10196
 Couzeix|87|10195
 Lillers|62|10193
-Saint-Claude|971|10177
+Saint-Claude|971|10177|L
 Courrières|62|10176
 Ploërmel|56|10163
 Jeumont|59|10160
@@ -1071,7 +1072,7 @@ Grigny-sur-Rhône|69|10030
 Saint-Loubès|33|10027
 Lambesc|13|10024
 Pont-Audemer|27|10023
-La Farlède|83|10014
+La Farlède|83|10014|L
 Neuville-en-Ferrain|59|10002
 Loudéac|22|9987
 Méry-sur-Oise|95|9983
@@ -1085,7 +1086,7 @@ Bourg-de-Péage|26|9921
 Lançon-Provence|13|9915
 Saint-Max|54|9913
 Saint-Amand-Montrond|18|9899
-Saint-Laurent-de-la-Salanque|66|9898
+Saint-Laurent-de-la-Salanque|66|9898|L
 Saint-Lys|31|9892
 Carmaux|81|9872
 Ézanville|95|9858
@@ -1103,7 +1104,7 @@ Mézidon Vallée d'Auge|14|9766
 Bernay|27|9765
 Revel|31|9762
 Bondues|59|9747
-Aytré|17|9746
+Aytré|17|9746|L
 Montigny-en-Gohelle|62|9743
 Cosne-Cours-sur-Loire|58|9733
 Saint-Barthélemy-d'Anjou|49|9720
@@ -1114,9 +1115,9 @@ Grand-Santi|973|9668
 Saint-Doulchard|18|9647
 Aucamville|31|9623
 Saint-Jean-d'Illac|33|9616
-Pérols|34|9615
+Pérols|34|9615|L
 Crosne|91|9610
-Gros-Morne|972|9610
+Gros-Morne|972|9610|L
 Lesquin|59|9600
 Saint-Rémy-de-Provence|13|9599
 Aire-sur-la-Lys|62|9598
@@ -1125,7 +1126,7 @@ Maripasoula|973|9579
 Nort-sur-Erdre|44|9570
 Darnétal|76|9566
 Saint-Jean-le-Blanc|45|9562
-Séné|56|9554
+Séné|56|9554|L
 Bures-sur-Yvette|91|9548
 Savenay|44|9543
 Redon|35|9542
@@ -1133,8 +1134,8 @@ L'Isle-Jourdain|32|9537
 Leers|59|9521
 Albert|80|9521
 Ville-la-Grand|74|9514
-Petit-Caux|76|9513
-Elne|66|9511
+Petit-Caux|76|9513|L
+Elne|66|9511|L
 Vallet|44|9495
 Quincy-sous-Sénart|91|9477
 Clermont-l'Hérault|34|9461
@@ -1144,11 +1145,11 @@ Arques|62|9431
 Landivisiau|29|9426
 Dombasle-sur-Meurthe|54|9424
 Luçon|85|9417
-Basse-Terre|971|9417
+Basse-Terre|971|9417|L
 Sallaumines|62|9414
 Guichen|35|9412
-Sainte-Luce|972|9410
-Carqueiranne|83|9408
+Sainte-Luce|972|9410|L
+Carqueiranne|83|9408|L
 Saint-Philbert-de-Grand-Lieu|44|9400
 Belley|01|9388
 Magny-les-Hameaux|78|9386
@@ -1175,11 +1176,11 @@ Le Crès|34|9226
 Lifou|988|9225
 Valréas|84|9224
 Dardilly|69|9221
-Ouistreham|14|9212
-Sarzeau|56|9212
+Ouistreham|14|9212|L
+Sarzeau|56|9212|L
 Beuvry|62|9189
 Ussel|19|9187
-Capbreton|40|9184
+Capbreton|40|9184|L
 Le Teich|33|9180
 Launaguet|31|9173
 Scionzier|74|9162
@@ -1198,29 +1199,29 @@ Escaudain|59|9039
 Irigny|69|9034
 Morières-lès-Avignon|84|9019
 Joigny|89|9016
-Quéven|56|8991
+Quéven|56|8991|L
 Saint-Paul-Trois-Châteaux|26|8981
 Cornebarrieu|31|8978
 Pibrac|31|8977
 Veauche|42|8975
 Quetigny|21|8971
-Boucau|64|8968
+Boucau|64|8968|L
 Cébazat|63|8953
 Meulan-en-Yvelines|78|8950
 Bellerive-sur-Allier|03|8943
 Velaux|13|8941
 Epagny Metz-Tessy|74|8925
-Chirongui|976|8920
-Gonfreville-l'Orcher|76|8916
+Chirongui|976|8920|L
+Gonfreville-l'Orcher|76|8916|L
 Roquevaire|13|8915
 Entraigues-sur-la-Sorgue|84|8913
 Les Angles|30|8908
 Longvic|21|8896
 Le Thor|84|8882
 Chartres-de-Bretagne|35|8880
-Périgny|17|8877
+Périgny|17|8877|L
 Bessancourt|95|8869
-Saint-Jean-de-Monts|85|8868
+Saint-Jean-de-Monts|85|8868|L
 Gouvieux|60|8867
 Nangis|77|8867
 Pithiviers|45|8856
@@ -1228,7 +1229,7 @@ Golbey|88|8832
 Gretz-Armainvilliers|77|8825
 Monistrol-sur-Loire|43|8823
 Ombrée d'Anjou|49|8813
-Le Portel|62|8768
+Le Portel|62|8768|L
 Sarlat-la-Canéda|24|8763
 La Chapelle-d'Armentières|59|8754
 Les Hauts-d'Anjou|49|8751
@@ -1238,8 +1239,8 @@ Wingles|62|8720
 Beauzelle|31|8713
 Lempdes|63|8709
 Chamonix-Mont-Blanc|74|8705
-Soustons|40|8701
-Aigues-Mortes|30|8699
+Soustons|40|8701|L
+Aigues-Mortes|30|8699|L
 L'Île-Saint-Denis|93|8696
 Artigues-près-Bordeaux|33|8687
 Plabennec|29|8686
@@ -1260,12 +1261,12 @@ Marcoussis|91|8618
 Aulnoye-Aymeries|59|8612
 Crolles|38|8609
 Ergué-Gabéric|29|8606
-Puget-sur-Argens|83|8602
+Puget-sur-Argens|83|8602|L
 Roussillon|38|8595
-Le Grau-du-Roi|30|8588
-Sérignan|34|8588
-Saint-Renan|29|8577
-Port-Saint-Louis-du-Rhône|13|8573
+Le Grau-du-Roi|30|8588|L
+Sérignan|34|8588|L
+Saint-Renan|29|8577|L
+Port-Saint-Louis-du-Rhône|13|8573|L
 Mauléon|79|8573
 Chantonnay|85|8557
 Sautron|44|8555
@@ -1286,10 +1287,10 @@ Unieux|42|8514
 La Salvetat-Saint-Gilles|31|8511
 Saint-Vallier|71|8508
 Theix-Noyalo|56|8500
-Talmont-Saint-Hilaire|85|8492
-Le Marin|972|8486
-Pont-l'Abbé|29|8484
-Le Vauclin|972|8483
+Talmont-Saint-Hilaire|85|8492|L
+Le Marin|972|8486|L
+Pont-l'Abbé|29|8484|L
+Le Vauclin|972|8483|L
 Éguilles|13|8479
 Onnaing|59|8479
 Ballan-Miré|37|8477
@@ -1297,17 +1298,17 @@ Hirson|02|8469
 Reignier-Ésery|74|8464
 Pérenchies|59|8455
 Groslay|95|8453
-Trégueux|22|8450
+Trégueux|22|8450|L
 Saint-Aubin-lès-Elbeuf|76|8443
-La Grande-Motte|34|8440
+La Grande-Motte|34|8440|L
 Bassens|33|8435
 Vaucresson|92|8432
 Pignan|34|8431
 Gennes-Val-de-Loire|49|8429
 Venelles|13|8418
-Larmor-Plage|56|8418
-Marseillan|34|8414
-Trignac|44|8397
+Larmor-Plage|56|8418|L
+Marseillan|34|8414|L
+Trignac|44|8397|L
 Orchies|59|8396
 Saint-Claude|39|8386
 Taiarapu-Ouest|987|8371
@@ -1315,33 +1316,33 @@ Feurs|42|8367
 Noyal-Châtillon-sur-Seiche|35|8359
 Marguerittes|30|8346
 Bouaye|44|8343
-Saint-Gilles-Croix-de-Vie|85|8333
+Saint-Gilles-Croix-de-Vie|85|8333|L
 Carbon-Blanc|33|8331
 Coutances|50|8321
 Bihorel|76|8316
 Saint-Pierre-lès-Elbeuf|76|8306
-Chiconi|976|8295
-Tonnay-Charente|17|8289
-Harfleur|76|8289
+Chiconi|976|8295|L
+Tonnay-Charente|17|8289|L
+Harfleur|76|8289|L
 Tournan-en-Brie|77|8274
-Guilers|29|8268
-Bandol|83|8267
+Guilers|29|8268|L
+Bandol|83|8267|L
 Brunstatt-Didenheim|68|8259
 Évron|53|8252
 Meximieux|01|8247
-Téteghem-Coudekerque-Village|59|8247
+Téteghem-Coudekerque-Village|59|8247|L
 Thuir|66|8243
-Pégomas|06|8240
+Pégomas|06|8240|L
 Malemort|19|8239
 Souffelweyersheim|67|8239
 Charnay-lès-Mâcon|71|8227
 Donges|44|8219
 Mazingarbe|62|8217
-Petit-Canal|971|8212
+Petit-Canal|971|8212|L
 Salles|33|8208
 Vern-sur-Seiche|35|8207
 Anse|69|8206
-La Colle-sur-Loup|06|8202
+La Colle-sur-Loup|06|8202|L
 Paray-Vieille-Poste|91|8202
 Ballancourt-sur-Essonne|91|8191
 Le Mesnil-Esnard|76|8177
@@ -1351,7 +1352,7 @@ Chinon|37|8144
 Questembert|56|8133
 Val de Briey|54|8130
 Coulaines|72|8121
-Cavalaire-sur-Mer|83|8121
+Cavalaire-sur-Mer|83|8121|L
 Talange|57|8120
 Rochefort-du-Gard|30|8117
 Sorbiers|42|8116
@@ -1387,12 +1388,12 @@ Jouy-en-Josas|78|7981
 Libercourt|62|7973
 Le Soler|66|7942
 Saint-Affrique|12|7941
-Langueux|22|7939
+Langueux|22|7939|L
 Billy-Montigny|62|7937
 Houplines|59|7921
 Geispolsheim|67|7919
 Mordelles|35|7911
-Lège-Cap-Ferret|33|7909
+Lège-Cap-Ferret|33|7909|L
 Contes|06|7897
 Ustaritz|64|7897
 Romagnat|63|7894
@@ -1403,10 +1404,10 @@ Gargenville|78|7869
 Saint-Pierre-en-Faucigny|74|7865
 Publier|74|7864
 Sisteron|04|7850
-Cappelle-la-Grande|59|7839
+Cappelle-la-Grande|59|7839|L
 Claix|38|7836
 Coulounieix-Chamiers|24|7832
-Bompas|66|7832
+Bompas|66|7832|L
 Courcelles-lès-Lens|62|7830
 Baillargues|34|7829
 Malzéville|54|7820
@@ -1414,7 +1415,7 @@ Corte|2B|7819
 Moirans|38|7818
 Neuville-sur-Saône|69|7812
 Montreuil-Juigné|49|7808
-Lagord|17|7802
+Lagord|17|7802|L
 Terville|57|7801
 Pézenas|34|7797
 La Verpillière|38|7786
@@ -1432,22 +1433,22 @@ Lys-Haut-Layon|49|7748
 Saint-Rémy-lès-Chevreuse|78|7747
 Noisy-le-Roi|78|7713
 Les Andelys|27|7706
-Mtsamboro|976|7705
+Mtsamboro|976|7705|L
 Beynes|78|7704
 Saint-Marcellin|38|7700
 Les Avenières Veyrins-Thuellin|38|7698
 Émerainville|77|7690
 Machecoul-Saint-Même|44|7689
-Bidart|64|7689
+Bidart|64|7689|L
 Pluvigner|56|7682
 Falaise|14|7680
 Langon|33|7674
 Bain-de-Bretagne|35|7674
-Mimizan|40|7673
+Mimizan|40|7673|L
 Villars|42|7664
 L'Aigle|61|7663
 Bourg-Saint-Andéol|07|7661
-Biguglia|2B|7642
+Biguglia|2B|7642|L
 Hasparren|64|7626
 Tullins|38|7624
 Saint-Prix|95|7612
@@ -1458,10 +1459,10 @@ Parentis-en-Born|40|7586
 Auxonne|21|7581
 Gérardmer|88|7581
 Saint-Péray|07|7580
-Sausset-les-Pins|13|7574
+Sausset-les-Pins|13|7574|L
 Lesneven|29|7566
 Wissembourg|67|7566
-Goyave|971|7565
+Goyave|971|7565|L
 Rosporden|29|7550
 Faverges-Seythenex|74|7545
 Saint-Apollinaire|21|7544
@@ -1471,24 +1472,24 @@ Sucé-sur-Erdre|44|7539
 Châteaubourg|35|7533
 Jaunay-Marigny|86|7528
 Saint-Jean-de-Maurienne|73|7524
-Céret|66|7521
+Céret|66|7521|L
 Villard-Bonnot|38|7509
-Crozon|29|7499
+Crozon|29|7499|L
 Huningue|68|7487
 Saint-Berthevin|53|7479
 Saint-Germain-lès-Corbeil|91|7469
-Pordic|22|7454
+Pordic|22|7454|L
 Clisson|44|7452
 Toulouges|66|7450
-Fabrègues|34|7447
+Fabrègues|34|7447|L
 Rethel|08|7444
 Saujon|17|7440
-Chaumes-en-Retz|44|7440
+Chaumes-en-Retz|44|7440|L
 Saint-Didier-au-Mont-d'Or|69|7435
 Langres|52|7421
 Soisy-sur-Seine|91|7418
 Yssingeaux|43|7415
-Trois-Rivières|971|7415
+Trois-Rivières|971|7415|L
 Carhaix-Plouguer|29|7412
 Lagnieu|01|7411
 Ruelle-sur-Touvre|16|7408
@@ -1504,7 +1505,7 @@ Guipry-Messac|35|7354
 Fresnes-sur-Escaut|59|7354
 Digoin|71|7353
 Pontcharra|38|7350
-Paimpol|22|7341
+Paimpol|22|7341|L
 Lanton|33|7337
 Perros-Guirec|22|7336
 Villemoisson-sur-Orge|91|7332
@@ -1516,19 +1517,19 @@ Moyeuvre-Grande|57|7311
 Courdimanche|95|7311
 Saint-Christol-lez-Alès|30|7310
 Nanteuil-lès-Meaux|77|7308
-Gourbeyre|971|7307
+Gourbeyre|971|7307|L
 Ensisheim|68|7306
 Roquefort-les-Pins|06|7292
 Le Pian-Médoc|33|7292
 Vizille|38|7292
 La Ferté-Saint-Aubin|45|7284
-Montoir-de-Bretagne|44|7282
+Montoir-de-Bretagne|44|7282|L
 Le Mesnil-Saint-Denis|78|7276
 Bourg-Saint-Maurice|73|7270
-Salazie|974|7268
+Salazie|974|7268|L
 Waziers|59|7266
-La Gaude|06|7265
-Saint-Pée-sur-Nivelle|64|7264
+La Gaude|06|7265|L
+Saint-Pée-sur-Nivelle|64|7264|L
 Vendargues|34|7262
 Divatte-sur-Loire|44|7252
 Orgeval|78|7252
@@ -1537,25 +1538,25 @@ Colombelles|14|7243
 Mably|42|7233
 Herbignac|44|7224
 Chauray|79|7221
-Les Trois-Bassins|974|7221
-Caudan|56|7206
-Kervignac|56|7204
+Les Trois-Bassins|974|7221|L
+Caudan|56|7206|L
+Kervignac|56|7204|L
 Templeuve-en-Pévèle|59|7202
 Écouen|95|7202
 Sainte-Pazanne|44|7201
 Verneuil d'Avre et d'Iton|27|7193
 Aubigny-Les Clouzeaux|85|7191
-Labenne|40|7183
+Labenne|40|7183|L
 Montauroux|83|7183
-Entre-Deux|974|7176
-Pleurtuit|35|7167
+Entre-Deux|974|7176|L
+Pleurtuit|35|7167|L
 Égly|91|7166
 Saint-Ismier|38|7165
 Eckbolsheim|67|7157
 Ugine|73|7154
 Wissous|91|7151
-Trégunc|29|7148
-Balaruc-les-Bains|34|7139
+Trégunc|29|7148|L
+Balaruc-les-Bains|34|7139|L
 La Talaudière|42|7133
 Eyguières|13|7119
 Bagnères-de-Bigorre|65|7114
@@ -1567,23 +1568,23 @@ Péronne|80|7090
 Auby|59|7083
 Aulnoy-lez-Valenciennes|59|7080
 Villemandeur|45|7078
-Vieux-Habitants|971|7077
+Vieux-Habitants|971|7077|L
 Notre-Dame-de-Bondeville|76|7071
 Grandchamp-des-Fontaines|44|7062
 Leforest|62|7060
 Barr|67|7057
 Brech|56|7052
 Manduel|30|7044
-Binic-Étables-sur-Mer|22|7041
+Binic-Étables-sur-Mer|22|7041|L
 Jurançon|64|7040
 Épône|78|7031
 Uckange|57|7021
 Sathonay-Camp|69|7019
 Trévoux|01|7013
-Saint-André-des-Eaux|44|7013
+Saint-André-des-Eaux|44|7013|L
 Soultz-Haut-Rhin|68|7012
 Chauvigny|86|7007
-Sainte-Adresse|76|7004
+Sainte-Adresse|76|7004|L
 Castelnau-d'Estrétefonds|31|7003
 Saint-Rambert-d'Albon|26|7001
 Nérac|47|6992
@@ -1598,14 +1599,14 @@ Cognin|73|6954
 Morteau|25|6953
 Luisant|28|6945
 Houdain|62|6945
-Saint-Pol-de-Léon|29|6941
-La Plaine-des-Palmistes|974|6936
+Saint-Pol-de-Léon|29|6941|L
+La Plaine-des-Palmistes|974|6936|L
 Plédran|22|6933
-Bourbourg|59|6931
+Bourbourg|59|6931|L
 Sénas|13|6925
 Escalquens|31|6924
 Jacou|34|6924
-Lucciana|2B|6923
+Lucciana|2B|6923|L
 Lésigny|77|6923
 Changé|72|6911
 Cadaujac|33|6909
@@ -1616,7 +1617,7 @@ Montluel|01|6895
 Saint-Maurice-l'Exil|38|6889
 Castries|34|6883
 Acigné|35|6874
-Carnoux-en-Provence|13|6873
+Carnoux-en-Provence|13|6873|L
 Veigné|37|6865
 Auvers-sur-Oise|95|6863
 Le Controis-en-Sologne|41|6860
@@ -1640,18 +1641,18 @@ Loos-en-Gohelle|62|6799
 Poussan|34|6797
 Beuvrages|59|6796
 Douvaine|74|6796
-Ploeren|56|6790
+Ploeren|56|6790|L
 Liancourt|60|6785
 Saint-Jean-d'Angély|17|6784
 Brindas|69|6775
 Divion|62|6766
-Puilboreau|17|6765
+Puilboreau|17|6765|L
 Le Cateau-Cambrésis|59|6764
 Saint-Julien-les-Villas|10|6760
 Merville|31|6760
-Cambo-les-Bains|64|6760
-Plouguerneau|29|6755
-Moëlan-sur-Mer|29|6749
+Cambo-les-Bains|64|6760|L
+Plouguerneau|29|6755|L
+Moëlan-sur-Mer|29|6749|L
 Meyreuil|13|6747
 Gaillon|27|6746
 Itteville|91|6746
@@ -1670,29 +1671,29 @@ Fronton|31|6671
 Meung-sur-Loire|45|6670
 Luxeuil-les-Bains|70|6663
 Montech|82|6663
-Cassis|13|6661
+Cassis|13|6661|L
 Chalonnes-sur-Loire|49|6659
 Thônes|74|6654
-Châtelaillon-Plage|17|6653
+Châtelaillon-Plage|17|6653|L
 Gignac|34|6651
 Elven|56|6651
 La Bassée|59|6650
 Le Lavandou|83|6646
 Grenay|62|6644
 Honfleur|14|6640
-Gigean|34|6639
+Gigean|34|6639|L
 Saint-Pierre-d'Oléron|17|6633
 Laneuveville-devant-Nancy|54|6630
 Lentilly|69|6623
 Sury-le-Comtal|42|6621
 Canohès|66|6616
 Loriol-sur-Drôme|26|6614
-La Penne-sur-Huveaune|13|6605
+La Penne-sur-Huveaune|13|6605|L
 Montauban-de-Bretagne|35|6597
 Bouffémont|95|6593
 Ceyrat|63|6592
 Chasse-sur-Rhône|38|6588
-Furiani|2B|6585
+Furiani|2B|6585|L
 Labarthe-sur-Lèze|31|6585
 Héric|44|6585
 Labruguière|81|6584
@@ -1700,11 +1701,11 @@ Bouchemaine|49|6580
 Gémenos|13|6579
 Longuenée-en-Anjou|49|6571
 Thoiry|01|6569
-Le Lorrain|972|6566
+Le Lorrain|972|6566|L
 Longué-Jumelles|49|6564
 Saint-Juéry|81|6564
 Saint-Jean-Bonnefonds|42|6563
-Sainte-Rose|974|6557
+Sainte-Rose|974|6557|L
 Le Mené|22|6556
 Champigneulles|54|6551
 Rives|38|6549
@@ -1717,7 +1718,7 @@ L'Arbresle|69|6537
 Saint-Alban|31|6534
 Cormontreuil|51|6534
 La Mulatière|69|6534
-Ondres|40|6533
+Ondres|40|6533|L
 Bon-Encontre|47|6530
 Lezoux|63|6528
 Gueugnon|71|6528
@@ -1725,18 +1726,18 @@ Brioude|43|6527
 Estaires|59|6525
 Neuves-Maisons|54|6524
 Chatuzange-le-Goubet|26|6523
-Ploudalmézeau|29|6522
+Ploudalmézeau|29|6522|L
 Ambert|63|6517
 Limours|91|6517
 Marignier|74|6507
-Les Trois-Îlets|972|6507
+Les Trois-Îlets|972|6507|L
 La Montagne|44|6505
 Changé|53|6502
-Gouesnou|29|6501
-Eu|76|6499
+Gouesnou|29|6501|L
+Eu|76|6499|L
 Champagne-sur-Seine|77|6497
 Calvisson|30|6486
-Arès|33|6482
+Arès|33|6482|L
 Longpont-sur-Orge|91|6482
 Villers-Saint-Paul|60|6480
 Le Perray-en-Yvelines|78|6480
@@ -1749,13 +1750,13 @@ Cuincy|59|6467
 Saint-Florent-sur-Cher|18|6463
 Entrelacs|73|6461
 Saint-Laurent-Blangy|62|6459
-Plonéour-Lanvern|29|6452
+Plonéour-Lanvern|29|6452|L
 Sciez|74|6447
 Louhans-Châteaurenaud|71|6446
 Péronnas|01|6444
 Frouard|54|6444
 Bonsecours|76|6442
-M'Tsangamouji|976|6432
+M'Tsangamouji|976|6432|L
 Saint-André-de-Sangonis|34|6427
 Courthézon|84|6426
 La Tronche|38|6424
@@ -1774,7 +1775,7 @@ Mehun-sur-Yèvre|18|6380
 Izon|33|6374
 Baud|56|6367
 Givet|08|6364
-Plescop|56|6362
+Plescop|56|6362|L
 Arpajon-sur-Cère|15|6361
 Ambilly|74|6355
 Nandy|77|6350
@@ -1782,7 +1783,7 @@ Villemur-sur-Tarn|31|6345
 Bons-en-Chablais|74|6343
 Le Mesnil-le-Roi|78|6332
 Saint-Cyr-au-Mont-d'Or|69|6327
-Dompierre-sur-Mer|17|6315
+Dompierre-sur-Mer|17|6315|L
 Champagne-au-Mont-d'Or|69|6311
 Thyez|74|6309
 Avallon|89|6305
@@ -1804,9 +1805,9 @@ Noyal-sur-Vilaine|35|6269
 Solliès-Toucas|83|6269
 Châtenoy-le-Royal|71|6267
 Huahine|987|6263
-Pluneret|56|6262
+Pluneret|56|6262|L
 Saint-Pryvé-Saint-Mesmin|45|6256
-Wimereux|62|6256
+Wimereux|62|6256|L
 Homécourt|54|6254
 Mer|41|6250
 Jassans-Riottier|01|6247
@@ -1825,7 +1826,7 @@ Livarot-Pays-d'Auge|14|6207
 Bruguières|31|6202
 Horbourg-Wihr|68|6199
 Saint-Quentin-Fallavier|38|6189
-Bouéni|976|6189
+Bouéni|976|6189|L
 Saint-Symphorien-d'Ozon|69|6186
 Prades-le-Lez|34|6184
 Menucourt|95|6184
@@ -1833,16 +1834,16 @@ Thue et Mue|14|6182
 Saint-Genest-Lerpt|42|6181
 Saint-Marcel-lès-Valence|26|6176
 Feytiat|87|6176
-Saint-Mitre-les-Remparts|13|6175
-Octeville-sur-Mer|76|6172
+Saint-Mitre-les-Remparts|13|6175|L
+Octeville-sur-Mer|76|6172|L
 Petite-Rosselle|57|6171
 Franqueville-Saint-Pierre|76|6171
 Mallemort|13|6166
 Behren-lès-Forbach|57|6166
 Le Blanc|36|6164
 Aurec-sur-Loire|43|6164
-Marennes-Hiers-Brouage|17|6163
-Le Diamant|972|6161
+Marennes-Hiers-Brouage|17|6163|L
+Le Diamant|972|6161|L
 Saint-Denis-lès-Bourg|01|6160
 Fayence|83|6157
 Oraison|04|6155
@@ -1851,10 +1852,10 @@ Jonage|69|6144
 Dourges|62|6139
 Vendenheim|67|6137
 Quint-Fonsegrives|31|6133
-Palavas-les-Flots|34|6133
-Bouillante|971|6127
-Le Barcarès|66|6109
-Blainville-sur-Orne|14|6106
+Palavas-les-Flots|34|6133|L
+Bouillante|971|6127|L
+Le Barcarès|66|6109|L
+Blainville-sur-Orne|14|6106|L
 Saint-Cannat|13|6097
 Sainte-Sigolène|43|6097
 Ostricourt|59|6097
@@ -1878,7 +1879,7 @@ Mondonville|31|6060
 Vaison-la-Romaine|84|6058
 Mortagne-sur-Sèvre|85|6057
 Luc-la-Primaube|12|6046
-Le Castellet|83|6040
+Le Castellet|83|6040|L
 Jouars-Pontchartrain|78|6039
 Pavilly|76|6029
 Marly-la-Ville|95|6022
@@ -1888,7 +1889,7 @@ Vexin-sur-Epte|27|6015
 Saint-Girons|09|6008
 Donzère|26|6008
 Clapiers|34|6006
-Saint-Mandrier-sur-Mer|83|6000
+Saint-Mandrier-sur-Mer|83|6000|L
 Noyelles-Godault|62|5994
 Fontenay-Trésigny|77|5994
 La Verrière|78|5994
@@ -1904,10 +1905,10 @@ Naintré|86|5964
 Roost-Warendin|59|5956
 Saint-Denis-de-Pile|33|5955
 Blanzy|71|5955
-Vias|34|5952
-Loon-Plage|59|5952
+Vias|34|5952|L
+Loon-Plage|59|5952|L
 Villennes-sur-Seine|78|5952
-Ciboure|64|5951
+Ciboure|64|5951|L
 Quiévrechain|59|5949
 Sains-en-Gohelle|62|5948
 Fleury-sur-Orne|14|5941
@@ -1919,7 +1920,7 @@ Nègrepelisse|82|5917
 Tain-l'Hermitage|26|5915
 Fontenilles|31|5906
 Saint-Pierre-d'Irube|64|5900
-Saint-André-de-la-Roche|06|5896
+Saint-André-de-la-Roche|06|5896|L
 Bricquebec-en-Cotentin|50|5893
 Aixe-sur-Vienne|87|5890
 Raon-l'Étape|88|5886
@@ -1932,13 +1933,13 @@ Lesparre-Médoc|33|5872
 Douvrin|62|5867
 Rabastens|81|5867
 Montpon-Ménestérol|24|5866
-Riantec|56|5865
+Riantec|56|5865|L
 La Wantzenau|67|5864
 Gond-Pontouvre|16|5862
 Oberhausbergen|67|5857
 Le Poinçonnet|36|5855
 Seloncourt|25|5854
-Port-la-Nouvelle|11|5852
+Port-la-Nouvelle|11|5852|L
 Fismes|51|5850
 Chambourcy|78|5847
 Boé|47|5846
@@ -1946,7 +1947,7 @@ Ludres|54|5843
 Saint-Martin-lez-Tatinghem|62|5843
 Ventabren|13|5839
 Bessan|34|5838
-Arradon|56|5835
+Arradon|56|5835|L
 Garéoult|83|5835
 Kembs|68|5834
 Roye|80|5833
@@ -1959,7 +1960,7 @@ Annezin|62|5825
 Montmorillon|86|5821
 Briec|29|5816
 Buc|78|5816
-Nieul-sur-Mer|17|5811
+Nieul-sur-Mer|17|5811|L
 Lannemezan|65|5811
 Saint-Just-en-Chaussée|60|5810
 Mouroux|77|5810
@@ -1967,14 +1968,14 @@ Viry|74|5809
 Le Barp|33|5806
 Bédarieux|34|5804
 Algrange|57|5802
-Roquefort-la-Bédoule|13|5798
+Roquefort-la-Bédoule|13|5798|L
 Sarrians|84|5792
 Saint-Laurent-de-Mure|69|5791
-Calvi|2B|5788
+Calvi|2B|5788|L
 Vergèze|30|5788
 Fenouillet|31|5784
 Simiane-Collongue|13|5780
-Oye-Plage|62|5780
+Oye-Plage|62|5780|L
 Fegersheim|67|5780
 Wasselonne|67|5780
 Magny-en-Vexin|95|5779
@@ -1983,17 +1984,17 @@ Peypin|13|5771
 Erdre-en-Anjou|49|5771
 Thizy-les-Bourgs|69|5771
 Saint-Hilaire-du-Harcouët|50|5770
-Pointe-Noire|971|5762
+Pointe-Noire|971|5762|L
 Mazé-Milon|49|5761
-Ensuès-la-Redonne|13|5757
+Ensuès-la-Redonne|13|5757|L
 Canéjan|33|5756
 Plouay|56|5755
 Saint-Gervais-les-Bains|74|5755
 Melle|79|5752
 Doullens|80|5751
 Flines-lez-Raches|59|5745
-Lacanau|33|5739
-La Cadière-d'Azur|83|5739
+Lacanau|33|5739|L
+La Cadière-d'Azur|83|5739|L
 Coursan|11|5737
 Orgères|35|5732
 Beaucouzé|49|5732
@@ -2002,20 +2003,20 @@ Gournay-en-Bray|76|5723
 Piolenc|84|5718
 Revin|08|5716
 Épernon|28|5715
-Saint-Michel-Chef-Chef|44|5714
+Saint-Michel-Chef-Chef|44|5714|L
 Saint-Martin-la-Pallu|86|5713
 Cugand-la-Bernardière|85|5711
-Lannilis|29|5709
+Lannilis|29|5709|L
 Missillac|44|5709
 Marolles-en-Hurepoix|91|5708
 Valdahon|25|5705
 Aimargues|30|5705
 Saint-Privat-des-Vieux|30|5703
-Carry-le-Rouet|13|5702
+Carry-le-Rouet|13|5702|L
 Tournus|71|5701
 Mondelange|57|5699
 Montbonnot-Saint-Martin|38|5698
-Saleilles|66|5698
+Saleilles|66|5698|L
 Valdallière|14|5696
 Marcheprime|33|5696
 Mourenx|64|5695
@@ -2025,12 +2026,12 @@ Lèves|28|5685
 Dainville|62|5683
 L'Isle-d'Espagnac|16|5682
 Longueau|80|5680
-Saint-Xandre|17|5677
+Saint-Xandre|17|5677|L
 Saint-Georges-d'Orques|34|5676
 Gan|64|5676
-Cancale|35|5672
+Cancale|35|5672|L
 Bédarrides|84|5671
-La Roquette-sur-Siagne|06|5669
+La Roquette-sur-Siagne|06|5669|L
 Pouzauges|85|5668
 Caumont-sur-Durance|84|5667
 Sausheim|68|5666
@@ -2053,7 +2054,7 @@ Rungis|94|5611
 Gannat|03|5610
 Sauvian|34|5608
 Cloyes-les-Trois-Rivières|28|5607
-Port-Louis|971|5607
+Port-Louis|971|5607|L
 La Ville-aux-Dames|37|5606
 Bohain-en-Vermandois|02|5605
 Ternay|69|5596
@@ -2087,14 +2088,14 @@ Servian|34|5517
 La Garnache|85|5515
 Neuville-de-Poitou|86|5513
 Penmarch|29|5508
-Kani-Kéli|976|5507
+Kani-Kéli|976|5507|L
 Chevreuse|78|5502
 Ernée|53|5499
 Grans|13|5489
-Le Boulou|66|5487
-Drap|06|5484
+Le Boulou|66|5487|L
+Drap|06|5484|L
 Nueil-les-Aubiers|79|5483
-Guînes|62|5479
+Guînes|62|5479|L
 Foulayronnes|47|5476
 Étoile-sur-Rhône|26|5468
 La Roque-d'Anthéron|13|5459
@@ -2109,7 +2110,7 @@ Châtillon-sur-Seine|21|5443
 Saint-Memmie|51|5441
 Fenain|59|5441
 Saint-Genis-les-Ollières|69|5439
-Coulogne|62|5438
+Coulogne|62|5438|L
 Roques|31|5436
 Boulay-Moselle|57|5434
 Marsannay-la-Côte|21|5433
@@ -2126,7 +2127,7 @@ Heillecourt|54|5414
 Marles-les-Mines|62|5411
 Peyrolles-en-Provence|13|5409
 Saint-Pierre-lès-Nemours|77|5401
-Plouhinec|56|5400
+Plouhinec|56|5400|L
 Bordères-sur-l'Échez|65|5399
 Vic-le-Comte|63|5396
 Le Lion-d'Angers|49|5390
@@ -2146,7 +2147,7 @@ Bléré|37|5352
 Commercy|55|5350
 Chagny|71|5350
 Mériel|95|5347
-Bretignolles-sur-Mer|85|5344
+Bretignolles-sur-Mer|85|5344|L
 Erquinghem-Lys|59|5341
 Idron|64|5340
 Dechy|59|5338
@@ -2160,7 +2161,7 @@ Audruicq|62|5309
 Bethoncourt|25|5308
 Barberaz|73|5306
 Vindry-sur-Turdine|69|5305
-Saint-Lyphard|44|5304
+Saint-Lyphard|44|5304|L
 Tahaa|987|5296
 Villers-le-Lac|25|5292
 Tresses|33|5290
@@ -2179,7 +2180,7 @@ Florensac|34|5254
 Châtillon-sur-Chalaronne|01|5250
 Pont-Sainte-Marie|10|5249
 Bauvin|59|5249
-Le Rove|13|5246
+Le Rove|13|5246|L
 Mulsanne|72|5244
 Guémené-Penfao|44|5243
 Séméac|65|5236
@@ -2189,10 +2190,10 @@ Laillé|35|5225
 Farébersviller|57|5224
 Forcalquier|04|5222
 Saint-Clément-de-Rivière|34|5218
-Marquise|62|5217
+Marquise|62|5217|L
 Le Bourget-du-Lac|73|5216
 Nans-les-Pins|83|5215
-Surzur|56|5211
+Surzur|56|5211|L
 Vernaison|69|5210
 Tourves|83|5207
 Saint-Saturnin-lès-Avignon|84|5206
@@ -2202,7 +2203,7 @@ Jonquières|84|5201
 Beynost|01|5198
 Brou-sur-Chantereine|77|5196
 Saint-Pierre|975|5194
-Acoua|976|5192
+Acoua|976|5192|L
 Pauillac|33|5190
 Gauchy|02|5183
 L'Hôpital|57|5183
@@ -2219,19 +2220,19 @@ L'Étang-la-Ville|78|5157
 Baume-les-Dames|25|5155
 Trilport|77|5146
 Pont-l'Évêque|14|5145
-Douvres-la-Délivrande|14|5143
+Douvres-la-Délivrande|14|5143|L
 Le Cannet-des-Maures|83|5140
 Villeneuve-sur-Yonne|89|5135
 Longuyon|54|5134
 Saint-Vit|25|5133
 Saint-Chéron|91|5132
 Ferrière-la-Grande|59|5131
-Locmaria-Plouzané|29|5130
-Cucq|62|5129
+Locmaria-Plouzané|29|5130|L
+Cucq|62|5129|L
 Villenoy|77|5127
 Chavanoz|38|5126
 Sully-sur-Loire|45|5124
-Dives-sur-Mer|14|5122
+Dives-sur-Mer|14|5122|L
 Moncoutant-sur-Sèvre|79|5121
 Villeneuve-en-Retz|44|5120
 Saint-Marcellin-en-Forez|42|5116
@@ -2241,20 +2242,20 @@ Château-Arnoux-Saint-Auban|04|5107
 Aÿ-Champagne|51|5103
 Val-de-Moder|67|5102
 Pulnoy|54|5099
-Baillif|971|5096
+Baillif|971|5096|L
 Genlis|21|5093
 Billy-Berclau|62|5093
-Saint-Georges-de-Didonne|17|5092
+Saint-Georges-de-Didonne|17|5092|L
 Saint-Pantaléon-de-Larche|19|5091
-Muzillac|56|5089
+Muzillac|56|5089|L
 Maen Roch|35|5088
-Baden|56|5086
+Baden|56|5086|L
 Châteaulin|29|5085
 Ornex|01|5082
-Saint-Philippe|974|5082
+Saint-Philippe|974|5082|L
 Giberville|14|5077
 Habsheim|68|5076
-Yffiniac|22|5074
+Yffiniac|22|5074|L
 Sommières|30|5073
 Villefranche-de-Lauragais|31|5072
 La Ferté Macé|61|5071
@@ -2265,14 +2266,14 @@ Luynes|37|5062
 Petite-Forêt|59|5054
 Laventie|62|5044
 Saint-Sever|40|5043
-Cilaos|974|5040
+Cilaos|974|5040|L
 Bezannes|51|5039
 Champagne-sur-Oise|95|5036
 Sainte-Soulle|17|5034
 La Mézière|35|5033
-Gruissan|11|5032
+Gruissan|11|5032|L
 Hauts de Bienne|39|5032
-Saint-Étienne-au-Mont|62|5029
+Saint-Étienne-au-Mont|62|5029|L
 Pacy-sur-Eure|27|5027
 Morcenx-la-Nouvelle|40|5022
 Decazeville|12|5020
@@ -2282,7 +2283,7 @@ Rambervillers|88|5018
 Plouigneau|29|5014
 Beaurepaire|38|5010
 Lestrem|62|5009
-Villefranche-sur-Mer|06|5008
+Villefranche-sur-Mer|06|5008|L
 Luzarches|95|5008
 Taputapuatea|987|5007
 Papaichton|973|5006
@@ -2293,7 +2294,7 @@ Val d'Erdre-Auxence|49|4981
 Saint-Mathieu-de-Tréviers|34|4979
 La Souterraine|23|4978
 Bousbecque|59|4978
-Le Fenouiller|85|4978
+Le Fenouiller|85|4978|L
 Montchanin|71|4976
 Crécy-la-Chapelle|77|4973
 Bitche|57|4966
@@ -2302,7 +2303,7 @@ Saint-Nom-la-Bretèche|78|4965
 La Mure|38|4963
 Verdun-sur-Garonne|82|4961
 Heyrieux|38|4956
-Sainte-Marie-la-Mer|66|4952
+Sainte-Marie-la-Mer|66|4952|L
 Souppes-sur-Loing|77|4952
 Nivillac|56|4951
 Créon|33|4950
@@ -2314,7 +2315,7 @@ Lisle-sur-Tarn|81|4939
 Decize|58|4932
 Laigneville|60|4926
 Pechbonnieu|31|4922
-Claira|66|4922
+Claira|66|4922|L
 Mandres-les-Roses|94|4922
 Bruyères-sur-Oise|95|4921
 Sainte-Eulalie|33|4915
@@ -2328,10 +2329,10 @@ Verneuil-sur-Vienne|87|4903
 Le Versoud|38|4900
 Charny Orée de Puisaye|89|4900
 Mourmelon-le-Grand|51|4895
-Saint-Père-en-Retz|44|4894
+Saint-Père-en-Retz|44|4894|L
 Bogny-sur-Meuse|08|4889
 Bégard|22|4889
-Grand-Fort-Philippe|59|4887
+Grand-Fort-Philippe|59|4887|L
 Saint-Pourçain-sur-Sioule|03|4884
 Lambres-lez-Douai|59|4883
 Volvic|63|4883
@@ -2345,7 +2346,7 @@ Montbazon|37|4874
 La Côte-Saint-André|38|4873
 Bonneval|28|4868
 Écommoy|72|4868
-Ceyreste|13|4863
+Ceyreste|13|4863|L
 Blendecques|62|4859
 Fagnières|51|4858
 Plateau d'Hauteville|01|4857
@@ -2353,7 +2354,7 @@ La Voulte-sur-Rhône|07|4854
 Cazères|31|4854
 Bazas|33|4854
 Sainte-Marie-aux-Mines|68|4851
-La Turballe|44|4850
+La Turballe|44|4850|L
 Vitry-en-Artois|62|4849
 Phalempin|59|4847
 Vic-en-Bigorre|65|4845
@@ -2369,7 +2370,7 @@ Monnaie|37|4833
 Bornel|60|4832
 Desvres|62|4829
 Legé|44|4817
-Milizac-Guipronvel|29|4816
+Milizac-Guipronvel|29|4816|L
 Robion|84|4816
 Tinchebray-Bocage|61|4813
 Charly|69|4811
@@ -2401,7 +2402,7 @@ Saint-Martin-des-Champs|29|4773
 Locminé|56|4773
 Sadirac|33|4769
 Marvejols|48|4764
-La Plaine-sur-Mer|44|4760
+La Plaine-sur-Mer|44|4760|L
 Sanilhac|24|4757
 Venansault|85|4757
 Casteljaloux|47|4755
@@ -2420,11 +2421,11 @@ L'Hermitage|35|4730
 Vermelles|62|4729
 Barbezieux-Saint-Hilaire|16|4726
 Mésanger|44|4724
-Saint-Méloir-des-Ondes|35|4720
+Saint-Méloir-des-Ondes|35|4720|L
 Aigondigné|79|4710
 Chavagne|35|4709
 Village-Neuf|68|4709
-Clohars-Carnoët|29|4708
+Clohars-Carnoët|29|4708|L
 La Charité-sur-Loire|58|4705
 Beuzeville|27|4704
 Samer|62|4704
@@ -2452,7 +2453,7 @@ Flayosc|83|4673
 L'Huisserie|53|4672
 Saint-Hilaire-de-Brethmas|30|4670
 Collonges-au-Mont-d'Or|69|4669
-Sangatte|62|4668
+Sangatte|62|4668|L
 La Bouëxière|35|4667
 Bar-sur-Aube|10|4665
 Auzeville-Tolosane|31|4665
@@ -2461,8 +2462,8 @@ Bédée|35|4662
 Neufchâtel-en-Bray|76|4662
 Soucieu-en-Jarrest|69|4660
 Blénod-lès-Pont-à-Mousson|54|4659
-Ascain|64|4658
-Soullans|85|4654
+Ascain|64|4658|L
+Soullans|85|4654|L
 Saint-Méen-le-Grand|35|4653
 La Tremblade|17|4650
 La Tour-de-Salvagny|69|4649
@@ -2473,7 +2474,7 @@ Montbard|21|4639
 Bas-en-Basset|43|4638
 Saint-Leu-d'Esserent|60|4638
 Guesnain|59|4635
-Plouha|22|4634
+Plouha|22|4634|L
 Argentré-du-Plessis|35|4633
 Pluméliau-Bieuzy|56|4632
 La Fouillouse|42|4630
@@ -2485,9 +2486,9 @@ Montville|76|4625
 Dompierre-sur-Yon|85|4625
 Tourrette-Levens|06|4624
 Hagetmau|40|4624
-Trouville-sur-Mer|14|4619
+Trouville-sur-Mer|14|4619|L
 Bouloc|31|4618
-Grand-Bourg|971|4617
+Grand-Bourg|971|4617|L
 Ars-sur-Moselle|57|4616
 Saint-Pierre-de-Chandieu|69|4616
 Vayres|33|4615
@@ -2513,7 +2514,7 @@ Hœrdt|67|4570
 La Frette-sur-Seine|95|4570
 Biache-Saint-Vaast|62|4568
 Retiers|35|4566
-Leucate|11|4562
+Leucate|11|4562|L
 Milly-la-Forêt|91|4562
 Bages|66|4560
 Le Thillay|95|4560
@@ -2526,27 +2527,27 @@ Chaponnay|69|4548
 Jouques|13|4547
 Villiers-sur-Orge|91|4545
 Communay|69|4540
-Case-Pilote|972|4537
+Case-Pilote|972|4537|L
 Camaret-sur-Aigues|84|4533
 Crespin|59|4532
 Saint-Aunès|34|4530
 Saint-Martin-de-May|14|4529
 Castelmaurou|31|4524
-Plougonvelin|29|4521
+Plougonvelin|29|4521|L
 Sainte-Marie-aux-Chênes|57|4519
 Montagnac|34|4515
 Notre-Dame-d'Oé|37|4515
 Saint-Marcel|27|4512
 Lunel-Viel|34|4507
-Saint-Pair-sur-Mer|50|4507
+Saint-Pair-sur-Mer|50|4507|L
 Marchiennes|59|4507
 Freneuse|78|4505
-Noirmoutier-en-l'Île|85|4505
+Noirmoutier-en-l'Île|85|4505|L
 Lamotte-Beuvron|41|4504
 Villeneuve-lès-Béziers|34|4500
 Jacob-Bellecombette|73|4499
 Beaussais-sur-Mer|22|4498
-Banyuls-sur-Mer|66|4496
+Banyuls-sur-Mer|66|4496|L
 Gonfaron|83|4496
 Montigny-en-Ostrevent|59|4495
 Bretteville-sur-Odon|14|4494
@@ -2561,7 +2562,7 @@ Saint-Laurent-du-Pont|38|4490
 La Réole|33|4487
 Jarnac|16|4486
 Charmes|88|4484
-Cap-d'Ail|06|4482
+Cap-d'Ail|06|4482|L
 Hesdin-la-Forêt|62|4480
 Hergnies|59|4479
 Royat|63|4479
@@ -2583,7 +2584,7 @@ Torigny-les-Villes|50|4444
 Capdenac-Gare|12|4440
 Vinay|38|4438
 Saclay|91|4437
-Valras-Plage|34|4432
+Valras-Plage|34|4432|L
 Craon|53|4431
 Provin|59|4428
 Angerville|91|4428
@@ -2592,13 +2593,13 @@ Serres-Castet|64|4418
 Millas|66|4417
 Mesnil-en-Ouche|27|4414
 Morigny-Champigny|91|4412
-Anse-Bertrand|971|4412
-Bastelicaccia|2A|4411
+Anse-Bertrand|971|4412|L
+Bastelicaccia|2A|4411|L
 Chazay-d'Azergues|69|4410
 Sierentz|68|4409
 Caveirac|30|4408
 Miniac-Morvan|35|4408
-Ghisonaccia|2B|4405
+Ghisonaccia|2B|4405|L
 La Tour-d'Aigues|84|4405
 Villemoustaussou|11|4401
 Montbeton|82|4400
@@ -2610,16 +2611,16 @@ Château-Renault|37|4392
 Ardres|62|4389
 Carignan-de-Bordeaux|33|4388
 Carnoules|83|4388
-Le Morne-Rouge|972|4388
+Le Morne-Rouge|972|4388|L
 Clarensac|30|4386
 La Brède|33|4386
 Aime-la-Plagne|73|4385
 Saint-Georges-lès-Baillargeaux|86|4385
 Kaysersberg Vignoble|68|4383
 Pins-Justaret|31|4378
-Le Tréport|76|4378
+Le Tréport|76|4378|L
 Ham|80|4378
-Riec-sur-Bélon|29|4376
+Riec-sur-Bélon|29|4376|L
 Ormes|45|4376
 Prigonrieux|24|4374
 Morlaàs|64|4374
@@ -2646,7 +2647,7 @@ Nilvange|57|4341
 Morestel|38|4340
 Ytrac|15|4339
 Beaumont-lès-Valence|26|4337
-Hillion|22|4335
+Hillion|22|4335|L
 Le Val|83|4335
 Rives de l'Yon|85|4335
 Sevrier|74|4333
@@ -2662,14 +2663,14 @@ Ussac|19|4322
 Coignières|78|4321
 Bessières|31|4310
 Cours|69|4306
-Friville-Escarbotin|80|4306
-Sainte-Anne|972|4306
+Friville-Escarbotin|80|4306|L
+Sainte-Anne|972|4306|L
 Saint-Aubin-d'Aubigné|35|4304
 Is-sur-Tille|21|4302
 Sandillon|45|4300
 Millery|69|4299
 Eyragues|13|4298
-Rang-du-Fliers|62|4297
+Rang-du-Fliers|62|4297|L
 Châtenois|67|4294
 Nozay|44|4292
 Lanvallay|22|4291
@@ -2682,10 +2683,10 @@ Ecquevilly|78|4279
 Koumac|988|4272
 Leuville-sur-Orge|91|4271
 Vimy|62|4270
-Courseulles-sur-Mer|14|4268
+Courseulles-sur-Mer|14|4268|L
 La Norville|91|4268
 Barbentane|13|4266
-Combrit|29|4265
+Combrit|29|4265|L
 Rognonas|13|4261
 Tonnerre|89|4261
 Beauvallon|69|4260
@@ -2695,21 +2696,21 @@ Maîche|25|4254
 Laigné-Saint-Gervais|72|4252
 Serémange-Erzange|57|4251
 La Séguinière|49|4248
-Fleury|11|4246
+Fleury|11|4246|L
 Pont-Péan|35|4245
 Terres-de-Caux|76|4245
 Brives-Charensac|43|4244
 Mimet|13|4241
 Forges-les-Bains|91|4241
-Angoulins|17|4240
-Plomelin|29|4239
+Angoulins|17|4240|L
+Plomelin|29|4239|L
 Saint-Just-Malmont|43|4239
 Rouffach|68|4238
 Saint-Laurent-Nouan|41|4236
 Sanvignes-les-Mines|71|4235
 Betschdorf|67|4231
-Le Touquet-Paris-Plage|62|4224
-Pluguffan|29|4223
+Le Touquet-Paris-Plage|62|4224|L
+Pluguffan|29|4223|L
 Rians|83|4223
 Breteuil|60|4222
 Jouarre|77|4221
@@ -2732,11 +2733,11 @@ Saint-Aubin-du-Cormier|35|4203
 Escautpont|59|4202
 Athis-Val de Rouvre|61|4201
 Le Neubourg|27|4199
-Carnac|56|4194
+Carnac|56|4194|L
 Saint-Donat-sur-l'Herbasse|26|4193
 Pont-du-Casse|47|4191
 Romillé|35|4189
-Bray-Dunes|59|4189
+Bray-Dunes|59|4189|L
 Brionne|27|4185
 Marlenheim|67|4185
 Porte des Pierres Dorées|69|4185
@@ -2745,7 +2746,7 @@ Bollwiller|68|4184
 Yvré-l'Évêque|72|4181
 Salouël|80|4179
 Guignen|35|4175
-Le Pouliguen|44|4173
+Le Pouliguen|44|4173|L
 Herserange|54|4170
 Thumeries|59|4170
 Anneyron|26|4169
@@ -2759,7 +2760,7 @@ Aigrefeuille-sur-Maine|44|4156
 Le Plessis-Pâté|91|4154
 Servon-sur-Vilaine|35|4152
 Vieillevigne|44|4150
-Fouras|17|4148
+Fouras|17|4148|L
 Gondecourt|59|4148
 Sainte-Menehould|51|4146
 Saint-Romain-le-Puy|42|4142
@@ -2772,7 +2773,7 @@ Condé-sur-Vire|50|4137
 Montferrier-sur-Lez|34|4135
 La Destrousse|13|4133
 Pont-de-l'Arche|27|4133
-Ghyvelde|59|4133
+Ghyvelde|59|4133|L
 Le Houlme|76|4130
 Chanteloup-en-Brie|77|4130
 Pézilla-la-Rivière|66|4129
@@ -2785,7 +2786,7 @@ Val d'Oingt|69|4117
 Saint-Lubin-des-Joncherets|28|4116
 Chaingy|45|4116
 Saffré|44|4115
-Neufchâtel-Hardelot|62|4115
+Neufchâtel-Hardelot|62|4115|L
 Monéteau|89|4114
 Bouchain|59|4113
 Domfront en Poiraie|61|4113
@@ -2796,7 +2797,7 @@ Bouxières-aux-Dames|54|4106
 Plœuc-L'Hermitage|22|4103
 Longeville-lès-Metz|57|4102
 Les Mées|04|4099
-Locmiquélic|56|4093
+Locmiquélic|56|4093|L
 Sainte-Maure-de-Touraine|37|4092
 Survilliers|95|4091
 Baccarat|54|4089
@@ -2806,12 +2807,12 @@ Allassac|19|4081
 Aramon|30|4081
 Cuxac-d'Aude|11|4079
 Caissargues|30|4079
-Leffrinckoucke|59|4078
+Leffrinckoucke|59|4078|L
 Plélan-le-Grand|35|4076
-Loctudy|29|4075
+Loctudy|29|4075|L
 Chevry-Cossigny|77|4075
 Avermes|03|4074
-Le Revest-les-Eaux|83|4074
+Le Revest-les-Eaux|83|4074|L
 Val-Couesnon|35|4072
 Staffelfelden|68|4072
 Saint-Georges-d'Oléron|17|4067
@@ -2823,8 +2824,8 @@ Verson|14|4059
 Saint-Rémy-sur-Avre|28|4058
 Campbon|44|4058
 Saint-Cézaire-sur-Siagne|06|4056
-Seignosse|40|4056
-Le Croisic|44|4056
+Seignosse|40|4056|L
+Le Croisic|44|4056|L
 Landévant|56|4056
 Trouy|18|4055
 Le Cellier|44|4051
@@ -2832,17 +2833,17 @@ Saint-Étienne-de-Tulmont|82|4051
 Offemont|90|4051
 Bâgé-Dommartin|01|4050
 Générac|30|4046
-Hourtin|33|4045
+Hourtin|33|4045|L
 Paulhan|34|4039
 Le Coudray|28|4038
 Hochfelden|67|4038
 La Châtre|36|4037
-Pont-Scorff|56|4037
+Pont-Scorff|56|4037|L
 Bressols|82|4036
-Beauvoir-sur-Mer|85|4035
+Beauvoir-sur-Mer|85|4035|L
 Savigné-l'Évêque|72|4031
-Plouarzel|29|4029
-La Haye|50|4029
+Plouarzel|29|4029|L
+La Haye|50|4029|L
 Bresles|60|4029
 Saint-Vallier|26|4027
 Sévérac d'Aveyron|12|4026
@@ -2853,11 +2854,11 @@ Fay-de-Bretagne|44|4023
 Montsoult|95|4023
 Nogent-le-Roi|28|4021
 Salernes|83|4019
-Port-Vendres|66|4018
+Port-Vendres|66|4018|L
 La Chapelle-de-Guinchay|71|4018
 Presles|95|4017
 Cinq-Mars-la-Pile|37|4015
-Vaux-sur-Mer|17|4013
+Vaux-sur-Mer|17|4013|L
 Gravigny|27|4012
 Cordemais|44|4012
 Avesnes-sur-Helpe|59|4012
@@ -2866,13 +2867,13 @@ Limonest|69|4012
 Layrac|47|4010
 Les Villages Vovéens|28|4009
 Le Plessis-Belleville|60|4009
-Erdeven|56|4008
+Erdeven|56|4008|L
 Vaulnaveys-le-Haut|38|4006
 Rives-en-Seine|76|4002
 Raimbeaucourt|59|4000
 Masny|59|3999
 Juillan|65|3999
-Propriano|2A|3996
+Propriano|2A|3996|L
 Saint-Aignan-Grandlieu|44|3996
 Duclair|76|3996
 Grand Bourgtheroulde|27|3995
@@ -2883,7 +2884,7 @@ Fourchambault|58|3992
 Oberhoffen-sur-Moder|67|3992
 Montady|34|3990
 Saint-Nolff|56|3990
-Pléneuf-Val-André|22|3988
+Pléneuf-Val-André|22|3988|L
 La Bruffière|85|3987
 Semur-en-Auxois|21|3986
 Le Lude|72|3983
@@ -2894,7 +2895,7 @@ Cires-lès-Mello|60|3978
 Poligny|39|3976
 Le Bignon|44|3976
 Boos|76|3975
-Erquy|22|3974
+Erquy|22|3974|L
 Châtelaudren-Plouagat|22|3974
 Porte-de-Savoie|73|3974
 Villeveyrac|34|3972
@@ -2904,7 +2905,7 @@ Quessoy|22|3969
 Plouvien|29|3968
 Aiguillon|47|3968
 Salses-le-Château|66|3965
-Saint-Pierre|972|3961
+Saint-Pierre|972|3961|L
 Gourin|56|3960
 Argences|14|3959
 Loperhet|29|3959
@@ -2935,22 +2936,22 @@ Mézières-sur-Seine|78|3923
 Saint-Chef|38|3921
 Lauris|84|3921
 Le May-sur-Èvre|49|3920
-Plouhinec|29|3919
+Plouhinec|29|3919|L
 Pagny-sur-Moselle|54|3919
-Arvert|17|3917
+Arvert|17|3917|L
 Fay-aux-Loges|45|3916
 Folschviller|57|3916
 Coye-la-Forêt|60|3915
-Touques|14|3913
+Touques|14|3913|L
 Ablis|78|3913
 Santeny|94|3913
 Pont-de-Roide-Vermondans|25|3912
 Hussigny-Godbrange|54|3912
-Les Anses-d'Arlet|972|3912
+Les Anses-d'Arlet|972|3912|L
 Nouvoitou|35|3911
 Canala|988|3911
 Richwiller|68|3905
-Plomeur|29|3904
+Plomeur|29|3904|L
 Oudon|44|3904
 Lexy|54|3904
 Villedieu-les-Poêles-Rouffigny|50|3903
@@ -2960,25 +2961,25 @@ Grosseto-Prugna|2A|3900
 Verberie|60|3898
 Mortagne-au-Perche|61|3898
 Blainville-sur-l'Eau|54|3893
-Belz|56|3893
+Belz|56|3893|L
 Tavaux|39|3888
 Petit-Mars|44|3888
 Le Val-d'Ajol|88|3885
 Gétigné|44|3883
 Boissy-sous-Saint-Yon|91|3882
-Prunelli-di-Fiumorbo|2B|3880
+Prunelli-di-Fiumorbo|2B|3880|L
 Lherm|31|3880
 Châteaubernard|16|3878
 Domloup|35|3877
 Jonquières-Saint-Vincent|30|3875
-Beaulieu-sur-Mer|06|3874
+Beaulieu-sur-Mer|06|3874|L
 Bosroumois|27|3872
 Fraisses|42|3872
 Terranjou|49|3871
 Ribécourt-Dreslincourt|60|3871
 Saint-Cergues|74|3869
 Saint-Léger-de-Linières|49|3866
-Wimille|62|3866
+Wimille|62|3866|L
 Pringy|77|3864
 Le Vigan|30|3863
 Réhon|54|3863
@@ -2986,22 +2987,22 @@ Fléac|16|3861
 Saint-Gildas-des-Bois|44|3860
 Pipriac|35|3859
 Montréverd|85|3857
-La Croix-Valmer|83|3855
+La Croix-Valmer|83|3855|L
 Lapalud|84|3853
 La Bresse|88|3853
 Mazères|09|3852
 Sulniac|56|3852
 Sargé-lès-le-Mans|72|3851
-Saint-Valery-en-Caux|76|3851
+Saint-Valery-en-Caux|76|3851|L
 Holtzheim|67|3850
 Villieu-Loyes-Mollon|01|3849
-Bénodet|29|3849
+Bénodet|29|3849|L
 Hasnon|59|3849
-Pleumeur-Bodou|22|3848
+Pleumeur-Bodou|22|3848|L
 Meyrargues|13|3847
 Vagney|88|3843
-Biéville-Beuville|14|3840
-Saint-Palais-sur-Mer|17|3840
+Biéville-Beuville|14|3840|L
+Saint-Palais-sur-Mer|17|3840|L
 Genilac|42|3839
 Ferrières-en-Gâtinais|45|3839
 Violaines|62|3839
@@ -3021,9 +3022,9 @@ Coudoux|13|3825
 Clouange|57|3824
 Beaumont-de-Lomagne|82|3824
 Callian|83|3823
-Trébeurden|22|3821
+Trébeurden|22|3821|L
 Saint-Étienne-lès-Remiremont|88|3818
-Soorts-Hossegor|40|3817
+Soorts-Hossegor|40|3817|L
 Châteauneuf-Grasse|06|3815
 Argonay|74|3807
 Bouliac|33|3804
@@ -3035,9 +3036,9 @@ Sospel|06|3791
 Bruyères-le-Châtel|91|3788
 Saint-Symphorien-sur-Coise|69|3785
 Chauconin-Neufmontiers|77|3784
-Alénya|66|3782
-Ploubezre|22|3780
-Bénesse-Maremne|40|3780
+Alénya|66|3782|L
+Ploubezre|22|3780|L
+Bénesse-Maremne|40|3780|L
 Grand-Aigueblanche|73|3780
 Bapaume|62|3779
 Saint-Clair-du-Rhône|38|3778
@@ -3050,7 +3051,7 @@ Barby|73|3772
 Pujols|47|3769
 Charlieu|42|3766
 Saint-Ay|45|3766
-Échillais|17|3765
+Échillais|17|3765|L
 Puiseux-en-France|95|3765
 Plémet|22|3764
 Saint-Martin-la-Plaine|42|3764
@@ -3059,7 +3060,7 @@ Brantôme en Périgord|24|3763
 Rangiroa|987|3761
 Houaïlou|988|3756
 Bouxwiller|67|3754
-Torreilles|66|3753
+Torreilles|66|3753|L
 Malville|44|3752
 Doussard|74|3751
 Varennes-sur-Seine|77|3748
@@ -3068,7 +3069,7 @@ Saint-Selve|33|3746
 Montreuil-Bellay|49|3746
 Labastide-Saint-Pierre|82|3745
 Rœulx|59|3743
-Sartène|2A|3742
+Sartène|2A|3742|L
 Les Rousses|39|3740
 Pannes|45|3740
 Peynier|13|3739
@@ -3080,11 +3081,11 @@ Lourches|59|3734
 Ploudaniel|29|3732
 Bailly|78|3731
 La Ferté-Alais|91|3731
-Audierne|29|3727
-Bohars|29|3727
+Audierne|29|3727|L
+Bohars|29|3727|L
 Pélussin|42|3727
 Chavagnes-en-Paillers|85|3726
-Cabourg|14|3725
+Cabourg|14|3725|L
 Ganges|34|3724
 Montamisé|86|3723
 Objat|19|3721
@@ -3092,19 +3093,19 @@ Sochaux|25|3721
 Bouzonville|57|3721
 Veyre-Monton|63|3721
 Houdan|78|3721
-Le Carbet|972|3721
-Plobannalec-Lesconil|29|3718
+Le Carbet|972|3721|L
+Plobannalec-Lesconil|29|3718|L
 Tumaraa|987|3718
 Isneauville|76|3716
 Ardentes|36|3715
 Latresne|33|3714
-Deshaies|971|3710
+Deshaies|971|3710|L
 Blanzat|63|3709
 Montastruc-la-Conseillère|31|3708
 Flassans-sur-Issole|83|3706
 Moréac|56|3704
 Bonnétable|72|3703
-Landéda|29|3702
+Landéda|29|3702|L
 Les Lucs-sur-Boulogne|85|3701
 Peyrehorade|40|3700
 Moncé-en-Belin|72|3697
@@ -3114,7 +3115,7 @@ La Rivière-de-Corps|10|3692
 Pleyben|29|3692
 Créhange|57|3691
 Meurchin|62|3691
-Saint-Laurent-d'Aigouze|30|3690
+Saint-Laurent-d'Aigouze|30|3690|L
 Étupes|25|3689
 Coulanges-lès-Nevers|58|3688
 Neuvic|24|3687
@@ -3123,14 +3124,14 @@ Geneston|44|3685
 Sainte-Gemmes-sur-Loire|49|3685
 La Chapelle-Saint-Ursin|18|3681
 Pont-de-l'Isère|26|3681
-Alata|2A|3681
+Alata|2A|3681|L
 Quincieux|69|3679
 Estrablin|38|3677
 Ligny-en-Barrois|55|3677
 Dampmart|77|3677
 Breteil|35|3675
 Guenrouet|44|3673
-Penta-di-Casinca|2B|3671
+Penta-di-Casinca|2B|3671|L
 Fillinges|74|3671
 Étrépagny|27|3670
 Lectoure|32|3670
@@ -3145,7 +3146,7 @@ Belleu|02|3659
 Gallargues-le-Montueux|30|3659
 Martillac|33|3659
 Saint-Vallier-de-Thiey|06|3658
-Arcangues|64|3657
+Arcangues|64|3657|L
 Saint-Philbert-de-Bouaine|85|3653
 Chaniers|17|3651
 Châteauneuf-du-Faou|29|3651
@@ -3199,13 +3200,13 @@ Marines|95|3594
 Prinquiau|44|3591
 Neuilly-Crimolois|21|3588
 Espaly-Saint-Marcel|43|3585
-Cléder|29|3584
+Cléder|29|3584|L
 Baziège|31|3583
 Orry-la-Ville|60|3583
 Bavans|25|3582
 Saint-Savin|33|3582
 Magalas|34|3582
-Saint-Tropez|83|3582
+Saint-Tropez|83|3582|L
 Saint-Germain-des-Fossés|03|3579
 Lumbres|62|3579
 Sauvagnon|64|3579
@@ -3213,7 +3214,7 @@ Vic-Fezensac|32|3577
 Pompignac|33|3577
 Saint-Évarzec|29|3574
 Plan-d'Orgon|13|3573
-Bourg-Blanc|29|3573
+Bourg-Blanc|29|3573|L
 Longeville-lès-Saint-Avold|57|3572
 Fontvieille|13|3571
 La Roche-de-Glun|26|3569
@@ -3230,7 +3231,7 @@ Sainte-Tulle|04|3558
 Tosse|40|3556
 Arbent|01|3555
 Loyettes|01|3554
-Plouescat|29|3554
+Plouescat|29|3554|L
 Saint-Julien-lès-Metz|57|3554
 Châteauneuf-sur-Charente|16|3550
 Nogent|52|3550
@@ -3244,18 +3245,18 @@ Messimy|69|3546
 Saint-Georges-d'Espéranche|38|3545
 Allennes-les-Marais|59|3545
 Clamecy|58|3544
-Isigny-sur-Mer|14|3543
+Isigny-sur-Mer|14|3543|L
 Fargues-Saint-Hilaire|33|3543
 Pleumeleuc|35|3543
 Saint-Soupplets|77|3542
 Carcès|83|3540
-Deauville|14|3539
+Deauville|14|3539|L
 Le Breuil|71|3538
 Saint-Maur|36|3537
 Rubelles|77|3537
 Bellac|87|3537
 Crémieu|38|3536
-La Bernerie-en-Retz|44|3536
+La Bernerie-en-Retz|44|3536|L
 Varangéville|54|3536
 Béligneux|01|3535
 Bains-sur-Oust|35|3535
@@ -3263,7 +3264,7 @@ Montmirail|51|3535
 Saint-Julien-les-Rosiers|30|3533
 Cerny|91|3531
 Gallardon|28|3530
-Portiragnes|34|3530
+Portiragnes|34|3530|L
 Lécousse|35|3530
 Locoal-Mendon|56|3530
 Amélie-les-Bains-Palalda|66|3529
@@ -3272,7 +3273,7 @@ Mouriès|13|3527
 Mérignies|59|3527
 Vertaizon|63|3527
 Bellignat|01|3525
-Bergues|59|3525
+Bergues|59|3525|L
 Dun-sur-Auron|18|3524
 Espira-de-l'Agly|66|3524
 Saint-Didier-en-Velay|43|3523
@@ -3284,13 +3285,13 @@ Rieumes|31|3517
 Les Houches|74|3515
 Capestang|34|3514
 Gramat|46|3512
-Sorède|66|3512
+Sorède|66|3512|L
 Weyersheim|67|3512
 Montalieu-Vercieu|38|3510
 Val-du-Layon|49|3510
 Savigneux|42|3509
 Hérimoncourt|25|3508
-La Forêt-Fouesnant|29|3508
+La Forêt-Fouesnant|29|3508|L
 Sainte-Geneviève|60|3505
 Chaumes-en-Brie|77|3503
 Issenheim|68|3502
@@ -3298,7 +3299,7 @@ La Buisse|38|3500
 Saint-Colomban|44|3500
 Chanceaux-sur-Choisille|37|3499
 Langeac|43|3499
-Férel|56|3499
+Férel|56|3499|L
 Les Belleville|73|3498
 Hornaing|59|3496
 Haucourt-Moulaine|54|3495
@@ -3306,7 +3307,7 @@ Mercury|73|3495
 Taninges|74|3491
 Gerstheim|67|3490
 Varilhes|09|3487
-Bréhal|50|3487
+Bréhal|50|3487|L
 Moûtiers|73|3487
 Bourcefranc-le-Chapus|17|3486
 L'Herbergement|85|3482
@@ -3323,10 +3324,10 @@ Sainte-Catherine|62|3471
 Crêts en Belledonne|38|3470
 La Chapelle-Heulin|44|3467
 Saint-Cyr-en-Val|45|3467
-Le Porge|33|3465
+Le Porge|33|3465|L
 Crèvecœur-le-Grand|60|3462
 Cléguer|56|3460
-La Jarrie|17|3458
+La Jarrie|17|3458|L
 Mirande|32|3457
 Lampertheim|67|3457
 Saint-Jeoire|74|3457
@@ -3341,7 +3342,7 @@ Ruffec|16|3449
 Choisy-au-Bac|60|3449
 Roura|973|3449
 La Foa|988|3449
-Saint-Sulpice-de-Royan|17|3446
+Saint-Sulpice-de-Royan|17|3446|L
 Saint-Ambroix|30|3445
 Verquin|62|3445
 Aubin|12|3444
@@ -3359,12 +3360,12 @@ Saint-Céré|46|3429
 Sérent|56|3429
 Orbey|68|3429
 Carpiquet|14|3428
-Vic-la-Gardiole|34|3428
+Vic-la-Gardiole|34|3428|L
 Coëx|85|3428
 Elliant|29|3427
 Saint-Étienne-de-Saint-Geoirs|38|3425
 Mours-Saint-Eusèbe|26|3424
-Crach|56|3423
+Crach|56|3423|L
 Vouvray|37|3420
 Rupt-sur-Moselle|88|3419
 Saint-Romain-de-Jalionas|38|3417
@@ -3373,7 +3374,7 @@ Nantua|01|3416
 Plouër-sur-Rance|22|3416
 Treize-Septiers|85|3416
 Lespignan|34|3414
-Bassussarry|64|3414
+Bassussarry|64|3414|L
 Le Pallet|44|3413
 Sainte-Marie-de-Ré|17|3412
 Brassac-les-Mines|63|3412
@@ -3381,12 +3382,12 @@ Feillens|01|3411
 Bourg-des-Comptes|35|3411
 Hégenheim|68|3410
 Attignat|01|3409
-Colomars|06|3409
+Colomars|06|3409|L
 Saint-Médard-d'Eyrans|33|3409
 Mauves-sur-Loire|44|3409
 Annet-sur-Marne|77|3408
 Landrecies|59|3407
-Vescovato|2B|3406
+Vescovato|2B|3406|L
 Mellac|29|3404
 Fontanil-Cornillon|38|3404
 Thurins|69|3404
@@ -3404,7 +3405,7 @@ Anduze|30|3391
 Pont-sur-Yonne|89|3391
 Forcalqueiret|83|3389
 Montbert|44|3388
-Saint-André|66|3388
+Saint-André|66|3388|L
 Narrosse|40|3387
 Mont-près-Chambord|41|3386
 Durtal|49|3386
@@ -3414,8 +3415,8 @@ Porcheville|78|3382
 Vernet|31|3381
 Évellys|56|3379
 Étain|55|3375
-Saint-Cast-le-Guildo|22|3371
-Melgven|29|3371
+Saint-Cast-le-Guildo|22|3371|L
+Melgven|29|3371|L
 Hulluch|62|3371
 Saint-André-de-Corcy|01|3370
 Salles-d'Aude|11|3369
@@ -3428,18 +3429,18 @@ Seilh|31|3356
 Monterblanc|56|3356
 Collégien|77|3354
 Saint-Andiol|13|3353
-Saint-Léonard|62|3353
-Afa|2A|3350
+Saint-Léonard|62|3353|L
+Afa|2A|3350|L
 Renage|38|3348
 Louvigné-du-Désert|35|3346
 Grosbliederstroff|57|3346
 Boissy-le-Châtel|77|3346
 Mareuil-lès-Meaux|77|3345
-Plélo|22|3344
-Bonifacio|2A|3344
+Plélo|22|3344|L
+Bonifacio|2A|3344|L
 Castillon-la-Bataille|33|3344
 Mertzwiller|67|3343
-Merlimont|62|3342
+Merlimont|62|3342|L
 Bischoffsheim|67|3342
 Briis-sous-Forges|91|3342
 Beauce la Romaine|41|3341
@@ -3449,36 +3450,36 @@ Val-au-Perche|61|3336
 Doubs|25|3335
 Champ-sur-Drac|38|3335
 Saint-Maximin|60|3335
-Villelongue-de-la-Salanque|66|3335
-Roscoff|29|3334
+Villelongue-de-la-Salanque|66|3335|L
+Roscoff|29|3334|L
 Bernin|38|3334
 Veuzain-sur-Loire|41|3333
 Précy-sur-Oise|60|3332
 Vourles|69|3332
 Chaumontel|95|3332
 Aigues-Vives|30|3331
-Palau-del-Vidre|66|3329
+Palau-del-Vidre|66|3329|L
 Ceyzériat|01|3328
 Bourgvallées|50|3326
 Houplin-Ancoisne|59|3326
-Hermanville-sur-Mer|14|3323
+Hermanville-sur-Mer|14|3323|L
 Besné|44|3322
 Wizernes|62|3321
 Évry-Grégy-sur-Yerre|77|3321
 Frépillon|95|3317
-Soubise|17|3316
+Soubise|17|3316|L
 Le Folgoët|29|3315
 Ambès|33|3313
-Pleuven|29|3311
+Pleuven|29|3311|L
 Saint-Nicolas-de-Redon|44|3311
 La Roche-Blanche|63|3311
 Morhange|57|3308
 Montanay|69|3308
-Frossay|44|3307
+Frossay|44|3307|L
 Airvault|79|3306
 Lagardelle-sur-Lèze|31|3303
 Lavérune|34|3302
-Mireval|34|3301
+Mireval|34|3301|L
 Rouans|44|3301
 Puiseaux|45|3299
 Malissard|26|3294
@@ -3494,10 +3495,10 @@ La Chapelle-Longueville|27|3282
 Sarrola-Carcopino|2A|3278
 Exincourt|25|3277
 Dordives|45|3277
-Luc-sur-Mer|14|3275
+Luc-sur-Mer|14|3275|L
 Pontpoint|60|3275
-Gouville-sur-Mer|50|3274
-Carantec|29|3272
+Gouville-sur-Mer|50|3274|L
+Carantec|29|3272|L
 La Chapelle-Launay|44|3270
 Podensac|33|3269
 Semoy|45|3269
@@ -3511,7 +3512,7 @@ Montmorot|39|3261
 Saint-Hilaire-Saint-Mesmin|45|3261
 Camors|56|3260
 Cessieu|38|3259
-Hoymille|59|3259
+Hoymille|59|3259|L
 Frévent|62|3259
 Puylaurens|81|3257
 Neuvecelle|74|3256
@@ -3520,38 +3521,38 @@ Magnac-sur-Touvre|16|3255
 Moussy-le-Neuf|77|3253
 Lespinasse|31|3251
 Neauphle-le-Château|78|3250
-Les Pieux|50|3249
+Les Pieux|50|3249|L
 Bavay|59|3249
 Pers-Jussy|74|3245
 Volx|04|3243
 Azay-sur-Cher|37|3243
-Offranville|76|3242
+Offranville|76|3242|L
 Albias|82|3240
 Aix-Villemaur-Pâlis|10|3236
 Plogonnec|29|3236
 Bousse|57|3236
-Jard-sur-Mer|85|3235
+Jard-sur-Mer|85|3235|L
 Sébazac-Concourès|12|3234
 Romilly-sur-Andelle|27|3234
 Argentonnay|79|3234
 Boves|80|3234
 Anould|88|3234
 Bram|11|3233
-Lansargues|34|3233
+Lansargues|34|3233|L
 Carentoir|56|3232
-L'Île-Rousse|2B|3231
+L'Île-Rousse|2B|3231|L
 Renaison|42|3231
 Baho|66|3231
 La Tour-du-Crieu|09|3230
 Brou|28|3230
 Picauville|50|3228
-Latour-Bas-Elne|66|3228
+Latour-Bas-Elne|66|3228|L
 Lignan-sur-Orb|34|3227
 Saint-Geniès-de-Malgoirès|30|3225
 Briollay|49|3225
 La Gaubretière|85|3225
 Ormoy|91|3225
-Saint-Quay-Portrieux|22|3224
+Saint-Quay-Portrieux|22|3224|L
 Piré-Chancé|35|3224
 Saint-Parres-aux-Tertres|10|3223
 Verneuil-l'Étang|77|3223
@@ -3563,7 +3564,7 @@ Bréviandes|10|3219
 Rochecorbon|37|3219
 Montagny|69|3218
 Saint-Martin-le-Beau|37|3216
-Ville-di-Pietrabugno|2B|3215
+Ville-di-Pietrabugno|2B|3215|L
 Veynes|05|3214
 Fretin|59|3214
 Ouroux-sur-Saône|71|3214
@@ -3575,7 +3576,7 @@ Creuzier-le-Vieux|03|3205
 Davézieux|07|3205
 Fonbeauzard|31|3204
 Seltz|67|3204
-Saint-Paul-de-Vence|06|3203
+Saint-Paul-de-Vence|06|3203|L
 Saint-Malo-de-Guersac|44|3203
 Guécélard|72|3202
 Saint-Michel|02|3199
@@ -3587,7 +3588,7 @@ Chantraine|88|3198
 Saint-Michel|16|3196
 Saône|25|3195
 Bagnols-en-Forêt|83|3194
-Plougasnou|29|3192
+Plougasnou|29|3192|L
 Souillac|46|3192
 Montsûrs|53|3192
 La Machine|58|3192
@@ -3607,16 +3608,16 @@ Salomé|59|3182
 Lozanne|69|3182
 Camblanes-et-Meynac|33|3181
 Lissieu|69|3181
-Meschers-sur-Gironde|17|3180
+Meschers-sur-Gironde|17|3180|L
 Saint-Gervais-la-Forêt|41|3180
 Sallèles-d'Aude|11|3179
 Toussieu|69|3177
-Marsilly|17|3176
+Marsilly|17|3176|L
 Saint-Ciers-sur-Gironde|33|3175
 Ploemel|56|3175
 Voujeaucourt|25|3174
 Cossé-le-Vivien|53|3174
-Merlevenez|56|3174
+Merlevenez|56|3174|L
 Baraqueville|12|3173
 Saint-Quentin-la-Poterie|30|3173
 Dolomieu|38|3173
@@ -3639,7 +3640,7 @@ Ouvéa|988|3162
 Berlaimont|59|3159
 Montberon|31|3158
 Échenoz-la-Méline|70|3158
-Médis|17|3157
+Médis|17|3157|L
 Bouvron|44|3153
 Longperrier|77|3152
 La Guerche-sur-l'Aubois|18|3151
@@ -3649,10 +3650,10 @@ La Flotte|17|3150
 Gilly-sur-Isère|73|3149
 Château-Landon|77|3149
 Saint-Thégonnec Loc-Eguiner|29|3148
-Plouézec|22|3147
+Plouézec|22|3147|L
 Chorges|05|3146
 Gimont|32|3146
-Donville-les-Bains|50|3146
+Donville-les-Bains|50|3146|L
 Boutigny-sur-Essonne|91|3146
 Quarouble|59|3145
 Galgon|33|3144
@@ -3668,7 +3669,7 @@ Lapalisse|03|3138
 Éloyes|88|3138
 Valensole|04|3137
 Manom|57|3137
-La Tranche-sur-Mer|85|3136
+La Tranche-sur-Mer|85|3136|L
 Chavanod|74|3135
 Pouillon|40|3134
 Moyenmoutier|88|3134
@@ -3677,7 +3678,7 @@ Saint-Thibéry|34|3132
 Château-Thébaud|44|3129
 Asnières-sur-Oise|95|3127
 Champcevinel|24|3126
-Saint-Hippolyte|66|3126
+Saint-Hippolyte|66|3126|L
 Signes|83|3126
 Arleux|59|3125
 Besse-sur-Issole|83|3125
@@ -3687,14 +3688,14 @@ Thézan-lès-Béziers|34|3124
 Saint-Germain-au-Mont-d'Or|69|3124
 Vémars|95|3124
 Boussois|59|3123
-Capesterre-de-Marie-Galante|971|3123
+Capesterre-de-Marie-Galante|971|3123|L
 Montfrin|30|3122
 Voh|988|3122
 Soultz-sous-Forêts|67|3121
 Morainvilliers|78|3120
 Saint-Jacques-sur-Darnétal|76|3117
 Le Touvet|38|3116
-Angles|85|3115
+Angles|85|3115|L
 Arbois|39|3114
 Appoigny|89|3114
 Chasseneuil-sur-Bonnieure|16|3111
@@ -3712,7 +3713,7 @@ Lailly-en-Val|45|3101
 Trémentines|49|3101
 Ponteilla|66|3101
 Dissay|86|3101
-Soulac-sur-Mer|33|3100
+Soulac-sur-Mer|33|3100|L
 Buhl|68|3100
 Nesmy|85|3100
 Anor|59|3099
@@ -3744,7 +3745,7 @@ Balan|01|3077
 Erbray|44|3072
 Ingrandes-le-Fresne-sur-Loire|49|3071
 La Motte|83|3071
-Chauvé|44|3070
+Chauvé|44|3070|L
 Villefranque|64|3069
 Pulversheim|68|3069
 Chens-sur-Léman|74|3068
@@ -3761,14 +3762,14 @@ Pont-à-Vendin|62|3062
 Pouembout|988|3062
 La Roche-Chalais|24|3060
 Port-Saint-Père|44|3059
-Saint-Génis-des-Fontaines|66|3059
-Breuillet|17|3058
+Saint-Génis-des-Fontaines|66|3059|L
+Breuillet|17|3058|L
 Agnetz|60|3058
 Nontron|24|3057
 Albigny-sur-Saône|69|3057
 Faremoutiers|77|3057
 Coufouleux|81|3057
-San-Martino-di-Lota|2B|3056
+San-Martino-di-Lota|2B|3056|L
 Gémozac|17|3052
 Montesquieu-Volvestre|31|3050
 Commelle-Vernay|42|3050
@@ -3777,11 +3778,11 @@ Pommeuse|77|3049
 Les Fins|25|3048
 Urcuit|64|3047
 Lecelles|59|3046
-La Turbie|06|3045
+La Turbie|06|3045|L
 Senonches|28|3045
-Paimbœuf|44|3045
+Paimbœuf|44|3045|L
 Cosnac|19|3044
-Rédené|29|3043
+Rédené|29|3043|L
 Lapeyrouse-Fossat|31|3043
 Feucherolles|78|3043
 Saint-Ouen|41|3041
@@ -3800,8 +3801,8 @@ Yenne|73|3026
 Nuku-Hiva|987|3025
 Boivre-la-Vallée|86|3024
 Pontonx-sur-l'Adour|40|3021
-Agon-Coutainville|50|3020
-Louannec|22|3019
+Agon-Coutainville|50|3020|L
+Louannec|22|3019|L
 Aubusson|23|3018
 Saint-Nazaire-les-Eymes|38|3016
 Puttelange-aux-Lacs|57|3016
@@ -3818,26 +3819,26 @@ Retournac|43|3007
 Cintegabelle|31|3006
 Saint-Drézéry|34|3006
 Courcelles-Chaussy|57|3006
-Maureillas-las-Illas|66|3006
+Maureillas-las-Illas|66|3006|L
 Sainte-Croix-en-Plaine|68|3004
 Saint-Saturnin-lès-Apt|84|3004
 Ailly-sur-Somme|80|3003
 Bozouls|12|3001
 Boën-sur-Lignon|42|3001
-L'Houmeau|17|3000
+L'Houmeau|17|3000|L
 Murviel-lès-Béziers|34|3000
 Saint-Venant|62|2999
 Saint-Laurent-des-Arbres|30|2996
 Lorris|45|2996
 Thise|25|2994
-Brem-sur-Mer|85|2993
-Zonza|2A|2989
+Brem-sur-Mer|85|2993|L
+Zonza|2A|2989|L
 Cailloux-sur-Fontaines|69|2989
 Iteuil|86|2989
 Soues|65|2988
-Rinxent|62|2987
+Rinxent|62|2987|L
 Rue|80|2987
-Plozévet|29|2984
+Plozévet|29|2984|L
 Barjols|83|2984
 Les Epesses|85|2983
 Aniane|34|2979
@@ -3856,7 +3857,7 @@ Mauléon-Licharre|64|2972
 Hésingue|68|2972
 Tourrettes|83|2972
 Gorcy|54|2971
-Saint-Coulomb|35|2969
+Saint-Coulomb|35|2969|L
 Frontenay-Rohan-Rohan|79|2967
 Briscous|64|2965
 Sorèze|81|2965
@@ -3879,7 +3880,7 @@ Saint-Baldoph|73|2949
 Saint-Calais|72|2948
 La Biolle|73|2948
 Grisy-Suisnes|77|2948
-Le Marigot|972|2948
+Le Marigot|972|2948|L
 Diémoz|38|2947
 Fleurbaix|62|2947
 Pont-de-Larn|81|2947
@@ -3899,11 +3900,11 @@ La Ferté-en-Ouche|61|2938
 Les Brouzils|85|2938
 Autrans-Méaudre en Vercors|38|2936
 Saint-Didier-sur-Chalaronne|01|2934
-Ploubazlanec|22|2932
+Ploubazlanec|22|2932|L
 Montblanc|34|2932
 Lalinde|24|2931
 Labastidette|31|2930
-Saint-Viaud|44|2929
+Saint-Viaud|44|2929|L
 Péaule|56|2929
 Fresnay-sur-Sarthe|72|2928
 Rives-du-Couesnon|35|2927
@@ -3928,7 +3929,7 @@ Panissières|42|2911
 Allonnes|49|2911
 Avord|18|2909
 Tresserve|73|2909
-Cany-Barville|76|2909
+Cany-Barville|76|2909|L
 Beaumont Saint-Cyr|86|2908
 Giromagny|90|2907
 Labouheyre|40|2906
@@ -3942,7 +3943,7 @@ Yvrac|33|2899
 Cruas|07|2898
 Auneuil|60|2898
 Orcet|63|2897
-Sainte-Mère-Église|50|2896
+Sainte-Mère-Église|50|2896|L
 Pennautier|11|2895
 Plerguer|35|2895
 Sennecey-le-Grand|71|2895
@@ -3950,7 +3951,7 @@ Rosières-en-Santerre|80|2894
 Mouzillon|44|2893
 Megève|74|2893
 La Grande-Paroisse|77|2893
-Batz-sur-Mer|44|2892
+Batz-sur-Mer|44|2892|L
 Corquilleroy|45|2891
 Fresnoy-le-Grand|02|2890
 Dormans|51|2890
@@ -3980,7 +3981,7 @@ Donnery|45|2873
 Pérignat-lès-Sarliève|63|2872
 Bordes|64|2872
 Vernou-sur-Brenne|37|2870
-Saint-Molf|44|2870
+Saint-Molf|44|2870|L
 Saint-Jean-Brévelay|56|2869
 Cissé|86|2869
 Gries|67|2868
@@ -3992,19 +3993,19 @@ Vallières-sur-Fier|74|2860
 Rozay-en-Brie|77|2860
 Bar-sur-Seine|10|2858
 Labourse|62|2858
-Étaules|17|2857
+Étaules|17|2857|L
 Rieux|56|2856
 Athée-sur-Cher|37|2855
 Courchelettes|59|2855
 Champcueil|91|2854
 Alleins|13|2852
-Basse-Pointe|972|2852
+Basse-Pointe|972|2852|L
 Saint-Jean-du-Falga|09|2851
 Modane|73|2849
 Saint-Clément|89|2849
-Saint-Jouan-des-Guérets|35|2847
+Saint-Jouan-des-Guérets|35|2847|L
 Margaux-Cantenac|33|2845
-L'Aiguillon-la-Presqu'île|85|2845
+L'Aiguillon-la-Presqu'île|85|2845|L
 Val-d'Arguenon|22|2844
 Seiches-sur-le-Loir|49|2844
 Rives d'Andaine|61|2844
@@ -4017,10 +4018,10 @@ La Boixe|16|2841
 Sussargues|34|2840
 Sainghin-en-Mélantois|59|2840
 Miremont|31|2838
-Vendays-Montalivet|33|2838
+Vendays-Montalivet|33|2838|L
 Bury|60|2838
 Fère-en-Tardenois|02|2836
-Gouesnach|29|2836
+Gouesnach|29|2836|L
 Langogne|48|2836
 Le Conquet|29|2835
 Burbure|62|2834
@@ -4032,7 +4033,7 @@ Allouagne|62|2823
 Crevin|35|2819
 Polignac|43|2819
 Blangy-sur-Bresle|76|2819
-Goderville|76|2818
+Goderville|76|2818|L
 Seillons-Source-d'Argens|83|2818
 La Roquebrussanne|83|2817
 Mercurol-Veaunes|26|2816
@@ -4061,7 +4062,7 @@ Wignehies|59|2804
 Le Cheylard|07|2803
 Genech|59|2803
 Cosnes-et-Romain|54|2802
-L'Île-d'Olonne|85|2802
+L'Île-d'Olonne|85|2802|L
 Candé|49|2801
 Rodilhan|30|2799
 Peyruis|04|2798
@@ -4071,7 +4072,7 @@ Levroux|36|2797
 Joué-sur-Erdre|44|2797
 Maisse|91|2797
 La Fère|02|2796
-Névez|29|2795
+Névez|29|2795|L
 Artannes-sur-Indre|37|2795
 Villeneuve-sur-Aisne|02|2792
 Amancy|74|2792
@@ -4087,14 +4088,14 @@ Chocques|62|2785
 Ducey-Les Chéris|50|2784
 Sérifontaine|60|2784
 Saint-Gervais|85|2781
-Saint-Agnant|17|2780
+Saint-Agnant|17|2780|L
 L'Isle-sur-le-Doubs|25|2780
 Connerré|72|2780
 Meslay-du-Maine|53|2779
-Saint-Nazaire|66|2779
+Saint-Nazaire|66|2779|L
 Montfort-l'Amaury|78|2779
-Sartilly-Baie-Bocage|50|2778
-Pont-Aven|29|2777
+Sartilly-Baie-Bocage|50|2778|L
+Pont-Aven|29|2777|L
 Baixas|66|2777
 Maillane|13|2775
 Les Adrets-de-l'Estérel|83|2775
@@ -4107,11 +4108,11 @@ Wassy|52|2771
 Dieuze|57|2770
 Beaumont-le-Roger|27|2769
 Ampuis|69|2769
-Saint-Lunaire|35|2768
+Saint-Lunaire|35|2768|L
 Sallebœuf|33|2767
 Hambach|57|2766
 Thuré|86|2765
-Sare|64|2763
+Sare|64|2763|L
 Orgon|13|2762
 Montignac-Lascaux|24|2762
 Figanières|83|2762
@@ -4122,7 +4123,7 @@ Venette|60|2758
 Cherré-Au|72|2758
 Malaucène|84|2758
 Bignan|56|2757
-Collioure|66|2756
+Collioure|66|2756|L
 Sinnamary|973|2756
 Sains-du-Nord|59|2755
 Saint-André-le-Gaz|38|2754
@@ -4144,7 +4145,7 @@ Chabris|36|2740
 Lahonce|64|2740
 Quintin|22|2739
 Saleux|80|2739
-Balaruc-le-Vieux|34|2737
+Balaruc-le-Vieux|34|2737|L
 Ronchamp|70|2737
 Huttenheim|67|2735
 Donzenac|19|2733
@@ -4164,7 +4165,7 @@ Geudertheim|67|2727
 Saint-Christophe-du-Ligneron|85|2727
 Chailles|41|2726
 Vernosc-lès-Annonay|07|2725
-Fontaine-la-Mallet|76|2725
+Fontaine-la-Mallet|76|2725|L
 Périgny|94|2724
 Saint-Witz|95|2724
 Rhinau|67|2723
@@ -4174,7 +4175,7 @@ Anet|28|2721
 Volgelsheim|68|2720
 Caux|34|2718
 Beaumont-en-Véron|37|2717
-Sainte-Foy|85|2717
+Sainte-Foy|85|2717|L
 Cellettes|41|2715
 Valdivienne|86|2715
 Vert-le-Petit|91|2714
@@ -4201,7 +4202,7 @@ Magescq|40|2698
 Saint-Mars-de-Coutais|44|2698
 Hanches|28|2696
 Saint-Martin-de-Londres|34|2696
-Corneilla-del-Vercol|66|2696
+Corneilla-del-Vercol|66|2696|L
 Castres-Gironde|33|2695
 Saint-Just-Chaleyssin|38|2695
 Cubzac-les-Ponts|33|2693
@@ -4213,10 +4214,10 @@ Saint-Maurice-de-Lignon|43|2688
 Guérard|77|2688
 Richebourg|62|2687
 Dommartin|69|2687
-Gassin|83|2687
+Gassin|83|2687|L
 Taluyers|69|2686
-Piriac-sur-Mer|44|2685
-Calenzana|2B|2684
+Piriac-sur-Mer|44|2685|L
+Calenzana|2B|2684|L
 Marzan|56|2684
 Bernes-sur-Oise|95|2684
 Verlinghem|59|2682
@@ -4235,18 +4236,18 @@ Cadillac-sur-Garonne|33|2670
 Dunières|43|2670
 Guilvinec|29|2669
 Montigny-sur-Loing|77|2669
-Criquetot-l'Esneval|76|2668
+Criquetot-l'Esneval|76|2668|L
 Bosmie-l'Aiguille|87|2667
 Aigueperse|63|2665
-La Richardais|35|2664
+La Richardais|35|2664|L
 Le Plessis-Grammoire|49|2664
-Plougoumelen|56|2664
+Plougoumelen|56|2664|L
 Alby-sur-Chéran|74|2664
 Le Bugue|24|2663
 Chevilly|45|2663
 Souchez|62|2663
 Les Vans|07|2662
-Vinassan|11|2662
+Vinassan|11|2662|L
 Miserey-Salines|25|2661
 Morzine|74|2658
 Larçay|37|2657
@@ -4271,9 +4272,9 @@ Charleval|13|2640
 Toury|28|2640
 Rieux-Volvestre|31|2639
 Les Touches|44|2638
-Coquelles|62|2638
+Coquelles|62|2638|L
 Les Landes-Genusson|85|2638
-La Jarne|17|2637
+La Jarne|17|2637|L
 Saint-Branchs|37|2637
 Achenheim|67|2637
 Champforgeuil|71|2637
@@ -4291,8 +4292,8 @@ Nieuil-l'Espoir|86|2631
 Puy-Guillaume|63|2630
 Vernou-la-Celle-sur-Seine|77|2630
 Gometz-le-Châtel|91|2630
-La Roche-Jaudy|22|2629
-Ventiseri|2B|2629
+La Roche-Jaudy|22|2629|L
+Ventiseri|2B|2629|L
 La Queue-les-Yvelines|78|2629
 La Bâtie-Neuve|05|2628
 Foug|54|2628
@@ -4300,21 +4301,21 @@ Vieux-Berquin|59|2628
 Haspres|59|2626
 Beychac-et-Caillau|33|2625
 La Broque|67|2625
-Longeville-sur-Mer|85|2625
+Longeville-sur-Mer|85|2625|L
 Garancières|78|2621
 Cagnac-les-Mines|81|2621
 Val-d'Izé|35|2620
 Saint-Domineuc|35|2619
 Saint-Étienne-de-Crossey|38|2619
 Ambrières-les-Vallées|53|2619
-Équihen-Plage|62|2619
+Équihen-Plage|62|2619|L
 Couzon-au-Mont-d'Or|69|2619
 Portets|33|2618
 Pommiers|69|2618
 Le Bourg-d'Oisans|38|2617
 La Milesse|72|2617
 Villeneuve-Saint-Germain|02|2616
-Vendres|34|2616
+Vendres|34|2616|L
 Loury|45|2616
 Saint-Pierre-la-Palud|69|2616
 Champlan|91|2615
@@ -4327,12 +4328,12 @@ Chauché|85|2613
 Louvigny|14|2612
 Restinclières|34|2612
 Plouénan|29|2610
-Saint-Louis|971|2610
+Saint-Louis|971|2610|L
 Ivry-la-Bataille|27|2609
 Frelinghien|59|2609
 Drémil-Lafage|31|2608
-Port-Louis|56|2608
-Le Bono|56|2608
+Port-Louis|56|2608|L
+Le Bono|56|2608|L
 Châtenois-les-Forges|90|2608
 Kilstett|67|2607
 Bessèges|30|2606
@@ -4347,8 +4348,8 @@ Trélon|59|2604
 Hilsenheim|67|2604
 Le Fauga|31|2603
 Grâces|22|2601
-Gestel|56|2601
-Épouville|76|2601
+Gestel|56|2601|L
+Épouville|76|2601|L
 La Châtaigneraie|85|2600
 Le Russey|25|2599
 Le Palais|56|2599
@@ -4360,7 +4361,7 @@ Oberschaeffolsheim|67|2597
 Baldersheim|68|2596
 Tourville-la-Rivière|76|2596
 Charly-sur-Marne|02|2594
-Corsept|44|2594
+Corsept|44|2594|L
 Cauchy-à-la-Tour|62|2593
 Montboucher-sur-Jabron|26|2592
 Sens-de-Bretagne|35|2592
@@ -4370,7 +4371,7 @@ Xertigny|88|2589
 Pouilly-sous-Charlieu|42|2588
 Montgiscard|31|2587
 Damparis|39|2587
-Colleville-Montgomery|14|2586
+Colleville-Montgomery|14|2586|L
 Saint-Jean-du-Gard|30|2586
 Saint-Yzan-de-Soudiac|33|2586
 Longueil-Annel|60|2586
@@ -4380,14 +4381,14 @@ Guiclan|29|2585
 Sainte-Flaive-des-Loups|85|2585
 Saint-Étienne-du-Bois|01|2584
 Arc-sur-Tille|21|2584
-Penvénan|22|2584
+Penvénan|22|2584|L
 Grand-Fougeray|35|2584
 Villebarou|41|2584
 Josselin|56|2584
 Villedieu-sur-Indre|36|2583
 Frans|01|2582
 Vivy|49|2582
-Camiers|62|2582
+Camiers|62|2582|L
 Thio|988|2581
 Cattenom|57|2580
 Beautor|02|2579
@@ -4403,7 +4404,7 @@ Gambais|78|2574
 Morbecque|59|2573
 Treffléan|56|2572
 Talensac|35|2571
-Verton|62|2571
+Verton|62|2571|L
 Nieul-le-Dolent|85|2571
 Toucy|89|2571
 Eymet|24|2569
@@ -4427,7 +4428,7 @@ Gragnague|31|2553
 Oradour-sur-Glane|87|2550
 Vervins|02|2549
 Noyal-Muzillac|56|2548
-Gainneville|76|2548
+Gainneville|76|2548|L
 Nexon|87|2548
 Auxi-le-Château|62|2547
 Saint-Martin-d'Auxigny|18|2546
@@ -4441,7 +4442,7 @@ Ouzouer-sur-Loire|45|2543
 Chadrac|43|2542
 Jugon-les-Lacs|22|2541
 Prémilhat|03|2540
-Mers-les-Bains|80|2540
+Mers-les-Bains|80|2540|L
 Bais|35|2539
 La Léchère|73|2538
 Huriel|03|2536
@@ -4460,18 +4461,18 @@ Granges-Aumontzey|88|2529
 Arthès|81|2528
 Opio|06|2527
 La Rivière-Saint-Sauveur|14|2527
-Criel-sur-Mer|76|2527
+Criel-sur-Mer|76|2527|L
 Plan-d'Aups-Sainte-Baume|83|2527
 Les Bois d'Anjou|49|2525
 Saint-Amand-Villages|50|2525
 Gonnehem|62|2525
-Trégastel|22|2524
+Trégastel|22|2524|L
 Rantigny|60|2524
 Conques-sur-Orbiel|11|2523
 Vibraye|72|2523
 Civray|86|2522
 Port-Sainte-Foy-et-Ponchapt|24|2520
-Port-Bail-sur-Mer|50|2520
+Port-Bail-sur-Mer|50|2520|L
 Prayssac|46|2519
 Ruelisheim|68|2519
 Barcelonnette|04|2518
@@ -4487,7 +4488,7 @@ Monchecourt|59|2516
 Fitz-James|60|2514
 Roëzé-sur-Sarthe|72|2514
 Caraman|31|2513
-La Fresnais|35|2509
+La Fresnais|35|2509|L
 Villeneuve-de-Marsan|40|2508
 Sainte-Foy-la-Grande|33|2507
 Bouligny|55|2507
@@ -4515,7 +4516,7 @@ Maureilhan|34|2495
 Bazancourt|51|2495
 Anthy-sur-Léman|74|2495
 Bourbon-l'Archambault|03|2494
-Camaret-sur-Mer|29|2494
+Camaret-sur-Mer|29|2494|L
 Calmont|31|2494
 Condé-sur-Sarthe|61|2494
 Sailly-Labourse|62|2493
@@ -4528,14 +4529,14 @@ Orgerus|78|2489
 Val-Revermont|01|2488
 Beautiran|33|2488
 Soultzmatt|68|2487
-Lion-sur-Mer|14|2486
+Lion-sur-Mer|14|2486|L
 Loriol-du-Comtat|84|2486
 Hinges|62|2485
 Crissey|71|2485
 Sainte-Reine-de-Bretagne|44|2484
 Tigy|45|2484
 Offendorf|67|2484
-Rivedoux-Plage|17|2483
+Rivedoux-Plage|17|2483|L
 Bort-les-Orgues|19|2483
 Audun-le-Roman|54|2483
 Saint-Mars-d'Outillé|72|2483
@@ -4554,10 +4555,10 @@ La Terrasse|38|2470
 Tressange|57|2470
 Le Nouvion-en-Thiérache|02|2468
 Breuil-le-Sec|60|2467
-Ploumilliau|22|2466
+Ploumilliau|22|2466|L
 Hermes|60|2466
 Saint-Contest|14|2465
-Salles-sur-Mer|17|2465
+Salles-sur-Mer|17|2465|L
 Poilly-lez-Gien|45|2465
 Varennes-Jarcy|91|2465
 Janville-en-Beauce|28|2464
@@ -4571,7 +4572,7 @@ Séez|73|2459
 Morbier|39|2456
 Hienghène|988|2455
 Laroque-d'Olmes|09|2454
-Santec|29|2454
+Santec|29|2454|L
 Pugnac|33|2453
 Saint-Julien|83|2453
 Avessac|44|2452
@@ -4579,7 +4580,7 @@ La Chapelle-Fleurigné|35|2451
 Péchabou|31|2449
 Ungersheim|68|2449
 Louargat|22|2448
-Arbonne|64|2447
+Arbonne|64|2447|L
 Flins-sur-Seine|78|2447
 Damigny|61|2446
 Illfurth|68|2445
@@ -4587,15 +4588,15 @@ Brison-Saint-Innocent|73|2445
 Vert-le-Grand|91|2444
 Château-Gaillard|01|2443
 Saint-Vigor-le-Grand|14|2443
-Condette|62|2443
+Condette|62|2443|L
 Truyes|37|2442
 Naveil|41|2442
 Beaumes-de-Venise|84|2442
 Saint-Ferréol-d'Auroure|43|2441
 Piennes|54|2441
 Tucquegnieux|54|2441
-Villers-sur-Mer|14|2440
-Saint-Père-Marc-en-Poulet|35|2440
+Villers-sur-Mer|14|2440|L
+Saint-Père-Marc-en-Poulet|35|2440|L
 Gorron|53|2440
 Valorbiquet|14|2439
 Saint-Paulien|43|2439
@@ -4604,12 +4605,12 @@ Saint-Félix|74|2439
 Saint-Médard-de-Guizières|33|2438
 Romagné|35|2438
 Saint-Germain|10|2437
-Bernières-sur-Mer|14|2437
+Bernières-sur-Mer|14|2437|L
 Étival-Clairefontaine|88|2437
 Schœneck|57|2435
 Busigny|59|2435
 Abondant|28|2434
-Saintes-Maries-de-la-Mer|13|2433
+Saintes-Maries-de-la-Mer|13|2433|L
 Saint-Armel|35|2433
 Plateau-des-Petites-Roches|38|2433
 Caumont-sur-Aure|14|2431
@@ -4628,7 +4629,7 @@ Neyron|01|2421
 Beaulieu-sous-la-Roche|85|2421
 Montreuil-sur-Ille|35|2420
 Doudeville|76|2420
-Notre-Dame-de-Monts|85|2420
+Notre-Dame-de-Monts|85|2420|L
 Saint-Ouen-de-Thouberville|27|2419
 Montardon|64|2419
 Saint-Denis-la-Chevasse|85|2419
@@ -4643,14 +4644,14 @@ Cantenay-Épinard|49|2415
 Feuquières-en-Vimeu|80|2414
 Kaltenhouse|67|2412
 Sathonay-Village|69|2412
-Arques-la-Bataille|76|2412
+Arques-la-Bataille|76|2412|L
 Cornas|07|2410
 Cessenon-sur-Orb|34|2410
 Varetz|19|2409
 Plonéis|29|2409
 Ouégoa|988|2409
 Théding|57|2408
-Évenos|83|2406
+Évenos|83|2406|L
 Riom-ès-Montagnes|15|2405
 Vallon-Pont-d'Arc|07|2403
 Montmoreau|16|2403
@@ -4667,7 +4668,7 @@ Grenade-sur-l'Adour|40|2398
 Bouvigny-Boyeffles|62|2398
 Rioz|70|2398
 Verniolle|09|2397
-Saint-Alban|22|2397
+Saint-Alban|22|2397|L
 Chevaigné|35|2397
 Saint-Sylvestre-sur-Lot|47|2397
 Porcelette|57|2397
@@ -4679,7 +4680,7 @@ Selongey|21|2395
 Les Salles-du-Gardon|30|2395
 Saint-Michel-de-Maurienne|73|2395
 Saint-Varent|79|2395
-Jullouville|50|2394
+Jullouville|50|2394|L
 Sèvres-Anxaumont|86|2394
 Arc-lès-Gray|70|2393
 Flavin|12|2392
@@ -4737,13 +4738,13 @@ Chef-Boutonne|79|2371
 Hiva-Oa|987|2371
 Presles-en-Brie|77|2369
 Néris-les-Bains|03|2368
-La Barre-de-Monts|85|2367
+La Barre-de-Monts|85|2367|L
 Chuzelles|38|2366
 Pleubian|22|2365
 Noyarey|38|2365
 Riaillé|44|2365
 Guégon|56|2365
-Saint-Rogatien|17|2364
+Saint-Rogatien|17|2364|L
 Bourganeuf|23|2364
 Saubens|31|2364
 Rouffiac-Tolosan|31|2363
@@ -4770,7 +4771,7 @@ Andilly|17|2350
 Fontenay-lès-Briis|91|2350
 Saint-Amour|39|2349
 Basse-Ham|57|2349
-Saint-Folquin|62|2349
+Saint-Folquin|62|2349|L
 Bezouce|30|2348
 Casseneuil|47|2348
 Maussane-les-Alpilles|13|2347
@@ -4780,7 +4781,7 @@ Sablons|38|2346
 Urt|64|2346
 Fessenheim|68|2345
 Coulonges-sur-l'Autize|79|2345
-Saint-Pierre-Quiberon|56|2344
+Saint-Pierre-Quiberon|56|2344|L
 Bray-sur-Seine|77|2344
 Courtisols|51|2343
 Monflanquin|47|2342
@@ -4798,14 +4799,14 @@ Rochefort-sur-Loire|49|2333
 Cissac-Médoc|33|2332
 Cepoy|45|2332
 Ponérihouen|988|2332
-Mathieu|14|2331
+Mathieu|14|2331|L
 Corseul|22|2331
 Bessenay|69|2331
 Fontcouverte|17|2330
 Bailleul-sur-Thérain|60|2330
 Langlade|30|2329
 Vignoc|35|2329
-Saint-Michel-en-l'Herm|85|2329
+Saint-Michel-en-l'Herm|85|2329|L
 Échenevex|01|2328
 Lamastre|07|2327
 Rurange-lès-Thionville|57|2327
@@ -4831,12 +4832,12 @@ Firmi|12|2318
 Bersée|59|2318
 Saint-Brandan|22|2317
 Plaine-et-Vallées|79|2317
-Cayeux-sur-Mer|80|2316
+Cayeux-sur-Mer|80|2316|L
 Callac|22|2312
 Brézins|38|2312
 Bois-de-Haye|54|2312
 Ruoms|07|2311
-Saint-Jean-Pla-de-Corts|66|2311
+Saint-Jean-Pla-de-Corts|66|2311|L
 Mouxy|73|2311
 La Boissière-de-Montaigu|85|2311
 Saint-Étienne-du-Bois|85|2311
@@ -4848,7 +4849,7 @@ Le Vigen|87|2310
 Lavardac|47|2307
 Léon|40|2306
 Bréhan|56|2306
-Saint-Valery-sur-Somme|80|2306
+Saint-Valery-sur-Somme|80|2306|L
 Lagrave|81|2305
 Saint-Germain-du-Puch|33|2304
 La Chapelle-Thouarault|35|2304
@@ -4857,7 +4858,7 @@ Rohrbach-lès-Bitche|57|2301
 Irodouër|35|2300
 Mexy|54|2300
 Izernore|01|2299
-Saint-Laurent-de-la-Prée|17|2299
+Saint-Laurent-de-la-Prée|17|2299|L
 Pomérols|34|2299
 Coulon|79|2299
 Saint-Saëns|76|2298
@@ -4869,7 +4870,7 @@ Guillestre|05|2295
 Le Monastère|12|2295
 La Couture-Boussey|27|2295
 Mionnay|01|2294
-Tréguier|22|2294
+Tréguier|22|2294|L
 Entrammes|53|2294
 Rebais|77|2294
 Châtillon-sur-Indre|36|2293
@@ -4888,7 +4889,7 @@ Drefféac|44|2288
 Pussay|91|2288
 Cozes|17|2287
 Eyzin-Pinet|38|2285
-Plouharnel|56|2285
+Plouharnel|56|2285|L
 Saint-Georges-du-Bois|72|2285
 Foucherans|39|2284
 Villers-sous-Saint-Leu|60|2284
@@ -4900,22 +4901,22 @@ Mérindol|84|2283
 Plomodiern|29|2282
 Poix-de-Picardie|80|2282
 Naves|19|2281
-Plounévez-Lochrist|29|2281
+Plounévez-Lochrist|29|2281|L
 Haulchin|59|2281
 Saint-Nicolas-de-la-Grave|82|2281
-Meucon|56|2280
+Meucon|56|2280|L
 Réding|57|2280
-Le Perrier|85|2280
+Le Perrier|85|2280|L
 Cussac-Fort-Médoc|33|2279
 Remoulins|30|2278
 Lessay|50|2278
 Faumont|59|2278
 Saint-Agrève|07|2277
 Saint-Sulpice-sur-Lèze|31|2277
-Angresse|40|2277
+Angresse|40|2277|L
 Metzervisse|57|2277
 Méounes-lès-Montrieux|83|2277
-L'Aiguillon-sur-Vie|85|2277
+L'Aiguillon-sur-Vie|85|2277|L
 Vouneuil-sur-Vienne|86|2277
 Nassandres sur Risle|27|2276
 Rœschwoog|67|2275
@@ -4927,21 +4928,21 @@ Noyelles-lès-Vermelles|62|2273
 Ballon-Saint Mars|72|2273
 Margencel|74|2273
 Nouan-le-Fuzelier|41|2272
-Arzon|56|2271
+Arzon|56|2271|L
 Sauzé-entre-Bois|79|2271
 Floing|08|2270
 Rocroi|08|2270
-Plourivo|22|2270
-Plouguin|29|2268
+Plourivo|22|2270|L
+Plouguin|29|2268|L
 Gièvres|41|2268
 Lusigny-sur-Barse|10|2267
 Cuverville|14|2267
-Aléria|2B|2267
+Aléria|2B|2267|L
 Hédé-Bazouges|35|2267
 Herlies|59|2267
 Marboz|01|2264
 Lavilledieu|07|2264
-Clohars-Fouesnant|29|2264
+Clohars-Fouesnant|29|2264|L
 Beaulieu|34|2264
 Gommegnies|59|2264
 Saint-Étienne-des-Oullières|69|2264
@@ -4951,23 +4952,23 @@ Epfig|67|2263
 Vignacourt|80|2263
 Lussac-les-Châteaux|86|2263
 Frangy|74|2262
-Creully sur Seulles|14|2261
+Creully sur Seulles|14|2261|L
 Morancé|69|2261
 Novalaise|73|2261
 Septfonds|82|2261
 Jujurieux|01|2260
 Soliers|14|2260
 Vinça|66|2260
-Trémuson|22|2259
+Trémuson|22|2259|L
 Saulnes|54|2259
 Malataverne|26|2258
-Saint-Briac-sur-Mer|35|2258
+Saint-Briac-sur-Mer|35|2258|L
 Corbehem|62|2258
 Franois|25|2257
 Cappelle-en-Pévèle|59|2257
 Racquinghem|62|2257
 Avanne-Aveney|25|2256
-Laroque-des-Albères|66|2256
+Laroque-des-Albères|66|2256|L
 La Chapelle-Saint-Aubin|72|2256
 Bois-de-Céné|85|2256
 Aubord|30|2253
@@ -4988,7 +4989,7 @@ Nouvion-sur-Meuse|08|2249
 Braine|02|2248
 Boulieu-lès-Annonay|07|2248
 Seyssuel|38|2248
-Itxassou|64|2248
+Itxassou|64|2248|L
 Dannemarie|68|2248
 Sainte-Marie|35|2247
 Lassay-les-Châteaux|53|2247
@@ -5024,7 +5025,7 @@ Saint-Victor-la-Coste|30|2233
 Lombez|32|2233
 Brécé|35|2232
 Avesnelles|59|2232
-Merville-Franceville-Plage|14|2231
+Merville-Franceville-Plage|14|2231|L
 Coullons|45|2231
 Méteren|59|2231
 Labaroche|68|2231
@@ -5037,10 +5038,10 @@ Arudy|64|2228
 Livry-sur-Seine|77|2226
 Avanton|86|2226
 Vendeuvre-sur-Barse|10|2225
-Esnandes|17|2224
+Esnandes|17|2224|L
 Kœnigsmacker|57|2224
 La Cavalerie|12|2223
-Barneville-Carteret|50|2223
+Barneville-Carteret|50|2223|L
 Lampaul-Plouarzel|29|2221
 Grosbreuil|85|2221
 Sarras|07|2220
@@ -5055,7 +5056,7 @@ Saint-Melaine-sur-Aubance|49|2216
 Hôpital-Camfrout|29|2215
 Langoiran|33|2215
 Bully|69|2213
-Notre-Dame-de-Riez|85|2213
+Notre-Dame-de-Riez|85|2213|L
 Nages-et-Solorgues|30|2212
 Feneu|49|2212
 Baulon|35|2210
@@ -5071,7 +5072,7 @@ Cheny|89|2206
 Les Églisottes-et-Chalaures|33|2205
 Javené|35|2205
 Bouin|85|2205
-Givrand|85|2205
+Givrand|85|2205|L
 Senones|88|2205
 Pont-de-Vaux|01|2204
 Grane|26|2204
@@ -5115,7 +5116,7 @@ Montagnat|01|2186
 Edern|29|2186
 Septème|38|2186
 Égreville|77|2186
-Falicon|06|2185
+Falicon|06|2185|L
 Boisseron|34|2185
 Tubuai|987|2185
 Saint-Thurial|35|2184
@@ -5148,13 +5149,13 @@ Saint-Julien-du-Sault|89|2173
 Mézériat|01|2172
 Brécey|50|2172
 Roquecourbe|81|2172
-Mesquer|44|2171
+Mesquer|44|2171|L
 Saint-Léger-les-Vignes|44|2171
 Fléville-devant-Nancy|54|2171
 La Chapelle-la-Reine|77|2170
 Saint-Agathon|22|2169
-Loupian|34|2169
-Luneray|76|2169
+Loupian|34|2169|L
+Luneray|76|2169|L
 Saint-Alban-de-Roche|38|2168
 Saint-Clément-de-la-Place|49|2168
 Corny-sur-Moselle|57|2168
@@ -5172,7 +5173,7 @@ Dambach-la-Ville|67|2165
 Bonnelles|78|2165
 Sainte-Anastasie-sur-Issole|83|2165
 Lumbin|38|2164
-Larressore|64|2163
+Larressore|64|2163|L
 Rurutu|987|2163
 Balazé|35|2162
 Chailly-en-Bière|77|2162
@@ -5187,11 +5188,11 @@ Aubigné-Racan|72|2158
 Pirey|25|2156
 Loué|72|2156
 Laize-Clinchamps|14|2155
-Plourhan|22|2155
+Plourhan|22|2155|L
 Pompertuzat|31|2155
 Lompret|59|2155
 Monchy-Saint-Éloi|60|2155
-Espelette|64|2155
+Espelette|64|2155|L
 Sainte-Consorce|69|2154
 Saint-Aubin-sur-Gaillon|27|2153
 Cousolre|59|2153
@@ -5202,7 +5203,7 @@ Bréval|78|2151
 Saint-Ouen-d'Aunis|17|2150
 Buxy|71|2150
 Méry|73|2150
-Cervione|2B|2149
+Cervione|2B|2149|L
 Saint-Geniès-des-Mourgues|34|2148
 Saint-Victor-de-Cessieu|38|2148
 Villié-Morgon|69|2148
@@ -5210,7 +5211,7 @@ Terval|85|2147
 Rougé|44|2146
 Bourbriac|22|2145
 Gosné|35|2145
-Èze|06|2144
+Èze|06|2144|L
 Saint-Didier-de-la-Tour|38|2143
 Mirebeau|86|2143
 Saint Geniez d'Olt et d'Aubrac|12|2142
@@ -5226,14 +5227,14 @@ Ger|64|2137
 Veyrac|87|2137
 Chevannes|89|2137
 Montréal|11|2136
-Saint-Just-Luzac|17|2136
+Saint-Just-Luzac|17|2136|L
 Pontcarré|77|2136
 Preignac|33|2135
 Boran-sur-Oise|60|2135
 Le Champ-Saint-Père|85|2135
 Nogent-l'Artaud|02|2134
 Douzy|08|2134
-Lecci|2A|2134
+Lecci|2A|2134|L
 Izeaux|38|2134
 Châbons|38|2133
 Annequin|62|2133
@@ -5244,7 +5245,7 @@ Brette-les-Pins|72|2131
 Logonna-Daoulas|29|2130
 Coteaux du Lizon|39|2130
 Sonnaz|73|2130
-Le Gua|17|2129
+Le Gua|17|2129|L
 Fesches-le-Châtel|25|2129
 Berric|56|2129
 Saint-Amé|88|2129
@@ -5256,13 +5257,13 @@ Réau|77|2127
 Cambon|81|2127
 Cérons|33|2126
 Poix-du-Nord|59|2126
-Théza|66|2126
+Théza|66|2126|L
 Samois-sur-Seine|77|2126
 Le Bois-Plage-en-Ré|17|2125
 Argeliers|11|2124
 Le Pont-de-Beauvoisin|73|2124
 Callas|83|2124
-Peille|06|2123
+Peille|06|2123|L
 Frontonas|38|2123
 Le Pouget|34|2122
 Monsempron-Libos|47|2122
@@ -5271,7 +5272,7 @@ Le Sourn|56|2121
 Pouilly-les-Nonains|42|2120
 Vay|44|2120
 Boissy-l'Aillerie|95|2120
-Pouldreuzic|29|2119
+Pouldreuzic|29|2119|L
 Saint-Nazaire-d'Aude|11|2118
 Le Thou|17|2117
 Villers-Outréaux|59|2117
@@ -5301,11 +5302,11 @@ Garat|16|2105
 Ligueil|37|2105
 Brenouille|60|2105
 Peschadoires|63|2104
-Ahetze|64|2104
-Saint-Aubin-sur-Mer|14|2101
+Ahetze|64|2104|L
+Saint-Aubin-sur-Mer|14|2101|L
 Plaimpied-Givaudins|18|2101
 Saint-Julien|22|2101
-Ambon|56|2101
+Ambon|56|2101|L
 Saint-Victor|03|2100
 Saint-Lumine-de-Clisson|44|2100
 Florac Trois Rivières|48|2100
@@ -5334,18 +5335,18 @@ Combloux|74|2093
 Beautheil-Saints|77|2093
 Chaptelat|87|2093
 Courçon|17|2091
-Candillargues|34|2091
+Candillargues|34|2091|L
 Serpaize|38|2091
 Bourgs sur Colagne|48|2091
 Carspach|68|2091
 Potigny|14|2089
 Mansle-les-Fontaines|16|2088
 Sainte-Foy-de-Peyrolières|31|2088
-Saint-Pabu|29|2087
+Saint-Pabu|29|2087|L
 Pleugueneuc|35|2087
 Saint-Bonnet-en-Champsaur|05|2086
 Saint-Denis-Lanneray|28|2086
-Pénestin|56|2085
+Pénestin|56|2085|L
 Wittisheim|67|2085
 Saint-Julien-des-Landes|85|2085
 Flourens|31|2084
@@ -5368,7 +5369,7 @@ La Ménitré|49|2079
 Roquefort|47|2078
 Suze-la-Rousse|26|2077
 Bû|28|2077
-Armbouts-Cappel|59|2077
+Armbouts-Cappel|59|2077|L
 Trosly-Breuil|60|2077
 Bagnères-de-Luchon|31|2076
 Saint-Paterne - Le Chevain|72|2076
@@ -5377,11 +5378,11 @@ Murviel-lès-Montpellier|34|2075
 Mons-en-Pévèle|59|2075
 Ginasservis|83|2075
 Dortan|01|2074
-Ranville|14|2074
-Ploumoguer|29|2074
-Pietrosella|2A|2074
+Ranville|14|2074|L
+Ploumoguer|29|2074|L
+Pietrosella|2A|2074|L
 La Canourgue|48|2074
-Étel|56|2074
+Étel|56|2074|L
 La Frénaye|76|2074
 Abbaretz|44|2073
 Perthes|77|2073
@@ -5395,17 +5396,17 @@ Bergheim|68|2069
 Les Matelles|34|2068
 Assat|64|2068
 Avoine|37|2067
-Créances|50|2067
+Créances|50|2067|L
 Cagny|14|2066
 Cairon|14|2066
 Évrecy|14|2066
 Houdemont|54|2066
 Sissonne|02|2065
-Monticello|2B|2065
+Monticello|2B|2065|L
 Champdieu|42|2064
-Les Attaques|62|2064
+Les Attaques|62|2064|L
 Couilly-Pont-aux-Dames|77|2064
-San-Nicolao|2B|2062
+San-Nicolao|2B|2062|L
 Cuttoli-Corticchiato|2A|2060
 Barsac|33|2058
 Marcellaz-Albanais|74|2058
@@ -5475,9 +5476,9 @@ Reventin-Vaugris|38|2035
 Foissiat|01|2034
 Ercé-près-Liffré|35|2034
 Châteauponsac|87|2034
-Ambleteuse|62|2033
+Ambleteuse|62|2033|L
 Lampaul-Guimiliau|29|2032
-Rety|62|2032
+Rety|62|2032|L
 Mozé-sur-Louet|49|2031
 Locqueltas|56|2031
 Prémesques|59|2031
@@ -5495,7 +5496,7 @@ Sauveterre|30|2025
 Villette-de-Vienne|38|2025
 Rountzenheim-Auenheim|67|2025
 Le Sequestre|81|2025
-Plogastel-Saint-Germain|29|2024
+Plogastel-Saint-Germain|29|2024|L
 Godewaersvelde|59|2024
 Lezay|79|2024
 Saint-Martin-du-Mont|01|2023
@@ -5504,7 +5505,7 @@ Les Côtes-d'Arey|38|2023
 Saint-Didier|35|2022
 Rosult|59|2022
 Charron|17|2021
-La Gouesnière|35|2021
+La Gouesnière|35|2021|L
 Voglans|73|2021
 Soignolles-en-Brie|77|2021
 Baillet-en-France|95|2021
@@ -5559,7 +5560,7 @@ Serre-les-Sapins|25|2004
 Saint-Hilaire-du-Rosier|38|2004
 Vienne-en-Val|45|2004
 Vernantes|49|2004
-Saint-Gildas-de-Rhuys|56|2004
+Saint-Gildas-de-Rhuys|56|2004|L
 Corneilla-la-Rivière|66|2004
 Charavines|38|2003
 Séreilhac|87|2003
@@ -5569,8 +5570,8 @@ Combaillaux|34|2001
 Saint-Romain-en-Gal|69|2001
 Rignac|12|2000
 Montbron|16|2000
-Saint-Urbain|85|2000
-Kerlouan|29|1999
+Saint-Urbain|85|2000|L
+Kerlouan|29|1999|L
 Saint-Jeoire-Prieuré|73|1999
 Craponne-sur-Arzon|43|1998
 Burlats|81|1998
@@ -5579,7 +5580,7 @@ Artenay|45|1997
 Garennes-sur-Eure|27|1996
 Saint-Joseph|42|1996
 Aumale|76|1996
-La Palme|11|1995
+La Palme|11|1995|L
 Monswiller|67|1995
 Savigny|69|1995
 Tulette|26|1994
@@ -5600,7 +5601,7 @@ Beaufort|73|1989
 Mamirolle|25|1988
 Jouy|28|1988
 Sauve|30|1988
-Bénouville|14|1987
+Bénouville|14|1987|L
 Bitschwiller-lès-Thann|68|1986
 Bart|25|1985
 Baule|45|1985
@@ -5618,7 +5619,7 @@ Messein|54|1981
 Rouhling|57|1981
 Allan|26|1980
 Ortaffa|66|1980
-Guissény|29|1979
+Guissény|29|1979|L
 Saint-Symphorien-de-Lay|42|1979
 Estevelles|62|1979
 Saint-Montan|07|1978
@@ -5629,7 +5630,7 @@ Saint-Germain-du-Bois|71|1977
 Bazouges Cré sur Loir|72|1977
 Rexpoëde|59|1976
 Sablons sur Huisne|61|1976
-Villelongue-dels-Monts|66|1976
+Villelongue-dels-Monts|66|1976|L
 Saint-Cyr-sur-Morin|77|1976
 Orbec|14|1975
 Frasne|25|1975
@@ -5638,19 +5639,19 @@ Le Temple-de-Bretagne|44|1975
 Les Molières|91|1975
 Meillac|35|1974
 Eurville-Bienville|52|1974
-Santa-Maria-di-Lota|2B|1973
+Santa-Maria-di-Lota|2B|1973|L
 Mametz|62|1973
 Noidans-lès-Vesoul|70|1973
-Plounéour-Brignogan-plages|29|1972
+Plounéour-Brignogan-plages|29|1972|L
 Astaffort|47|1972
 Beaumont-sur-Sarthe|72|1972
 Bessé-sur-Braye|72|1972
-Saint-Aubin-Routot|76|1972
+Saint-Aubin-Routot|76|1972|L
 Blodelsheim|68|1971
 Porte du Ried|68|1971
 Touvois|44|1970
 Roquetoire|62|1970
-Lanvollon|22|1969
+Lanvollon|22|1969|L
 Burnhaupt-le-Bas|68|1969
 Chaulnes|80|1969
 Malemort-du-Comtat|84|1969
@@ -5672,13 +5673,13 @@ Froideconche|70|1960
 Sornay|71|1960
 Lombron|72|1960
 Saint-André-Goule-d'Oie|85|1960
-Vairé|85|1960
+Vairé|85|1960|L
 Sours|28|1959
 Soudan|44|1959
 Lutzelhouse|67|1959
 Hurigny|71|1959
 Bourbonne-les-Bains|52|1958
-Le Crotoy|80|1958
+Le Crotoy|80|1958|L
 Rieux-Minervois|11|1957
 Biars-sur-Cère|46|1957
 Saint-Thonan|29|1956
@@ -5701,7 +5702,7 @@ Taradeau|83|1945
 Vauhallan|91|1945
 Beignon|56|1944
 Neuilly-Saint-Front|02|1943
-Damgan|56|1943
+Damgan|56|1943|L
 Marquette-en-Ostrevant|59|1943
 Campagne-lès-Hesdin|62|1943
 Albon|26|1942
@@ -5734,7 +5735,7 @@ Remy|60|1928
 Peyrestortes|66|1927
 Saint-Cosme-en-Vairais|72|1927
 Azay-le-Brûlé|79|1927
-Breuil-Magné|17|1926
+Breuil-Magné|17|1926|L
 Montoison|26|1926
 Labastide-Saint-Sernin|31|1925
 Villemoirieu|38|1925
@@ -5758,7 +5759,7 @@ Tignes|73|1919
 Simandres|69|1918
 Jasseron|01|1917
 Saint-Hilaire-des-Loges|85|1917
-Langrune-sur-Mer|14|1916
+Langrune-sur-Mer|14|1916|L
 Saint-Paul-lès-Romans|26|1916
 Bullion|78|1916
 Cubnezais|33|1915
@@ -5807,7 +5808,7 @@ Le Val-Saint-Père|50|1898
 Bachy|59|1898
 Prissé|71|1898
 Marles-en-Brie|77|1898
-Thairé|17|1897
+Thairé|17|1897|L
 Plouzévédé|29|1897
 Cambes|33|1897
 Saint-Romans|38|1897
@@ -5819,33 +5820,33 @@ Janneyrias|38|1896
 Saint-Barthélemy-de-Vals|26|1895
 Longueil-Sainte-Marie|60|1895
 Neuf-Brisach|68|1895
-Thaon|14|1894
+Thaon|14|1894|L
 Hinx|40|1894
 Châtillon-Coligny|45|1894
 Reiningue|68|1894
 Pédernec|22|1893
 La Roche-Maurice|29|1893
-Sotta|2A|1893
+Sotta|2A|1893|L
 Garidech|31|1893
 Saint-Viance|19|1892
 Saint-Sulpice-le-Guérétois|23|1892
 Saulce-sur-Rhône|26|1892
 Fussy|18|1891
-Hesdin-l'Abbé|62|1891
+Hesdin-l'Abbé|62|1891|L
 Menthon-Saint-Bernard|74|1891
 Moncourt-Fromonville|77|1891
 Saint-Cyr-sur-Menthon|01|1890
 Louvigné-de-Bais|35|1890
 Colombe|38|1890
-Assérac|44|1890
+Assérac|44|1890|L
 Le Gâvre|44|1890
 Villevieille|30|1889
 Saint-Augustin|77|1888
-Ramatuelle|83|1888
+Ramatuelle|83|1888|L
 Saint-Paulet-de-Caisson|30|1887
 Marigny-les-Usages|45|1887
 Port-Sainte-Marie|47|1887
-Bavent|14|1885
+Bavent|14|1885|L
 Sauveterre-de-Guyenne|33|1885
 Saint-Christo-en-Jarez|42|1885
 Saint-Thuriau|56|1885
@@ -5872,12 +5873,12 @@ Champigny en Rochereau|86|1878
 Les Aix-d'Angillon|18|1877
 Bazouges-la-Pérouse|35|1877
 Pierrefonds|60|1877
-Port-en-Bessin-Huppain|14|1876
+Port-en-Bessin-Huppain|14|1876|L
 Poey-de-Lescar|64|1876
 Pont-Salomon|43|1875
 Trie-Château|60|1875
 Alo|986|1875
-Venzolasca|2B|1874
+Venzolasca|2B|1874|L
 Aiton|73|1874
 Canet|11|1873
 Peillac|56|1873
@@ -5886,10 +5887,10 @@ Villeneuve-le-Comte|77|1872
 Saint-Aubin|39|1871
 Agny|62|1871
 Bonny-sur-Loire|45|1870
-Hautot-sur-Mer|76|1870
+Hautot-sur-Mer|76|1870|L
 Collobrières|83|1870
 Saint-Georges-de-Pointindoux|85|1870
-Coëtmieux|22|1869
+Coëtmieux|22|1869|L
 Écaillon|59|1869
 Cuiseaux|71|1869
 Saint-Pardoux-Soutiers|79|1869
@@ -5946,10 +5947,10 @@ Guengat|29|1846
 Berson|33|1846
 Saint-Vivien-de-Médoc|33|1846
 Montferrat|38|1846
-Arzal|56|1846
+Arzal|56|1846|L
 Laloubère|65|1846
 Plancher-Bas|70|1846
-La Trinité-sur-Mer|56|1845
+La Trinité-sur-Mer|56|1845|L
 Mazères-Lezons|64|1845
 Novéant-sur-Moselle|57|1844
 Priay|01|1842
@@ -5971,7 +5972,7 @@ Saint-Jean-le-Vieux|01|1839
 Arthez-de-Béarn|64|1837
 La Murette|38|1836
 Vix|85|1835
-Houlgate|14|1834
+Houlgate|14|1834|L
 Saint-Morillon|33|1834
 Albitreccia|2A|1833
 Bologne|52|1833
@@ -5992,13 +5993,13 @@ Grandfontaine|25|1827
 Saint-Maurice-en-Gourgois|42|1827
 Port-Brillet|53|1827
 Messei|61|1827
-Saubion|40|1826
+Saubion|40|1826|L
 Étival-lès-le-Mans|72|1826
 Saint-Antoine-du-Rocher|37|1824
 Teillé|44|1824
 Sillery|51|1824
 Glières-Val-de-Borne|74|1824
-Barbâtre|85|1824
+Barbâtre|85|1824|L
 Champagné-les-Marais|85|1824
 Saint-Pierre-le-Moûtier|58|1823
 Saint-Valérien|89|1823
@@ -6022,7 +6023,7 @@ Laurens|34|1815
 Thilouze|37|1815
 Saint-Laurent-en-Grandvaux|39|1815
 Ramonchamp|88|1815
-Lantic|22|1814
+Lantic|22|1814|L
 Mons|30|1813
 Beaumont-Louestault|37|1813
 Crépy|02|1812
@@ -6031,7 +6032,7 @@ Lannoy|59|1812
 Joyeuse|07|1811
 Pont-l'Abbé-d'Arnoult|17|1811
 Saint-Chinian|34|1811
-Quettehou|50|1811
+Quettehou|50|1811|L
 Verdun-Ciel|71|1811
 Crouy-sur-Ourcq|77|1811
 Saint-Laurent-sur-Saône|01|1810
@@ -6072,7 +6073,7 @@ Puget-Théniers|06|1798
 Sainte-Fortunade|19|1798
 Velars-sur-Ouche|21|1798
 Plouasne|22|1798
-Rouxmesnil-Bouteilles|76|1798
+Rouxmesnil-Bouteilles|76|1798|L
 Vergongheon|43|1797
 Noisy-sur-École|77|1797
 Massiac|15|1796
@@ -6082,7 +6083,7 @@ Saint-Pierre-d'Eyraud|24|1795
 Villeblevin|89|1795
 Neuville-sur-Ain|01|1794
 Haybes|08|1794
-Rospez|22|1794
+Rospez|22|1794|L
 Lentigny|42|1794
 Sainte-Radegonde|12|1793
 Parthenay-de-Bretagne|35|1793
@@ -6116,11 +6117,11 @@ Lagarrigue|81|1784
 Héry|89|1784
 Vulbens|74|1783
 Saint-Étienne-de-Mer-Morte|44|1782
-Plonévez-Porzay|29|1781
-Saint-Julien-en-Born|40|1781
+Plonévez-Porzay|29|1781|L
+Saint-Julien-en-Born|40|1781|L
 Krautergersheim|67|1781
 Sainte-Colombe|77|1781
-Port-des-Barques|17|1780
+Port-des-Barques|17|1780|L
 Villemeux-sur-Eure|28|1780
 Oletta|2B|1780
 Lyaud|74|1780
@@ -6152,19 +6153,19 @@ Saint-Victurnien|87|1774
 Eygalières|13|1773
 Vergt|24|1773
 Willer-sur-Thur|68|1773
-Figari|2A|1772
+Figari|2A|1772|L
 Paimpont|35|1772
 Congis-sur-Thérouanne|77|1772
 Saint-Ouen|80|1772
 Angervilliers|91|1772
-Matignon|22|1771
+Matignon|22|1771|L
 Nangy|74|1771
 Quintenas|07|1770
 Murat|15|1770
 Ladoix-Serrigny|21|1770
 Illange|57|1770
 Château-Chinon (Ville)|58|1770
-Ferques|62|1770
+Ferques|62|1770|L
 Massongy|74|1770
 Le Bourgneuf-la-Forêt|53|1769
 Assevent|59|1769
@@ -6179,10 +6180,10 @@ Allonne|60|1767
 Saint-Bauzille-de-Putois|34|1766
 Gacé|61|1766
 Chambaron sur Morge|63|1766
-Fontenay|76|1766
+Fontenay|76|1766|L
 Villeron|95|1766
 Agonac|24|1765
-Saint-Pierre-Église|50|1765
+Saint-Pierre-Église|50|1765|L
 Sierck-les-Bains|57|1765
 Denguin|64|1765
 Beauvoir-sur-Niort|79|1765
@@ -6210,12 +6211,12 @@ Baguer-Pican|35|1756
 Nortkerque|62|1756
 Demigny|71|1756
 Monthyon|77|1756
-Plougoulm|29|1755
+Plougoulm|29|1755|L
 Serquigny|27|1754
 Fontaine-Notre-Dame|59|1754
-Porspoder|29|1753
+Porspoder|29|1753|L
 Romagnieu|38|1753
-Vue|44|1753
+Vue|44|1753|L
 Essars|62|1753
 Nordhouse|67|1753
 Thiberville|27|1752
@@ -6229,21 +6230,21 @@ Loyat|56|1750
 Simandre|71|1750
 Tanneron|83|1750
 Marigny-le-Châtel|10|1749
-Appietto|2A|1749
+Appietto|2A|1749|L
 Aubers|59|1749
 Guiscard|60|1749
 Thénac|17|1748
 Esternay|51|1748
 Saint-Pierre-des-Nids|53|1748
 Romenay|71|1748
-Plouguiel|22|1747
+Plouguiel|22|1747|L
 Frignicourt|51|1747
 Aspach-Michelbach|68|1747
 Bennecourt|78|1747
 Ambillou|37|1746
 Tuffalun|49|1746
 Saint-Rémy-sur-Durolle|63|1746
-Bellefontaine|972|1746
+Bellefontaine|972|1746|L
 La Capelle|02|1745
 Claret|34|1745
 Saint-Jean-de-Fos|34|1745
@@ -6266,7 +6267,7 @@ Sainte-Croix-aux-Mines|68|1742
 Seine-Port|77|1742
 Lagnes|84|1742
 Cantin|59|1741
-Saint-Vincent-sur-Jard|85|1741
+Saint-Vincent-sur-Jard|85|1741|L
 Venoy|89|1741
 Bourogne|90|1741
 Les Gonds|17|1740
@@ -6290,7 +6291,7 @@ Pontfaverger-Moronvilliers|51|1734
 Prémery|58|1734
 Ceton|61|1734
 Saint-Sernin-du-Bois|71|1734
-Rogerville|76|1734
+Rogerville|76|1734|L
 Cuffies|02|1733
 Beaumontois en Périgord|24|1733
 Acquigny|27|1733
@@ -6347,7 +6348,7 @@ Lorry-lès-Metz|57|1720
 Westhoffen|67|1720
 Orgueil|82|1720
 Soussans|33|1719
-Lit-et-Mixe|40|1719
+Lit-et-Mixe|40|1719|L
 Crespières|78|1719
 Montferrat|83|1719
 Villegailhenc|11|1718
@@ -6356,12 +6357,12 @@ Saint-Vaury|23|1718
 Nézignan-l'Évêque|34|1718
 Plaissan|34|1718
 Pithiviers-le-Vieil|45|1718
-Spycker|59|1718
-Le Morne-Vert|972|1718
+Spycker|59|1718|L
+Le Morne-Vert|972|1718|L
 Montrozier|12|1717
 Noaillan|33|1717
 Yvré-le-Pôlin|72|1717
-Bierne|59|1716
+Bierne|59|1716|L
 Saint-Paterne-Racan|37|1715
 Virazeil|47|1715
 Blacé|69|1715
@@ -6450,7 +6451,7 @@ Cabrières-d'Avignon|84|1686
 La Roche-des-Arnauds|05|1685
 Lédenon|30|1685
 Valros|34|1685
-Vieux-Boucau-les-Bains|40|1685
+Vieux-Boucau-les-Bains|40|1685|L
 Flines-lès-Mortagne|59|1685
 Bréhand|22|1684
 Bailleau-le-Pin|28|1684
@@ -6466,9 +6467,9 @@ Lamasquère|31|1682
 Bourghelles|59|1682
 Les Ancizes-Comps|63|1682
 Marcigny|71|1682
-L'Ajoupa-Bouillon|972|1682
+L'Ajoupa-Bouillon|972|1682|L
 Trévé|22|1681
-Digosville|50|1681
+Digosville|50|1681|L
 Magenta|51|1680
 Tuffé Val de la Chéronne|72|1680
 Saint-Vincent-sur-Oust|56|1679
@@ -6481,7 +6482,7 @@ Rochegude|26|1678
 La Trinité-Surzur|56|1678
 Valframbert|61|1678
 Maisnil-lès-Ruitz|62|1678
-Cauville-sur-Mer|76|1678
+Cauville-sur-Mer|76|1678|L
 Sonchamp|78|1678
 Neuvéglise-sur-Truyère|15|1677
 Yèvres|28|1677
@@ -6489,7 +6490,7 @@ Nostang|56|1676
 Civrieux-d'Azergues|69|1675
 Juvigny les Vallées|50|1674
 Saint-Martin-du-Vivier|76|1674
-Vieux-Fort|971|1674
+Vieux-Fort|971|1674|L
 Montéléger|26|1673
 Boulogne-sur-Gesse|31|1673
 Four|38|1673
@@ -6500,17 +6501,17 @@ Saulzoir|59|1672
 Ousse|64|1672
 Créhen|22|1671
 Saint-Urbain|29|1670
-Pont-Croix|29|1669
+Pont-Croix|29|1669|L
 Mareau-aux-Prés|45|1669
 Cauvigny|60|1669
 Ferrières-en-Bray|76|1669
-Blausasc|06|1668
+Blausasc|06|1668|L
 Laroque|34|1668
 La Verdière|83|1668
 Cornillon-Confoux|13|1667
 Épervans|71|1667
 Castagniers|06|1666
-Tourneville-sur-Mer|50|1666
+Tourneville-sur-Mer|50|1666|L
 Saint-Prouant|85|1666
 Cenon-sur-Vienne|86|1666
 Cazaubon|32|1665
@@ -6520,7 +6521,7 @@ Vasles|79|1665
 Martignat|01|1664
 Cazilhac|11|1664
 Saint-André-sur-Orne|14|1664
-Chaillevette|17|1664
+Chaillevette|17|1664|L
 Châteauneuf-d'Ille-et-Vilaine|35|1664
 Saint-Privat|07|1663
 Moncheaux|59|1663
@@ -6549,7 +6550,7 @@ Wœrth|67|1656
 Saint-Brice-sur-Vienne|87|1656
 Fargues|33|1655
 Dieupentale|82|1655
-Tollevast|50|1654
+Tollevast|50|1654|L
 Pargny-sur-Saulx|51|1654
 Vendeville|59|1654
 Villaudric|31|1653
@@ -6557,7 +6558,7 @@ Cussac-sur-Loire|43|1653
 Cercy-la-Tour|58|1653
 Marigné-Laillé|72|1653
 Gençay|86|1653
-Le Trévoux|29|1652
+Le Trévoux|29|1652|L
 Saugues|43|1652
 Écuisses|71|1652
 La Mothe-Saint-Héray|79|1652
@@ -6567,7 +6568,7 @@ Ostheim|68|1651
 Sorges et Ligueux en Périgord|24|1650
 Beaulon|03|1649
 Routot|27|1648
-Saint-Vaast-la-Hougue|50|1648
+Saint-Vaast-la-Hougue|50|1648|L
 Labeuvrière|62|1648
 Saint-Aubin-le-Cloud|79|1648
 Beaumont-sur-Lèze|31|1647
@@ -6595,7 +6596,7 @@ Saint-Germain-de-Prinçay|85|1640
 Corbreuse|91|1640
 Les Monts du Roumois|27|1639
 Saint-Mariens|33|1639
-Flamanville|50|1639
+Flamanville|50|1639|L
 Westhouse|67|1639
 Villeneuve|01|1638
 Saint-Estèphe|33|1638
@@ -6611,7 +6612,7 @@ Thorigné-sur-Dué|72|1637
 Trangé|72|1637
 La Francheville|08|1636
 Wattwiller|68|1636
-L'Épine|85|1636
+L'Épine|85|1636|L
 Coux|07|1635
 Plestan|22|1635
 Auzielle|31|1635
@@ -6634,7 +6635,7 @@ Guîtres|33|1631
 Anstaing|59|1631
 Bonnac-la-Côte|87|1631
 Euville|55|1630
-Zuydcoote|59|1630
+Zuydcoote|59|1630|L
 Cinqueux|60|1630
 Bantzenheim|68|1630
 Jouy-le-Châtel|77|1630
@@ -6662,7 +6663,7 @@ Saint-Jouvent|87|1625
 Montierchaume|36|1624
 Cernay-lès-Reims|51|1624
 Pont-de-Salars|12|1623
-Lézardrieux|22|1623
+Lézardrieux|22|1623|L
 Neuvy-Saint-Sépulchre|36|1623
 Esches|60|1623
 La Clusaz|74|1623
@@ -6672,7 +6673,7 @@ Corneilhan|34|1622
 Saint-Jean-Lasseille|66|1622
 Mont-Saxonnex|74|1622
 Hornoy-le-Bourg|80|1622
-Blonville-sur-Mer|14|1621
+Blonville-sur-Mer|14|1621|L
 Périgneux|42|1621
 Cousances-les-Forges|55|1621
 Lusigny|03|1620
@@ -6684,7 +6685,7 @@ Eslettes|76|1620
 Orval|18|1619
 Randan|63|1619
 Tallende|63|1619
-Turretot|76|1619
+Turretot|76|1619|L
 Saint-Laurent-du-Pape|07|1618
 Saint-Médard-de-Mussidan|24|1618
 Bretagne-de-Marsan|40|1618
@@ -6710,14 +6711,14 @@ Sassenay|71|1612
 Saint-Malô-du-Bois|85|1612
 Ginestas|11|1611
 Pezens|11|1611
-Lancieux|22|1611
-Fréhel|22|1611
+Lancieux|22|1611|L
+Fréhel|22|1611|L
 Bosc-le-Hard|76|1611
 Riez|04|1610
 Valady|12|1610
 Courpalay|77|1610
 L'Honor-de-Cos|82|1610
-Gorbio|06|1609
+Gorbio|06|1609|L
 Pernay|37|1609
 La Regrippière|44|1609
 Rully|71|1609
@@ -6744,7 +6745,7 @@ Cazilhac|34|1605
 Coulans-sur-Gée|72|1605
 Saint-Mamert-du-Gard|30|1604
 Luant|36|1604
-Trévou-Tréguignec|22|1603
+Trévou-Tréguignec|22|1603|L
 Coron|49|1603
 Ercuis|60|1603
 Lévis-Saint-Nom|78|1603
@@ -6752,12 +6753,12 @@ Castelnau-de-Lévis|81|1603
 Moutiers|54|1602
 Steenbecque|59|1602
 Plouguernével|22|1601
-Bouzigues|34|1601
+Bouzigues|34|1601|L
 Ay-sur-Moselle|57|1601
 Longnes|78|1601
 Saint-Hilaire-de-la-Côte|38|1600
 Étriché|49|1600
-Blainville-sur-Mer|50|1600
+Blainville-sur-Mer|50|1600|L
 Cendras|30|1599
 Gauriaguet|33|1599
 Le Bousquet-d'Orb|34|1599
@@ -6767,7 +6768,7 @@ Mortagne-du-Nord|59|1599
 Wavrechain-sous-Denain|59|1599
 Bellengreville|14|1598
 Baugy|18|1598
-Ploulec'h|22|1598
+Ploulec'h|22|1598|L
 Richelieu|37|1598
 Melrand|56|1598
 Saint-Jans-Cappel|59|1598
@@ -6801,7 +6802,7 @@ Montpezat-de-Quercy|82|1590
 Chabanais|16|1589
 La Sauve|33|1589
 Laroque-Timbaut|47|1589
-Martin-Église|76|1589
+Martin-Église|76|1589|L
 Québriac|35|1588
 Yaté|988|1588
 Origny-Sainte-Benoite|02|1587
@@ -6813,16 +6814,16 @@ La Marne|44|1586
 Erre|59|1586
 Beauregard-l'Évêque|63|1586
 Montescot|66|1586
-Yves|17|1585
+Yves|17|1585|L
 Cours-de-Pile|24|1585
 Val de Louyre et Caudeau|24|1585
 Noirétable|42|1585
 Champlitte|70|1585
 Charny|77|1585
-Brando|2B|1584
+Brando|2B|1584|L
 Chalifert|77|1584
 Château-Guibert|85|1584
-Ciré-d'Aunis|17|1583
+Ciré-d'Aunis|17|1583|L
 Gamarde-les-Bains|40|1583
 Saint-Sulpice-sur-Risle|61|1583
 Soumoulou|64|1583
@@ -6830,7 +6831,7 @@ Abondance|74|1583
 Lauzerville|31|1582
 Champier|38|1582
 Argences en Aubrac|12|1581
-Ver-sur-Mer|14|1581
+Ver-sur-Mer|14|1581|L
 Saint-Éloy-de-Gy|18|1581
 Mareuil-sur-Ourcq|60|1581
 Saint-Cyprien|24|1580
@@ -6842,7 +6843,7 @@ Ammerschwihr|68|1580
 Nantiat|87|1580
 Balan|08|1579
 Vasselay|18|1579
-Landunvez|29|1579
+Landunvez|29|1579|L
 Monségur|33|1579
 Saint-Étienne-de-Chigny|37|1579
 Vigneulles-lès-Hattonchâtel|55|1579
@@ -6857,7 +6858,7 @@ Saint-Just-d'Ardèche|07|1577
 Laguenne-sur-Avalouze|19|1577
 Felletin|23|1577
 Terres de Bord|27|1577
-Locmariaquer|56|1577
+Locmariaquer|56|1577|L
 Nieul|87|1577
 Awala-Yalimapo|973|1577
 Saint-Carreuc|22|1576
@@ -6866,7 +6867,7 @@ Chailly-en-Brie|77|1576
 Dreuil-lès-Amiens|80|1576
 Le Val-Saint-Germain|91|1576
 Lagorce|33|1575
-Saint-Philibert|56|1575
+Saint-Philibert|56|1575|L
 Sainte-Cécile|85|1575
 Équemauville|14|1574
 Lasserre-Pradère|31|1574
@@ -6879,7 +6880,7 @@ Plombières-les-Bains|88|1573
 Nousty|64|1572
 Brouilla|66|1572
 Belleneuve|21|1571
-Cavan|22|1571
+Cavan|22|1571|L
 Kersaint-Plabennec|29|1571
 Neuilly-sous-Clermont|60|1571
 Denicé|69|1571
@@ -6949,7 +6950,7 @@ Pontlevoy|41|1556
 Locquirec|29|1555
 Cirey-sur-Vezouze|54|1555
 Mansigné|72|1555
-Saint-Martin-du-Manoir|76|1555
+Saint-Martin-du-Manoir|76|1555|L
 Bazoges-en-Paillers|85|1555
 Caunes-Minervois|11|1554
 Mansac|19|1554
@@ -6963,18 +6964,18 @@ Goincourt|60|1552
 Le Breil-sur-Mérize|72|1552
 Pourcieux|83|1552
 Solignac|87|1552
-Lanrivoaré|29|1551
+Lanrivoaré|29|1551|L
 Castets et Castillon|33|1551
 Perrigny|39|1551
 Berné|56|1551
-La Capelle-lès-Boulogne|62|1551
+La Capelle-lès-Boulogne|62|1551|L
 Rochetaillée-sur-Saône|69|1551
 Amou|40|1550
 Féternes|74|1550
 Chevannes|91|1550
 Criquebeuf-sur-Seine|27|1549
 Brûlon|72|1549
-Saint-Révérend|85|1549
+Saint-Révérend|85|1549|L
 Rosières|43|1548
 Corbeilles|45|1548
 Charpey|26|1547
@@ -6994,7 +6995,7 @@ Chazelles|16|1543
 Saint-Maurice-Montcouronne|91|1543
 Barberey-Saint-Sulpice|10|1542
 Saint-Paul-des-Landes|15|1542
-Grayan-et-l'Hôpital|33|1542
+Grayan-et-l'Hôpital|33|1542|L
 Pluherlin|56|1542
 Perrecy-les-Forges|71|1542
 Châteauneuf-la-Forêt|87|1542
@@ -7008,7 +7009,7 @@ Montfaucon|30|1540
 Bussières|42|1540
 Lacrouzette|81|1540
 Chèvremont|90|1539
-Trizay|17|1538
+Trizay|17|1538|L
 La Chapelle-Bouëxic|35|1537
 Charvonnex|74|1537
 Bonnemain|35|1536
@@ -7021,7 +7022,7 @@ Fleurey-sur-Ouche|21|1535
 Clonas-sur-Varèze|38|1535
 Le Vigan-en-Quercy|46|1535
 Luché-Pringé|72|1535
-La Môle|83|1535
+La Môle|83|1535|L
 Satillieu|07|1534
 Saint-Jean-des-Champs|50|1534
 Alba-la-Romaine|07|1533
@@ -7030,7 +7031,7 @@ Pouilly-en-Auxois|21|1533
 Saint-Léger-sur-Dheune|71|1533
 Saint-Vincent-de-Mercuze|38|1532
 Certines|01|1531
-Saint-Jean-Cap-Ferrat|06|1531
+Saint-Jean-Cap-Ferrat|06|1531|L
 Épinouze|26|1531
 Saint-Julien-de-Peyrolas|30|1531
 Chindrieux|73|1531
@@ -7059,19 +7060,19 @@ Montmarault|03|1525
 Saint-Vincent-des-Landes|44|1525
 Donzy|58|1525
 Scey-sur-Saône-et-Saint-Albin|70|1525
-Le Minihic-sur-Rance|35|1524
+Le Minihic-sur-Rance|35|1524|L
 Bouvesse-Quirieu|38|1524
 Marsac-sur-Don|44|1524
 Saint-Nicolas-du-Pélem|22|1523
 Gahard|35|1523
 Andres|62|1523
 Sommerau|67|1523
-Grandcamp-Maisy|14|1522
+Grandcamp-Maisy|14|1522|L
 Plougourvest|29|1522
 Vigy|57|1522
 Beaufay|72|1522
-Saint-Augustin|17|1521
-Plurien|22|1521
+Saint-Augustin|17|1521|L
+Plurien|22|1521|L
 Mensignac|24|1521
 Vernioz|38|1521
 Val-de-la-Hune|72|1521
@@ -7079,10 +7080,10 @@ Dogneville|88|1521
 Feuguerolles-Bully|14|1520
 Mirambeau|17|1520
 Alissas|07|1519
-Landevieille|85|1519
-Vielle-Saint-Girons|40|1518
+Landevieille|85|1519|L
+Vielle-Saint-Girons|40|1518|L
 Mur-de-Sologne|41|1518
-Uxem|59|1518
+Uxem|59|1518|L
 Munchhouse|68|1518
 Tart|21|1517
 Charnècles|38|1517
@@ -7095,11 +7096,11 @@ Daix|21|1515
 Eclose-Badinières|38|1515
 Stuckange|57|1515
 Saint-Martin-de-Boscherville|76|1515
-Santa-Lucia-di-Moriani|2B|1514
+Santa-Lucia-di-Moriani|2B|1514|L
 Saint-Marcel|36|1514
-Pirou|50|1514
+Pirou|50|1514|L
 Villecroze|83|1514
-Gonneville-Le Theil|50|1513
+Gonneville-Le Theil|50|1513|L
 Auchy-lès-Hesdin|62|1513
 Champs-sur-Yonne|89|1513
 Guéreins|01|1512
@@ -7110,7 +7111,7 @@ Briouze|61|1512
 La Villedieu-du-Clain|86|1512
 Annesse-et-Beaulieu|24|1511
 Masseube|32|1511
-Vieille-Église|62|1511
+Vieille-Église|62|1511|L
 Limésy|76|1511
 Montagne|33|1510
 Saint-Corneille|72|1510
@@ -7133,7 +7134,7 @@ Louplande|72|1505
 Vireux-Molhain|08|1504
 Gruffy|74|1504
 Meauzac|82|1504
-Tréméoc|29|1503
+Tréméoc|29|1503|L
 Saint-Avit-Saint-Nazaire|33|1503
 Genillé|37|1503
 Varennes-Changy|45|1503
@@ -7159,8 +7160,8 @@ Vernet-les-Bains|66|1498
 Saint-Hilaire-la-Palud|79|1498
 Maël-Carhaix|22|1497
 Badonviller|54|1497
-Saint-Laurent-de-Brèvedent|76|1496
-Saint-Hippolyte|17|1495
+Saint-Laurent-de-Brèvedent|76|1496|L
+Saint-Hippolyte|17|1495|L
 La Tour-en-Jarez|42|1495
 Saint-Denis-d'Anjou|53|1495
 La Vraie-Croix|56|1495
@@ -7205,7 +7206,7 @@ Dannemarie-sur-Crète|25|1486
 Cauro|2A|1486
 Lieuran-lès-Béziers|34|1486
 Saint-Lattier|38|1486
-Saint-Planchers|50|1486
+Saint-Planchers|50|1486|L
 Sermoise-sur-Loire|58|1486
 Les Magnils-Reigniers|85|1486
 Vergigny|89|1486
@@ -7218,7 +7219,7 @@ Roye|70|1484
 Crédin|56|1483
 Bailleval|60|1483
 Rabastens-de-Bigorre|65|1483
-Banyuls-dels-Aspres|66|1483
+Banyuls-dels-Aspres|66|1483|L
 Cransac-les-Thermes|12|1482
 Dizy|51|1482
 Châteauvillain|52|1482
@@ -7229,18 +7230,18 @@ Chameyrat|19|1481
 Beaufort-Orbagna|39|1481
 Authon-du-Perche|28|1480
 Chamigny|77|1480
-Hénanbihen|22|1479
+Hénanbihen|22|1479|L
 Plounévez-Moëdec|22|1479
 Meslan|56|1479
 Saint-Jean-Pied-de-Port|64|1479
 Ergersheim|67|1479
 Xonrupt-Longemer|88|1479
-Le Prêcheur|972|1479
-Trédrez-Locquémeau|22|1478
+Le Prêcheur|972|1479|L
+Trédrez-Locquémeau|22|1478|L
 Monestier-de-Clermont|38|1478
 Saint-Prim|38|1478
 Ruitz|62|1478
-Théoule-sur-Mer|06|1477
+Théoule-sur-Mer|06|1477|L
 Saint-Donan|22|1477
 Bourgogne-Fresne|51|1477
 Saint-Cyr|07|1476
@@ -7257,7 +7258,7 @@ Bernardswiller|67|1473
 Campsas|82|1473
 Crécy-sur-Serre|02|1472
 Castellane|04|1472
-Souraïde|64|1472
+Souraïde|64|1472|L
 Dinsheim-sur-Bruche|67|1472
 Dracy-le-Fort|71|1472
 Ballaison|74|1472
@@ -7268,7 +7269,7 @@ Finhan|82|1471
 Pleaux|15|1470
 Poullaouen|29|1470
 Rions|33|1470
-Groffliers|62|1470
+Groffliers|62|1470|L
 Bessens|82|1470
 Savigneux|01|1469
 Cuzieu|42|1469
@@ -7300,15 +7301,15 @@ Bourgneuf|17|1463
 Candé-sur-Beuvron|41|1463
 Saint-Denis-de-Gastines|53|1463
 Brue-Auriac|83|1463
-Terre-de-Haut|971|1463
+Terre-de-Haut|971|1463|L
 Lieu-Saint-Amand|59|1462
-Armissan|11|1461
+Armissan|11|1461|L
 Francueil|37|1461
 Blaesheim|67|1461
 Saillans|26|1460
 Champvans|39|1460
 Le Luart|72|1460
-Landudec|29|1459
+Landudec|29|1459|L
 Saint-Bonnet-le-Château|42|1459
 Épieds-en-Beauce|45|1459
 Nuaillé|49|1459
@@ -7330,14 +7331,14 @@ Bretoncelles|61|1455
 Maroilles|59|1454
 Val-de-Saâne|76|1454
 Capendu|11|1453
-Poullan-sur-Mer|29|1453
+Poullan-sur-Mer|29|1453|L
 Saint-Georges-Haute-Ville|42|1453
 Fontevraud-l'Abbaye|49|1453
 Saizerais|54|1453
 Challuy|58|1453
 Montfort-sur-Argens|83|1453
 Nogent-le-Phaye|28|1452
-Brouckerque|59|1452
+Brouckerque|59|1452|L
 Saint-Senier-sous-Avranches|50|1451
 Haussy|59|1451
 Joncherey|90|1451
@@ -7365,7 +7366,7 @@ Le Broc|06|1446
 Montbazens|12|1446
 Hordain|59|1446
 Saint-Arnoult|76|1446
-Sari-Solenzara|2A|1445
+Sari-Solenzara|2A|1445|L
 Neuvy-sur-Loire|58|1445
 Bollezeele|59|1445
 Auvers-le-Hamon|72|1445
@@ -7375,10 +7376,10 @@ Landéhen|22|1444
 Niherne|36|1444
 Quistinic|56|1444
 Merten|57|1444
-Pléguien|22|1443
+Pléguien|22|1443|L
 Lamothe-Montravel|24|1443
 Les Fourgs|25|1443
-Sainte-Eulalie-en-Born|40|1443
+Sainte-Eulalie-en-Born|40|1443|L
 Pierrevillers|57|1443
 Seppois-le-Bas|68|1443
 Lauzerte|82|1443
@@ -7399,7 +7400,7 @@ Bellegarde|45|1440
 Brioux-sur-Boutonne|79|1440
 Meroux-Moval|90|1440
 Pannecé|44|1439
-Hames-Boucres|62|1439
+Hames-Boucres|62|1439|L
 Taintrux|88|1439
 Saint-Fargeau|89|1439
 Epiniac|35|1438
@@ -7410,7 +7411,7 @@ Dornes|58|1437
 Feuquières|60|1437
 Loubeyrat|63|1437
 Étreux|02|1436
-Saint-Vivien|17|1436
+Saint-Vivien|17|1436|L
 Creissan|34|1436
 Saint-Romain-la-Motte|42|1436
 Le Doulieu|59|1436
@@ -7462,7 +7463,7 @@ Marsat|63|1426
 Aillevillers-et-Lyaumont|70|1426
 Tossiat|01|1425
 Ayguemorte-les-Graves|33|1425
-Montmartin-sur-Mer|50|1425
+Montmartin-sur-Mer|50|1425|L
 Rieux-en-Cambrésis|59|1425
 La Dominelais|35|1424
 Herbeys|38|1424
@@ -7479,7 +7480,7 @@ Villereversure|01|1420
 Labastide-Rouairoux|81|1420
 Hermonville|51|1419
 Eckwersheim|67|1419
-Croix-Chapeau|17|1418
+Croix-Chapeau|17|1418|L
 Tréon|28|1418
 Dauendorf|67|1418
 Ohlungen|67|1418
@@ -7522,23 +7523,23 @@ Marseille-en-Beauvaisis|60|1409
 Neuve-Chapelle|62|1409
 Saint-Fuscien|80|1409
 Saint-Christol|84|1409
-Peillon|06|1408
+Peillon|06|1408|L
 Saint-Satur|18|1408
-Le Verdon-sur-Mer|33|1408
+Le Verdon-sur-Mer|33|1408|L
 Faverolles-sur-Cher|41|1408
 Dry|45|1408
 Jury|57|1408
 Quincié-en-Beaujolais|69|1408
 Kernilis|29|1407
-Clavette|17|1406
+Clavette|17|1406|L
 Clermont-en-Argonne|55|1406
 Nivelle|59|1406
 Hénouville|76|1406
 Cahagnes|14|1405
 Assas|34|1405
-Steene|59|1405
+Steene|59|1405|L
 Palinges|71|1405
-Bretteville-du-Grand-Caux|76|1405
+Bretteville-du-Grand-Caux|76|1405|L
 Colombiers|86|1405
 Ceyras|34|1404
 Chanac|48|1404
@@ -7547,7 +7548,7 @@ Oberbronn|67|1404
 Sainte-Verge|79|1404
 Nérondes|18|1403
 Saché|37|1403
-Fréthun|62|1403
+Fréthun|62|1403|L
 Obenheim|67|1403
 Avrillé|85|1403
 Ouges|21|1402
@@ -7583,9 +7584,9 @@ Alairac|11|1395
 Sansac-de-Marmiesse|15|1395
 Lugon-et-l'Île-du-Carnay|33|1395
 Saint-Georges-sur-Allier|63|1395
-Angerville-l'Orcher|76|1395
+Angerville-l'Orcher|76|1395|L
 Payns|10|1394
-Amfreville|14|1394
+Amfreville|14|1394|L
 Ahun|23|1394
 Beaumont-Monteux|26|1394
 Saint-Paul-et-Valmalle|34|1394
@@ -7633,7 +7634,7 @@ Niederhaslach|67|1383
 Celle-Lévescault|86|1383
 Bessay-sur-Allier|03|1382
 Lamarche-sur-Saône|21|1382
-Hirel|35|1382
+Hirel|35|1382|L
 Saugnac-et-Muret|40|1382
 Schleithal|67|1382
 Brussieu|69|1382
@@ -7650,7 +7651,7 @@ Clères|76|1381
 Monestiés|81|1381
 Saint-Pardoux-le-Lac|87|1381
 Égriselles-le-Bocage|89|1381
-Sainte-Agnès|06|1380
+Sainte-Agnès|06|1380|L
 Giraumont|54|1380
 Vineuil-Saint-Firmin|60|1380
 Seyne|04|1379
@@ -7671,7 +7672,7 @@ Saint-Laurent-sur-Gorre|87|1378
 Saint-Laurent-en-Royans|26|1377
 Saint-Médard-sur-Ille|35|1377
 Saint-Germain|70|1377
-La Guérinière|85|1377
+La Guérinière|85|1377|L
 Saint-Paul-en-Pareds|85|1377
 Haverskerque|59|1376
 Tournehem-sur-la-Hem|62|1376
@@ -7703,7 +7704,7 @@ Flaxlanden|68|1370
 La Chartre-sur-le-Loir|72|1370
 Fublaines|77|1370
 La Saulce|05|1369
-Baye|29|1369
+Baye|29|1369|L
 Aigrefeuille|31|1369
 Froncles|52|1369
 Escoutoux|63|1369
@@ -7732,7 +7733,7 @@ Meursault|21|1363
 Dasle|25|1363
 Coulombs|28|1363
 Le Pertre|35|1363
-Fort-Mahon-Plage|80|1363
+Fort-Mahon-Plage|80|1363|L
 Sainte-Honorine-du-Fay|14|1362
 Dignac|16|1362
 Montenois|25|1362
@@ -7776,7 +7777,7 @@ Bize-Minervois|11|1355
 Farnay|42|1355
 Origny-en-Thiérache|02|1354
 Val Buëch-Méouge|05|1354
-Hérouvillette|14|1354
+Hérouvillette|14|1354|L
 Nanteuil-en-Vallée|16|1354
 Vestric-et-Candiac|30|1354
 Saint-M'Hervé|35|1354
@@ -7784,11 +7785,11 @@ Gennes-Longuefuye|53|1354
 Frotey-lès-Vesoul|70|1354
 Choisy-en-Brie|77|1354
 Saint-Pierre-du-Chemin|85|1354
-Colomby-Anguerny|14|1353
+Colomby-Anguerny|14|1353|L
 Saint-Usage|21|1353
 Incarville|27|1353
 Puissalicon|34|1353
-Montesquieu-des-Albères|66|1353
+Montesquieu-des-Albères|66|1353|L
 Saint-Paul-de-Jarrat|09|1352
 Val des Vignes|16|1352
 Queyrac|33|1352
@@ -7813,15 +7814,15 @@ Saint-Clair|07|1348
 Yzeures-sur-Creuse|37|1348
 Mugron|40|1348
 Neuvy-en-Sullias|45|1348
-Martinvast|50|1348
+Martinvast|50|1348|L
 Mellecey|71|1348
 Villebrumier|82|1348
-Fourques|66|1347
+Fourques|66|1347|L
 Castillonnès|47|1346
 Vézelise|54|1346
 Lécluse|59|1346
 Marthod|73|1346
-Ault|80|1346
+Ault|80|1346|L
 Saint-Priest|07|1345
 Massay|18|1345
 Vallères|37|1345
@@ -7842,7 +7843,7 @@ Andé|27|1343
 Junas|30|1343
 Bracieux|41|1343
 Outarville|45|1343
-Le Tour-du-Parc|56|1343
+Le Tour-du-Parc|56|1343|L
 Sault|84|1343
 Arnay-le-Duc|21|1342
 Gaillac-Toulza|31|1342
@@ -7867,7 +7868,7 @@ Aix-en-Pévèle|59|1338
 Wannehain|59|1338
 Bidache|64|1338
 Quincey|70|1338
-Gonneville-la-Mallet|76|1338
+Gonneville-la-Mallet|76|1338|L
 Neufmoutiers-en-Brie|77|1338
 Saint-Martin-Vésubie|06|1337
 Blaison-Saint-Sulpice|49|1337
@@ -7907,7 +7908,7 @@ Saint-Michel-l'Observatoire|04|1329
 Soulaines-sur-Aubance|49|1329
 Pruillé-le-Chétif|72|1329
 La Tour|74|1329
-Bréauté|76|1329
+Bréauté|76|1329|L
 Sousceyrac-en-Quercy|46|1328
 Robecq|62|1328
 Wardrecques|62|1328
@@ -7933,7 +7934,7 @@ Villegouge|33|1325
 Niederschaeffolsheim|67|1325
 Venizel|02|1324
 Luçay-le-Mâle|36|1324
-Baincthun|62|1324
+Baincthun|62|1324|L
 Brêmes|62|1324
 Stosswihr|68|1323
 Uriménil|88|1323
@@ -7945,9 +7946,9 @@ Bussac-sur-Charente|17|1321
 Treis-Sants-en-Ouche|27|1321
 La Chaussée-d'Ivry|28|1321
 Aigurande|36|1321
-Préfailles|44|1321
+Préfailles|44|1321|L
 Saint-Pierre-du-Regard|61|1321
-La Méaugon|22|1320
+La Méaugon|22|1320|L
 Marbois|27|1320
 Rosières|07|1319
 Saint-Maxire|79|1319
@@ -7992,7 +7993,7 @@ Saint-Martin-sur-Oust|56|1312
 Sainte-Foy-l'Argentière|69|1312
 Availles-Limouzine|86|1312
 Labastide-Marnhac|46|1311
-Dannes|62|1311
+Dannes|62|1311|L
 Praz-sur-Arly|74|1311
 Montlieu-la-Garde|17|1310
 Lignières|18|1310
@@ -8010,7 +8011,7 @@ Bessoncourt|90|1309
 Coincy|02|1308
 Ardoix|07|1308
 Forges|17|1308
-Saint-Quay-Perros|22|1308
+Saint-Quay-Perros|22|1308|L
 Nancray|25|1308
 Béguey|33|1308
 Compertrix|51|1308
@@ -8018,12 +8019,12 @@ Saint-Paër|76|1308
 Saint-Philbert-du-Peuple|49|1307
 Ébreuil|03|1306
 Fabrezan|11|1306
-Pléhédel|22|1306
-Guéthary|64|1306
+Pléhédel|22|1306|L
+Guéthary|64|1306|L
 Saivres|79|1306
 Villes-sur-Auzon|84|1306
 Saint-Maurice-sur-Moselle|88|1306
-La Désirade|971|1306
+La Désirade|971|1306|L
 Montreuil-aux-Lions|02|1305
 Beure|25|1305
 Châtillon-Saint-Jean|26|1305
@@ -8039,7 +8040,7 @@ Jouet-sur-l'Aubois|18|1303
 Rouvres-en-Plaine|21|1303
 Morre|25|1303
 La Remaudière|44|1303
-Sainte-Hélène|56|1303
+Sainte-Hélène|56|1303|L
 Vermenton|89|1303
 Cercoux|17|1302
 La Haye-Pesnel|50|1302
@@ -8059,12 +8060,12 @@ Vigeois|19|1300
 Le Crest|63|1300
 La Guierche|72|1300
 La Cerlangue|76|1300
-Néville|76|1300
+Néville|76|1300|L
 Saint-Germain-de-Lusignan|17|1299
 Le Vieux-Marché|22|1299
 Quingey|25|1299
 Bailleau-Armenonville|28|1299
-Moliets-et-Maa|40|1299
+Moliets-et-Maa|40|1299|L
 Schlierbach|68|1299
 Onnion|74|1299
 Gouaix|77|1299
@@ -8082,7 +8083,7 @@ Bussière-Galant|87|1298
 Le Rouget-Pers|15|1297
 Plounéour-Ménez|29|1297
 Mondoubleau|41|1297
-Biriatou|64|1297
+Biriatou|64|1297|L
 Cormeilles-en-Vexin|95|1297
 Chézy-sur-Marne|02|1296
 Baix|07|1296
@@ -8093,7 +8094,7 @@ Saint-Gatien-des-Bois|14|1295
 Corme-Écluse|17|1295
 Saint-Augustin-des-Bois|49|1295
 Cambremer|14|1294
-Hénansal|22|1294
+Hénansal|22|1294|L
 Berrwiller|68|1294
 Montaigu-de-Quercy|82|1294
 Moigny-sur-École|91|1294
@@ -8105,10 +8106,10 @@ Clermont-Créans|72|1293
 Saint-Sauvant|86|1293
 Montvendre|26|1292
 Saint-Féliu-d'Amont|66|1292
-Manéglise|76|1292
+Manéglise|76|1292|L
 Montenay|53|1291
 Englefontaine|59|1291
-Offekerque|62|1291
+Offekerque|62|1291|L
 Saint-Jean-de-Verges|09|1290
 Villedômer|37|1290
 Cunlhat|63|1290
@@ -8116,7 +8117,7 @@ Ogeu-les-Bains|64|1290
 Saint-Maurice-la-Clouère|86|1290
 Saint-Étienne-de-Tinée|06|1289
 Neaufles-Saint-Martin|27|1289
-Olmeto|2A|1289
+Olmeto|2A|1289|L
 Le Champ-près-Froges|38|1289
 Solignac-sur-Loire|43|1289
 Boynes|45|1289
@@ -8148,7 +8149,7 @@ Les Échelles|73|1286
 Château-Porcien|08|1285
 Ax-les-Thermes|09|1285
 Guerlesquin|29|1285
-Saint-Guinoux|35|1285
+Saint-Guinoux|35|1285|L
 Bierné-les-Villages|53|1285
 Méaulte|80|1285
 Oppède|84|1285
@@ -8159,7 +8160,7 @@ Villemaury|28|1283
 Beaupuy|31|1283
 Gabarret|40|1283
 Montverdun|42|1283
-Fermanville|50|1283
+Fermanville|50|1283|L
 Marmagne|71|1283
 Provenchères-et-Colroy|88|1283
 Nailly|89|1283
@@ -8184,10 +8185,10 @@ Geneuille|25|1280
 Houlbec-Cocherel|27|1280
 Ennetières-en-Weppes|59|1280
 Dammartin-sur-Tigeaux|77|1280
-Quend|80|1280
+Quend|80|1280|L
 Portel-des-Corbières|11|1279
 Nuaillé-d'Aunis|17|1279
-Vergeroux|17|1279
+Vergeroux|17|1279|L
 Condé-sur-Vesgre|78|1279
 Saint-Riquier|80|1279
 La Coquille|24|1278
@@ -8225,7 +8226,7 @@ Saint-André-de-Lidon|17|1272
 Le Manoir|27|1272
 Lunay|41|1272
 Bellevigne|16|1271
-Minihy-Tréguier|22|1271
+Minihy-Tréguier|22|1271|L
 La Boussac|35|1271
 Terre-et-Marais|50|1271
 Nordausques|62|1271
@@ -8233,15 +8234,15 @@ Lée|64|1271
 Leymen|68|1271
 Saint-Loup-de-Varennes|71|1271
 Perpezac-le-Noir|19|1270
-Hardinghen|62|1270
+Hardinghen|62|1270|L
 Cervens|74|1270
 Pourrain|89|1270
 Sancerre|18|1269
 Vignot|55|1269
 Saint-Lieux-lès-Lavaur|81|1269
-Cantaron|06|1268
+Cantaron|06|1268|L
 Savigny-lès-Beaune|21|1268
-Plourin|29|1268
+Plourin|29|1268|L
 Espondeilhan|34|1268
 Lacapelle-Marival|46|1268
 Holving|57|1268
@@ -8279,7 +8280,7 @@ Cornil|19|1261
 Poligné|35|1261
 La Roche-Blanche|44|1261
 Villeréal|47|1261
-Bricqueville-sur-Mer|50|1261
+Bricqueville-sur-Mer|50|1261|L
 Rieulay|59|1261
 Winnezeele|59|1261
 Barbizon|77|1261
@@ -8339,7 +8340,7 @@ Saint-Félix-Lauragais|31|1252
 Cerelles|37|1252
 Limeray|37|1252
 Ligny-le-Ribault|45|1252
-Saint-Quentin-la-Motte-Croix-au-Bailly|80|1252
+Saint-Quentin-la-Motte-Croix-au-Bailly|80|1252|L
 Bégaar|40|1251
 Saint-Fiacre-sur-Maine|44|1251
 Lormes|58|1251
@@ -8350,7 +8351,7 @@ L'Oie|85|1250
 Jardres|86|1250
 Chaillac-sur-Vienne|87|1250
 Voutezac|19|1249
-Couville|50|1249
+Couville|50|1249|L
 Sagy|71|1249
 Bon Repos sur Blavet|22|1248
 Corbenay|70|1248
@@ -8373,7 +8374,7 @@ Saint-Lon-les-Mines|40|1246
 Saint-Denis-de-Cabanne|42|1246
 Poiroux|85|1246
 Dompierre-sur-Veyle|01|1245
-Trélévern|22|1245
+Trélévern|22|1245|L
 Saint-Alexandre|30|1245
 Saint-Sauveur|33|1245
 Agnin|38|1245
@@ -8399,7 +8400,7 @@ Busnes|62|1243
 Plougrescant|22|1242
 Montfort-en-Chalosse|40|1242
 Festubert|62|1242
-Landrethun-le-Nord|62|1242
+Landrethun-le-Nord|62|1242|L
 Spéracèdes|06|1241
 Bonrepos-sur-Aussonnelle|31|1241
 Vineuil|36|1241
@@ -8407,7 +8408,7 @@ Sainte-Marie-de-Gosse|40|1241
 La Coucourde|26|1240
 Saint-Pierre-de-Mons|33|1240
 Mazières-en-Mauges|49|1240
-Yquelon|50|1240
+Yquelon|50|1240|L
 Courcy|51|1240
 La Roche-Neuville|53|1240
 Dugny-sur-Meuse|55|1240
@@ -8457,7 +8458,7 @@ Saint-Maixent-sur-Vie|85|1234
 Villate|31|1233
 Pouzolles|34|1233
 La Ville-ès-Nonais|35|1233
-Orval sur Sienne|50|1233
+Orval sur Sienne|50|1233|L
 Étrœungt|59|1233
 L'Abergement-Sainte-Colombe|71|1233
 Mouzeuil-Saint-Martin|85|1233
@@ -8469,7 +8470,7 @@ Pouilly-lès-Feurs|42|1231
 Salviac|46|1231
 Vieille-Toulouse|31|1230
 Saint-André-sur-Vieux-Jonc|01|1229
-Ploëzal|22|1229
+Ploëzal|22|1229|L
 Aurignac|31|1229
 Viols-le-Fort|34|1229
 Martinet|85|1229
@@ -8502,7 +8503,7 @@ Bout-du-Pont-de-Larn|81|1225
 Juniville|08|1224
 Le Perrey|27|1224
 Saint-Pierre-du-Vauvray|27|1224
-Lumio|2B|1224
+Lumio|2B|1224|L
 Kerbach|57|1224
 Péroy-les-Gombries|60|1224
 Villefranche-d'Albigeois|81|1224
@@ -8520,15 +8521,15 @@ Oursbelille|65|1222
 Combrand|79|1222
 La Chambre|73|1221
 Villasavary|11|1220
-Nieulle-sur-Seudre|17|1220
+Nieulle-sur-Seudre|17|1220|L
 Villers-les-Pots|21|1220
 Goupil-Othon|27|1220
 Balinghem|62|1220
-Reynès|66|1220
+Reynès|66|1220|L
 Oslon|71|1220
 Céreste-en-Luberon|04|1219
 Arsac-en-Velay|43|1219
-Saint-Aubin-sur-Scie|76|1219
+Saint-Aubin-sur-Scie|76|1219|L
 Messy|77|1219
 Tacoignières|78|1219
 Saint-Florent-sur-Auzonnet|30|1218
@@ -8559,7 +8560,7 @@ Fontaine-au-Pire|59|1214
 Lathus-Saint-Rémy|86|1214
 Pleumartin|86|1214
 Signy-le-Petit|08|1213
-Pouldergat|29|1213
+Pouldergat|29|1213|L
 Marciac|32|1213
 Sabres|40|1213
 Eecke|59|1213
@@ -8567,7 +8568,7 @@ Oisy-le-Verger|62|1213
 Corbère-les-Cabanes|66|1213
 Couches|71|1213
 Saint-Avaugourd-des-Landes|85|1213
-Ponts sur Seulles|14|1212
+Ponts sur Seulles|14|1212|L
 Droue-sur-Drouette|28|1212
 Boisset-lès-Montrond|42|1212
 Yvetot-Bocage|50|1212
@@ -8577,14 +8578,14 @@ Mercurey|71|1211
 Petiville|76|1211
 Mauves|07|1210
 Viviez|12|1210
-Saint-Nazaire-sur-Charente|17|1210
+Saint-Nazaire-sur-Charente|17|1210|L
 Serques|62|1210
 Civaux|86|1210
 Cheniménil|88|1210
 Monts-de-Randon|48|1209
 Cartignies|59|1209
-Cerbère|66|1209
-Rolleville|76|1209
+Cerbère|66|1209|L
+Rolleville|76|1209|L
 Montrem|24|1208
 Boussières|25|1208
 Lugos|33|1208
@@ -8598,7 +8599,7 @@ Laguiole|12|1207
 Fontain|25|1207
 Amfreville-Saint-Amand|27|1207
 Gruson|59|1207
-Étainhus|76|1207
+Étainhus|76|1207|L
 Villebois|01|1206
 Fontenay-sur-Eure|28|1206
 Saint-Romain-en-Jarez|42|1206
@@ -8611,7 +8612,7 @@ Vabres-l'Abbaye|12|1205
 Arnac-Pompadour|19|1205
 Sacquenville|27|1205
 Bernwiller|68|1205
-San-Gavino-di-Carbini|2A|1204
+San-Gavino-di-Carbini|2A|1204|L
 Courlaoux|39|1204
 Buhl-Lorraine|57|1204
 Saint-Usuge|71|1204
@@ -8627,7 +8628,7 @@ Bischwihr|68|1202
 La Bridoire|73|1202
 Raon-aux-Bois|88|1202
 Vaux-en-Bugey|01|1201
-Tonquédec|22|1201
+Tonquédec|22|1201|L
 Excideuil|24|1201
 Breuilpont|27|1201
 Marcilloles|38|1201
@@ -8641,7 +8642,7 @@ Jaujac|07|1199
 Lantosque|06|1198
 Puichéric|11|1198
 Mirabel-et-Blacons|26|1198
-Vensac|33|1198
+Vensac|33|1198|L
 Fortschwihr|68|1198
 Bonnieux|84|1198
 Polminhac|15|1197
@@ -8650,7 +8651,7 @@ Ségoufielle|32|1197
 Moirax|47|1197
 Saint-Barthélemy|56|1197
 Villers-Pol|59|1197
-Beuzeville-la-Grenier|76|1197
+Beuzeville-la-Grenier|76|1197|L
 Les Granges-le-Roi|91|1197
 Montceaux|01|1196
 Chanos-Curson|26|1196
@@ -8682,7 +8683,7 @@ Chaunay|86|1194
 Sardieu|38|1193
 Louvigné|53|1193
 Fèves|57|1193
-Froberville|76|1193
+Froberville|76|1193|L
 Viels-Maisons|02|1192
 Andance|07|1192
 Saint-Vite|47|1192
@@ -8702,7 +8703,7 @@ Saint-Baudelle|53|1189
 Blaincourt-lès-Précy|60|1189
 Port-d'Envaux|17|1188
 Tonnay-Boutonne|17|1188
-Pleumeur-Gautier|22|1188
+Pleumeur-Gautier|22|1188|L
 Écueillé|36|1188
 Cognac-la-Forêt|87|1188
 Sigave|986|1188
@@ -8710,7 +8711,7 @@ Peyriac-de-Mer|11|1187
 Castelnau d'Auzan Labarrère|32|1187
 Saint-Agnin-sur-Bion|38|1187
 Chailland|53|1187
-Tourville-sur-Arques|76|1187
+Tourville-sur-Arques|76|1187|L
 Coutevroult|77|1187
 Sains-en-Amiénois|80|1187
 Hauterive|03|1186
@@ -8736,13 +8737,13 @@ La Devise|17|1183
 Cénac-et-Saint-Julien|24|1183
 Quiers-sur-Bezonde|45|1183
 Bellefont-La Rauze|46|1183
-Camoël|56|1183
+Camoël|56|1183|L
 Joze|63|1183
 Soultzeren|68|1183
 Courzieu|69|1183
 Courlon-sur-Yonne|89|1183
 Saint-Ségal|29|1182
-Sisco|2B|1182
+Sisco|2B|1182|L
 Saint-Aupre|38|1182
 Arlay|39|1182
 Cheix-en-Retz|44|1182
@@ -8752,7 +8753,7 @@ Culhat|63|1182
 Bourg-Madame|66|1182
 Henvic|29|1181
 Thusy|74|1181
-Saint-Sauveur-d'Émalleville|76|1181
+Saint-Sauveur-d'Émalleville|76|1181|L
 Rignieux-le-Franc|01|1180
 Andel|22|1180
 Piégut-Pluviers|24|1180
@@ -8787,9 +8788,9 @@ Jegun|32|1176
 Niederhergheim|68|1176
 Armentières-en-Brie|77|1176
 Boismé|79|1176
-Langoat|22|1175
+Langoat|22|1175|L
 Bailleau-l'Évêque|28|1175
-Conca|2A|1175
+Conca|2A|1175|L
 Gondrin|32|1175
 Paillet|33|1175
 Ville-sous-Anjou|38|1175
@@ -8859,10 +8860,10 @@ Ablon|14|1166
 Sireuil|16|1166
 Saint-Pardoux-la-Rivière|24|1166
 Barc|27|1166
-Linguizzetta|2B|1166
-Surtainville|50|1166
+Linguizzetta|2B|1166|L
+Surtainville|50|1166|L
 Delme|57|1166
-Tresserre|66|1166
+Tresserre|66|1166|L
 Vaux|03|1165
 Villevocance|07|1165
 Cressensac-Sarrazac|46|1165
@@ -8903,7 +8904,7 @@ Saint-Simon|15|1159
 Saint-Aubin-des-Bois|28|1159
 Pancé|35|1159
 Neuvy-Pailloux|36|1159
-Fitou|11|1158
+Fitou|11|1158|L
 Clairvaux-d'Aveyron|12|1158
 Montfaucon-en-Velay|43|1158
 Étreillers|02|1157
@@ -8938,7 +8939,7 @@ Tourville-sur-Odon|14|1153
 Juillac|19|1153
 Saint-Germain-les-Vergnes|19|1153
 Brusvily|22|1153
-Saint-Broladre|35|1153
+Saint-Broladre|35|1153|L
 Saint-Dyé-sur-Loire|41|1153
 Les Ageux|60|1153
 Allouville-Bellefosse|76|1153
@@ -8966,7 +8967,7 @@ Lanquetot|76|1151
 Villeneuve-sur-Bellot|77|1151
 Touvre|16|1150
 La Madeleine-de-Nonancourt|27|1150
-Cargèse|2A|1150
+Cargèse|2A|1150|L
 Mareuil-sur-Cher|41|1150
 Chevrières|42|1150
 Mareuil-le-Port|51|1150
@@ -8994,7 +8995,7 @@ Saint-Eusèbe|71|1147
 Mons-en-Laonnois|02|1146
 Jausiers|04|1146
 La Balme-les-Grottes|38|1146
-Aureilhan|40|1146
+Aureilhan|40|1146|L
 Cambronne-lès-Clermont|60|1146
 Thérouanne|62|1146
 Mont|64|1146
@@ -9011,7 +9012,7 @@ Saint-Jean-sur-Veyle|01|1143
 Bressolles|03|1143
 Saint-Dizier-Masbaraud|23|1143
 Barbières|26|1143
-Sibiril|29|1143
+Sibiril|29|1143|L
 Villandry|37|1143
 Faramans|38|1143
 Aubigny-au-Bac|59|1143
@@ -9079,7 +9080,7 @@ Caudrot|33|1134
 Susville|38|1134
 Estrées|59|1134
 Ansauvillers|60|1134
-Coat-Méal|29|1133
+Coat-Méal|29|1133|L
 Villematier|31|1133
 Herbault|41|1133
 Cocumont|47|1133
@@ -9093,7 +9094,7 @@ Les Villards-sur-Thônes|74|1132
 Labastide-du-Temple|82|1132
 Pissotte|85|1132
 Chantelle|03|1131
-Plogoff|29|1131
+Plogoff|29|1131|L
 Bernos-Beaulac|33|1131
 Cercié|69|1131
 Saint-Symphorien-d'Ancelles|71|1131
@@ -9154,7 +9155,7 @@ Delettes|62|1124
 Effiat|63|1124
 Louey|65|1124
 Sivry-Courtry|77|1124
-La Chaize-Giraud|85|1124
+La Chaize-Giraud|85|1124|L
 La Chapelle-Palluau|85|1124
 Brens|01|1123
 Peyriac-Minervois|11|1123
@@ -9172,7 +9173,7 @@ Rodelle|12|1122
 Chançay|37|1122
 Mercuès|46|1122
 Vaudelnay|49|1122
-Isques|62|1122
+Isques|62|1122|L
 Habère-Lullin|74|1122
 Doue|77|1122
 Auchay-sur-Vendée|85|1122
@@ -9200,12 +9201,12 @@ Quéménéven|29|1119
 Les Artigues-de-Lussac|33|1119
 Folligny|50|1119
 Pépieux|11|1118
-Saint-Aubin-d'Arquenay|14|1118
-Quemper-Guézennec|22|1118
+Saint-Aubin-d'Arquenay|14|1118|L
+Quemper-Guézennec|22|1118|L
 Marcilly-la-Campagne|27|1118
 Billy|41|1118
 Le Temple-sur-Lot|47|1118
-Passa|66|1118
+Passa|66|1118|L
 Entrecasteaux|83|1118
 Sévignac|22|1117
 Gauciel|27|1117
@@ -9248,7 +9249,7 @@ Morvillars|90|1113
 Mison|04|1112
 Talencieux|07|1112
 La Couarde-sur-Mer|17|1112
-Kermaria-Sulard|22|1112
+Kermaria-Sulard|22|1112|L
 Villandraut|33|1112
 Tournon-Saint-Martin|36|1112
 Foncine-le-Haut|39|1112
@@ -9282,7 +9283,7 @@ Jourgnac|87|1109
 Le Grand-Village-Plage|17|1108
 Marboué|28|1108
 La Salvetat-sur-Agout|34|1108
-Cherrueix|35|1108
+Cherrueix|35|1108|L
 Quaëdypre|59|1108
 Saint-Martin-le-Nœud|60|1108
 Fouquières-lès-Béthune|62|1108
@@ -9292,7 +9293,7 @@ Gaillefontaine|76|1108
 Ableiges|95|1108
 Saint-Martin-Lalande|11|1107
 Tourville-la-Campagne|27|1107
-Naujac-sur-Mer|33|1107
+Naujac-sur-Mer|33|1107|L
 Saint-Just|35|1107
 Le Montat|46|1107
 Saint-Thibaud-de-Couz|73|1107
@@ -9340,7 +9341,7 @@ Saint-Berain-sous-Sanvignes|71|1102
 Sierville|76|1102
 Quevauvillers|80|1102
 Roannes-Saint-Mary|15|1101
-Mont-Dol|35|1101
+Mont-Dol|35|1101|L
 Sainte-Lizaigne|36|1101
 Pezou|41|1101
 Fleury|50|1101
@@ -9393,7 +9394,7 @@ La Bazouge-du-Désert|35|1095
 Mouchard|39|1095
 Béning-lès-Saint-Avold|57|1095
 Bugnicourt|59|1095
-Nesles|62|1095
+Nesles|62|1095|L
 Sainte-Julie|01|1094
 Péone|06|1094
 Attigny|08|1094
@@ -9403,13 +9404,13 @@ Curgy|71|1094
 Loupiac|33|1093
 Saubusse|40|1093
 La Ferté-Saint-Cyr|41|1093
-Vicq-sur-Mer|50|1093
+Vicq-sur-Mer|50|1093|L
 Recy|51|1093
 Chiry-Ourscamp|60|1093
 Kurtzenhouse|67|1093
 Blan|81|1093
 Andelnans|90|1093
-Saint-Arnoult|14|1092
+Saint-Arnoult|14|1092|L
 Crouy-en-Thelle|60|1092
 Pierrefitte-Nestalas|65|1092
 Val-du-Mignon|79|1092
@@ -9432,8 +9433,8 @@ Chamarande|91|1089
 Savigny-en-Sancerre|18|1088
 La Pacaudière|42|1088
 Clary|59|1088
-Ourville-en-Caux|76|1088
-Saint-Pierre-en-Val|76|1088
+Ourville-en-Caux|76|1088|L
+Saint-Pierre-en-Val|76|1088|L
 Maulette|78|1088
 Seboncourt|02|1087
 Saint-Fiel|23|1087
@@ -9445,7 +9446,7 @@ Saint-Gonnery|56|1087
 La Tour-en-Maurienne|73|1087
 Bignoux|86|1087
 Vendœuvres|36|1086
-Messanges|40|1086
+Messanges|40|1086|L
 Chazé-sur-Argos|49|1086
 Saint-Perreux|56|1086
 Oermingen|67|1086
@@ -9468,7 +9469,7 @@ Villorceau|45|1084
 Le Puy-Notre-Dame|49|1084
 Villereau|59|1084
 Zudausques|62|1084
-Épreville|76|1084
+Épreville|76|1084|L
 Rosiers-d'Égletons|19|1083
 Tabanac|33|1083
 La Frette|38|1083
@@ -9503,11 +9504,11 @@ Bazougers|53|1079
 Saint-Sulpice|60|1079
 Neuwiller-lès-Saverne|67|1079
 Orcier|74|1079
-Angerville-la-Martel|76|1079
+Angerville-la-Martel|76|1079|L
 Fresquiennes|76|1079
 Chaveyriat|01|1078
 Blagny|08|1078
-Prat|22|1078
+Prat|22|1078|L
 Claville|27|1078
 Duneau|72|1078
 Duingt|74|1078
@@ -9542,8 +9543,8 @@ Orthevielle|40|1073
 Morfontaine|54|1073
 Hargarten-aux-Mines|57|1073
 Chantenay-Saint-Imbert|58|1073
-Conchil-le-Temple|62|1073
-Saint-Omer-Capelle|62|1073
+Conchil-le-Temple|62|1073|L
+Saint-Omer-Capelle|62|1073|L
 Essigny-le-Grand|02|1072
 Banon|04|1072
 Auros|33|1072
@@ -9570,27 +9571,27 @@ Rivière-sur-Tarn|12|1069
 Varzy|58|1069
 Heiteren|68|1069
 Domfront-en-Champagne|72|1069
-Cresserons|14|1068
+Cresserons|14|1068|L
 Moulon|33|1068
 Ligré|37|1068
 Rumersheim-le-Haut|68|1068
 Clarafond-Arcine|74|1068
-Étalondes|76|1068
+Étalondes|76|1068|L
 Lamothe-Capdeville|82|1068
 Collonges-et-Premières|21|1067
 Margès|26|1067
 Brasparts|29|1067
 Saint-Vincent-de-Paul|33|1067
 Saint-Christophe-sur-le-Nais|37|1067
-Guemps|62|1067
-Billiers|56|1066
+Guemps|62|1067|L
+Billiers|56|1066|L
 Radenac|56|1066
 Marcilly-d'Azergues|69|1066
 Chevanceaux|17|1065
 Heudreville-sur-Eure|27|1065
 Argol|29|1065
 Bonnetan|33|1065
-Le Vivier-sur-Mer|35|1065
+Le Vivier-sur-Mer|35|1065|L
 Sainte-Agathe-la-Bouteresse|42|1065
 Morgny-la-Pommeraye|76|1065
 Ceyzérieu|01|1064
@@ -9637,7 +9638,7 @@ Plouray|56|1060
 Saintines|60|1060
 Obersaasheim|68|1060
 Mézières-en-Drouais|28|1059
-Roz-sur-Couesnon|35|1059
+Roz-sur-Couesnon|35|1059|L
 Dossenheim-sur-Zinsel|67|1059
 Mirandol-Bourgnounac|81|1059
 Peyrat-de-Bellac|87|1059
@@ -9665,7 +9666,7 @@ Saint-Lager|69|1056
 Cruet|73|1056
 Givonne|08|1055
 Tournes|08|1055
-Trédarzec|22|1055
+Trédarzec|22|1055|L
 Cussey-sur-l'Ognon|25|1055
 Saint-Denis-sur-Sarthon|61|1055
 Bindernheim|67|1055
@@ -9678,7 +9679,7 @@ Les Champs-Géraux|22|1054
 Sarliac-sur-l'Isle|24|1054
 Sainte-Geneviève-des-Bois|45|1054
 Saint-Remy-du-Nord|59|1054
-Manneville-la-Goupil|76|1054
+Manneville-la-Goupil|76|1054|L
 Saint-Paul-Cap-de-Joux|81|1054
 Magnet|03|1053
 Charmont-sous-Barbuise|10|1053
@@ -9720,7 +9721,7 @@ Camarsac|33|1048
 Neuvy-le-Roi|37|1048
 Lamure-sur-Azergues|69|1048
 La Muraz|74|1048
-Grainville-la-Teinturière|76|1048
+Grainville-la-Teinturière|76|1048|L
 Sérigné|85|1048
 Fournès|30|1047
 Buschwiller|68|1047
@@ -9781,7 +9782,7 @@ Biaudos|40|1041
 Les Rairies|49|1041
 Ravenel|60|1041
 Thiverny|60|1041
-Saint-Josse|62|1041
+Saint-Josse|62|1041|L
 Savigny|74|1041
 Saint-Maurice-les-Brousses|87|1041
 Roppe|90|1041
@@ -9790,7 +9791,7 @@ Saint-Martin-de-Mailloc|14|1040
 Bussière-Dunoise|23|1040
 Vigoulet-Auzil|31|1040
 Nervieux|42|1040
-Réville|50|1040
+Réville|50|1040|L
 Izel-lès-Équerchin|62|1040
 Marsonnas|01|1039
 Saint-Cernin|15|1039
@@ -9815,7 +9816,7 @@ Mouthe|25|1037
 Hostun|26|1037
 Saint-Hilaire-des-Landes|35|1037
 Saint-Cyr-de-Favières|42|1037
-Teurthéville-Hague|50|1037
+Teurthéville-Hague|50|1037|L
 Priziac|56|1037
 Tracy-le-Val|60|1037
 Parigné-le-Pôlin|72|1037
@@ -9868,7 +9869,7 @@ Paillencourt|59|1030
 Laroin|64|1030
 Saint-Martin-de-Sanzay|79|1030
 Saint-André-les-Alpes|04|1029
-Basly|14|1029
+Basly|14|1029|L
 Laval-en-Belledonne|38|1029
 Seyresse|40|1029
 Hautefage-la-Tour|47|1029
@@ -9892,7 +9893,7 @@ Thiel-sur-Acolin|03|1027
 Sombernon|21|1027
 Saint-Martory|31|1027
 Renac|35|1027
-Bretteville|50|1027
+Bretteville|50|1027|L
 Hangest-en-Santerre|80|1027
 Antigny|85|1027
 Nant|12|1026
@@ -9903,12 +9904,12 @@ Le Fidelaire|27|1025
 Macornay|39|1025
 Péronne-en-Mélantois|59|1025
 Fontaine-le-Port|77|1025
-Pendé|80|1025
+Pendé|80|1025|L
 Peyrat-le-Château|87|1025
 Villeneuve-sur-Allier|03|1024
 Belle-Isle-en-Terre|22|1024
 Marville-Moutiers-Brûlé|28|1024
-Santa-Reparata-di-Balagna|2B|1024
+Santa-Reparata-di-Balagna|2B|1024|L
 Druye|37|1024
 Meyrieu-les-Étangs|38|1024
 Vignieu|38|1024
@@ -9935,7 +9936,7 @@ Charnay|69|1023
 Poule-les-Écharmeaux|69|1023
 Thiverval-Grignon|78|1023
 Sauverny|01|1022
-Varaville|14|1022
+Varaville|14|1022|L
 Saturargues|34|1022
 Mont-Saint-Éloi|62|1022
 Kolbsheim|67|1022
@@ -9944,7 +9945,7 @@ Sault-Brénaz|01|1021
 Cavanac|11|1021
 Essouvert|17|1021
 Cours-les-Barres|18|1021
-Mahalon|29|1021
+Mahalon|29|1021|L
 Mernel|35|1021
 Chaillac|36|1021
 Cangey|37|1021
@@ -9999,7 +10000,7 @@ Roisey|42|1014
 Rédange|57|1014
 Lévignen|60|1014
 Coteaux-du-Blanzacais|16|1013
-Lanildut|29|1013
+Lanildut|29|1013|L
 Meusnes|41|1013
 Blénod-lès-Toul|54|1013
 Soucht|57|1013
@@ -10035,7 +10036,7 @@ Cheffois|85|1009
 La Merlatière|85|1009
 Seyssel|01|1008
 Martiel|12|1008
-Beuzec-Cap-Sizun|29|1008
+Beuzec-Cap-Sizun|29|1008|L
 Neffiès|34|1008
 Saint-Justin|40|1008
 Dampierre-en-Yvelines|78|1008
@@ -10079,7 +10080,7 @@ Chancenay|52|1003
 Beaumetz-lès-Loges|62|1003
 Neufchâtel-en-Saosnois|72|1003
 Cieux|87|1003
-Pontrieux|22|1002
+Pontrieux|22|1002|L
 Tourch|29|1002
 Allègre-les-Fumades|30|1002
 Argelliers|34|1002
@@ -10092,7 +10093,7 @@ Larchamp|53|1001
 La Chapelle-Neuve|56|1001
 Rustenhart|68|1001
 Corcelles-en-Beaujolais|69|1001
-Écrainville|76|1001
+Écrainville|76|1001|L
 Linards|87|1001
 Étables|07|1000
 Berchères-les-Pierres|28|1000
@@ -10131,11 +10132,11 @@ Villiers-Saint-Denis|02|997
 Châteauneuf-Villevieille|06|997
 Brizambourg|17|997
 La Ronde|17|997
-Saint-Jean-Trolimon|29|997
+Saint-Jean-Trolimon|29|997|L
 Sail-sous-Couzan|42|997
-Sassetot-le-Mauconduit|76|997
+Sassetot-le-Mauconduit|76|997|L
 Reyssouze|01|996
-Castellar|06|996
+Castellar|06|996|L
 Saint-Rémy|14|996
 Saint-Thual|35|996
 Treffieux|44|996
@@ -10155,7 +10156,7 @@ Beurlay|17|994
 Guimiliau|29|994
 Saint-Genès-de-Fronsac|33|994
 Bangor|56|994
-Avremesnil|76|994
+Avremesnil|76|994|L
 Chauffry|77|994
 Landeleau|29|993
 Séchilienne|38|993
@@ -10175,7 +10176,7 @@ Le Mesnil-Amelot|77|992
 Bézu-Saint-Germain|02|991
 Mazeray|17|991
 Langrolay-sur-Rance|22|991
-Tréflez|29|991
+Tréflez|29|991|L
 Boucoiran-et-Nozières|30|991
 Marquefave|31|991
 Verzenay|51|991
@@ -10204,7 +10205,7 @@ Le Mesnil-sur-Oger|51|988
 Hurtigheim|67|988
 Notre-Dame-des-Millières|73|988
 Cerisiers|89|988
-Sommervieu|14|987
+Sommervieu|14|987|L
 Bonnétage|25|987
 Luzillé|37|987
 Chozeau|38|987
@@ -10214,7 +10215,7 @@ Dieudonné|60|987
 Pfetterhouse|68|987
 Darvault|77|987
 Rougegoutte|90|987
-Macouba|972|987
+Macouba|972|987|L
 Le Merzer|22|986
 Moulin-Neuf|24|986
 Val d'Orger|27|986
@@ -10291,7 +10292,7 @@ Goudourville|82|976
 Moncontour|86|976
 Macey|10|975
 Pechbusque|31|975
-Saint-Benoît-des-Ondes|35|975
+Saint-Benoît-des-Ondes|35|975|L
 Velles|36|975
 Saint-Paul-en-Born|40|975
 Isles-sur-Suippe|51|975
@@ -10347,7 +10348,7 @@ Poilley|50|969
 Sainte-Catherine|69|969
 Saint-Julien|69|969
 Montriond|74|969
-Varengeville-sur-Mer|76|969
+Varengeville-sur-Mer|76|969|L
 Saint-Paul-le-Jeune|07|968
 Saint-Victor|07|968
 Léguillac-de-l'Auche|24|968
@@ -10392,7 +10393,7 @@ Vaïssac|82|964
 Saint-Clair-sur-Epte|95|964
 Saint-Gérand-le-Puy|03|963
 Saint-Rome-de-Cernon|12|963
-Montroy|17|963
+Montroy|17|963|L
 Saint-Ouen-les-Vignes|37|963
 Espère|46|963
 Achen|57|963
@@ -10406,7 +10407,7 @@ Sanchey|88|963
 Parves et Nattages|01|962
 Ventenac-Cabardès|11|962
 Thiron-Gardais|28|962
-Corbara|2B|962
+Corbara|2B|962|L
 Saint-Médard-en-Forez|42|962
 Saint-Brisson-sur-Loire|45|962
 Froissy|60|962
@@ -10501,7 +10502,7 @@ Saint-Georges-sur-Fontaine|76|950
 Saulx-Marchais|78|950
 Cirières|79|950
 Granges-les-Beaumont|26|949
-Gourlizon|29|949
+Gourlizon|29|949|L
 Chaudefonds-sur-Layon|49|949
 Châtillon-sur-Colmont|53|949
 Saint-Aignan-sur-Roë|53|949
@@ -10539,7 +10540,7 @@ Pouilloux|71|946
 Cabrières-d'Aigues|84|946
 Croutelle|86|946
 Noailles|19|945
-Trégomeur|22|945
+Trégomeur|22|945|L
 Tornac|30|945
 Pujols-sur-Ciron|33|945
 Benais|37|945
@@ -10624,7 +10625,7 @@ Mercin-et-Vaux|02|935
 Massegros Causses Gorges|48|935
 Sarrigné|49|935
 Crévic|54|935
-Mannevillette|76|935
+Mannevillette|76|935|L
 Bombon|77|935
 Flogny-la-Chapelle|89|935
 Faramans|01|934
@@ -10653,13 +10654,13 @@ Fauquembergues|62|932
 Périgné|79|932
 Glos|14|931
 Saint-Christophe-sur-Dolaizon|43|931
-Siouville-Hague|50|931
+Siouville-Hague|50|931|L
 Éloise|74|931
 Anglars-Saint-Félix|12|930
 Landudal|29|930
 Badaroux|48|930
 Haudainville|55|930
-Le Hézo|56|930
+Le Hézo|56|930|L
 Charbonnier-les-Mines|63|930
 Pardies|64|930
 Chambost-Longessaigne|69|930
@@ -10674,7 +10675,7 @@ Vers-sur-Selle|80|929
 La Bastidonne|84|929
 Sermamagny|90|929
 Lagarde-Marc-la-Tour|19|928
-Hardinvast|50|928
+Hardinvast|50|928|L
 Hudimesnil|50|928
 Kutzenhausen|67|928
 Rittershoffen|67|928
@@ -10697,21 +10698,21 @@ Montaigut-le-Blanc|63|927
 Merkwiller-Pechelbronn|67|927
 Saint-Hippolyte|68|927
 Bouttencourt|80|927
-Grues|85|927
+Grues|85|927|L
 Couvron-et-Aumencourt|02|926
 Civray|18|926
 Lanouaille|24|926
 Saint-Geniès|24|926
 Donnezac|33|926
-Saint-Germain-sur-Ay|50|926
+Saint-Germain-sur-Ay|50|926|L
 Saint-Fraimbault-de-Prières|53|926
 Alligny-Cosne|58|926
 Songeons|60|926
 Sap-en-Auge|61|926
 Tronget|03|925
 Charnas|07|925
-Trévières|14|925
-Gastes|40|925
+Trévières|14|925|L
+Gastes|40|925|L
 Chémery|41|925
 Pern-Lhospitalet|46|925
 Bicqueley|54|925
@@ -10761,11 +10762,11 @@ Saint-Sylvestre|87|922
 Saint-Nizier-le-Désert|01|921
 La Roquette-sur-Var|06|921
 Beire-le-Châtel|21|921
-Pleudaniel|22|921
+Pleudaniel|22|921|L
 Saint-Sauveur-Marville|28|921
 Villariès|31|921
 Catus|46|921
-Bacilly|50|921
+Bacilly|50|921|L
 Le Parc|50|921
 Aux Marais|60|921
 Gelles|63|921
@@ -10791,15 +10792,15 @@ Trévérien|35|918
 Pradines|42|918
 Le Coudray-Macouard|49|918
 Rozoy-sur-Serre|02|917
-Peumerit|29|917
+Peumerit|29|917|L
 Saint-Aubin-des-Landes|35|917
 Le Pont-Chrétien-Chabenet|36|917
 Castelnau-sur-Gupie|47|917
-Larmor-Baden|56|917
+Larmor-Baden|56|917|L
 Château-l'Abbaye|59|917
 Crisolles|60|917
 Saint-Pierre-le-Vieux|85|917
-Cléden-Cap-Sizun|29|916
+Cléden-Cap-Sizun|29|916|L
 Odars|31|916
 Hondeghem|59|916
 Saint-Ignat|63|916
@@ -10841,7 +10842,7 @@ Messia-sur-Sorne|39|911
 Mastaing|59|911
 Thuret|63|911
 Bézenet|03|910
-L'Éguille|17|910
+L'Éguille|17|910|L
 Murianette|38|910
 Cheverny|41|910
 Saint Géry-Vers|46|910
@@ -10852,7 +10853,7 @@ Saint-Mesmin|10|909
 Mons|83|909
 Bonnard|89|909
 Quins|12|908
-Saint-Jacut-de-la-Mer|22|908
+Saint-Jacut-de-la-Mer|22|908|L
 Saint-Germain-et-Mons|24|908
 Viggianello|2A|908
 Pompignan|30|908
@@ -10893,7 +10894,7 @@ Molles|03|904
 La Roche-de-Rame|05|904
 Saissac|11|904
 Saint-Rome-de-Tarn|12|904
-Sorbo-Ocagnano|2B|904
+Sorbo-Ocagnano|2B|904|L
 Viry|39|904
 Saint-Denis-sur-Loire|41|904
 Loupershouse|57|904
@@ -10906,7 +10907,7 @@ Saint-Léger-près-Troyes|10|903
 Bouhet|17|903
 Malbuisson|25|903
 Boissey-le-Châtel|27|903
-Saint-Armel|56|903
+Saint-Armel|56|903|L
 Saint-Gingolph|74|903
 Nointel|95|903
 Léogeats|33|902
@@ -10941,7 +10942,7 @@ Beuvraignes|80|900
 Courson-les-Carrières|89|900
 Raivavae|987|900
 Val de Drôme|14|899
-Caouënnec-Lanvézéac|22|899
+Caouënnec-Lanvézéac|22|899|L
 Puymirol|47|899
 Saint-Pierre-de-Clairac|47|899
 Louvignies-Quesnoy|59|899
@@ -10954,7 +10955,7 @@ Mont-Cauvaire|76|898
 Lhommaizé|86|898
 Saint-Arnoult-des-Bois|28|897
 Kergloff|29|897
-Patrimonio|2B|897
+Patrimonio|2B|897|L
 Cornillon|30|897
 Les Cerqueux|49|897
 Atton|54|897
@@ -10990,7 +10991,7 @@ Thenay|36|893
 Cohade|43|893
 Voutré|53|893
 Esquerchin|59|893
-Frencq|62|893
+Frencq|62|893|L
 Dompierre-les-Ormes|71|893
 Gourdon|71|893
 Cormes|72|893
@@ -11009,7 +11010,7 @@ Clénay|21|891
 La Bachellerie|24|891
 Villetoureix|24|891
 Maslacq|64|891
-Sainneville|76|891
+Sainneville|76|891|L
 Ardillières|17|890
 Le Val-Doré|27|890
 Locmalo|56|890
@@ -11047,7 +11048,7 @@ Anglade|33|887
 Porchères|33|887
 Grammond|42|887
 Malvalette|43|887
-Coudeville-sur-Mer|50|887
+Coudeville-sur-Mer|50|887|L
 Noyers-Saint-Martin|60|887
 Lauw|68|887
 Drucat|80|887
@@ -11062,7 +11063,7 @@ Villentrois-Faverolles-en-Berry|36|886
 Lussault-sur-Loire|37|886
 Beaux|43|886
 Cœur de Causse|46|886
-Louhossoa|64|886
+Louhossoa|64|886|L
 Niederrœdern|67|886
 Preuschdorf|67|886
 Correns|83|886
@@ -11071,7 +11072,7 @@ Saint-Germain|86|886
 Fanjeaux|11|885
 Saint-Paul-lès-Durance|13|885
 La Prénessaye|22|885
-Poggio-Mezzana|2B|885
+Poggio-Mezzana|2B|885|L
 Sort-en-Chalosse|40|885
 Athis|51|885
 Attin|62|885
@@ -11093,7 +11094,7 @@ Savas-Mépin|38|883
 Mézières-lez-Cléry|45|883
 Orbeil|63|883
 Saint-Siméon|77|883
-Saint-Blimont|80|883
+Saint-Blimont|80|883|L
 Ciry-Salsogne|02|882
 Eygliers|05|882
 Villesèquelande|11|882
@@ -11103,7 +11104,7 @@ Vieille-Chapelle|62|882
 Bours|65|882
 Saint-Célerin|72|882
 Ury|77|882
-Béthencourt-sur-Mer|80|882
+Béthencourt-sur-Mer|80|882|L
 Terminiers|28|881
 Visseiche|35|881
 Varacieux|38|881
@@ -11137,13 +11138,13 @@ Cordes-sur-Ciel|81|879
 Jarnac-Champagne|17|878
 Josnes|41|878
 Ivry-le-Temple|60|878
-Ossès|64|878
+Ossès|64|878|L
 Schaeffersheim|67|878
 Bazoches-lès-Bray|77|878
 Lempaut|81|878
 Saint-Gervais|95|878
 Manhac|12|877
-Mornac-sur-Seudre|17|877
+Mornac-sur-Seudre|17|877|L
 Saint-Clet|22|877
 Saint-Mards-de-Blacarville|27|877
 Puiseux-le-Hauberger|60|877
@@ -11158,7 +11159,7 @@ Ornacieux-Balbins|38|876
 Chaspuzac|43|876
 Breistroff-la-Grande|57|876
 Maresché|72|876
-Caves|11|875
+Caves|11|875|L
 Saint-Maurice-Colombier|25|875
 Moulès-et-Baucels|34|875
 Optevoz|38|875
@@ -11172,7 +11173,7 @@ Verzé|71|875
 Orphin|78|875
 Magny-sur-Tille|21|874
 Lanrelas|22|874
-Saint-Frégant|29|874
+Saint-Frégant|29|874|L
 Velaines|55|874
 Monts-sur-Orne|61|874
 Bourg-Lastic|63|874
@@ -11187,15 +11188,15 @@ Saint-Vougay|29|873
 Saint-Laurent-en-Gâtines|37|873
 Landos|43|873
 Bohal|56|873
-Fontaine-le-Dun|76|873
+Fontaine-le-Dun|76|873|L
 Neuvy-Sautour|89|873
-Terre-de-Bas|971|873
+Terre-de-Bas|971|873|L
 Beauregard|01|872
 Crandelles|15|872
 Pranzac|16|872
 Genouillé|17|872
 Ploudiry|29|872
-Luri|2B|872
+Luri|2B|872|L
 Le Grand-Pressigny|37|872
 Neuville-sur-Brenne|37|872
 Candresse|40|872
@@ -11219,7 +11220,7 @@ Vecoux|88|871
 Avernes|95|871
 Saint-Marcel-de-Careiret|30|870
 Le Coudray-Saint-Germer|60|870
-Irissarry|64|870
+Irissarry|64|870|L
 Serres-Morlaàs|64|870
 Bey|71|870
 Montbellet|71|870
@@ -11245,7 +11246,7 @@ Bassou|89|869
 Foussemagne|90|869
 La Barben|13|868
 Pierrefort|15|868
-Brélès|29|868
+Brélès|29|868|L
 Saint-Michel-de-Rieufret|33|868
 Thourie|35|868
 Mézos|40|868
@@ -11305,7 +11306,7 @@ Chizé|79|862
 Saint-Amans-Valtoret|81|862
 Hermival-les-Vaux|14|861
 Muids|27|861
-Confort-Meilars|29|861
+Confort-Meilars|29|861|L
 Saint-Derrien|29|861
 Lignol|56|861
 Ferfay|62|861
@@ -11328,7 +11329,7 @@ Condat-sur-Vézère|24|859
 Quillebeuf-sur-Seine|27|859
 Saint-Gervais-sur-Mare|34|859
 Montrelais|44|859
-Lanchères|80|859
+Lanchères|80|859|L
 La Trimouille|86|859
 Saint-Barthélemy-le-Plain|07|858
 Ordan-Larroque|32|858
@@ -11352,14 +11353,14 @@ Aubazines|19|856
 Illeville-sur-Montfort|27|856
 Doizieux|42|856
 Limogne-en-Quercy|46|856
-Sideville|50|856
+Sideville|50|856|L
 Jolimetz|59|856
 Adé|65|856
 Gunsbach|68|856
 Kruth|68|856
 Docelles|88|856
 Neuflize|08|855
-Roscanvel|29|855
+Roscanvel|29|855|L
 Bruc-sur-Aff|35|855
 Bascons|40|855
 Saint-Étienne-de-Fougères|47|855
@@ -11368,14 +11369,14 @@ Baigts-de-Béarn|64|855
 Sainte-Hélène-du-Lac|73|855
 Serbannes|03|854
 Corgnac-sur-l'Isle|24|854
-Mendionde|64|854
+Mendionde|64|854|L
 Voray-sur-l'Ognon|70|854
 Aincourt|95|854
 Villiers-en-Désœuvre|27|853
 Sauzet|30|853
 Paulhaguet|43|853
 Sougy|45|853
-Hesdigneul-lès-Boulogne|62|853
+Hesdigneul-lès-Boulogne|62|853|L
 Mittelwihr|68|853
 Géovreisset|01|852
 Kerfourn|56|852
@@ -11392,7 +11393,7 @@ Busset|03|850
 Moulins-sur-Yèvre|18|850
 Flangebouche|25|850
 Pouligney-Lusans|25|850
-Fiennes|62|850
+Fiennes|62|850|L
 Soisy-Bouy|77|850
 Clairefontaine-en-Yvelines|78|850
 Coquainvilliers|14|849
@@ -11406,7 +11407,7 @@ Viglain|45|849
 Lantignié|69|849
 Raddon-et-Chapendu|70|849
 Sallenôves|74|849
-Valmont|76|849
+Valmont|76|849|L
 Pécy|77|849
 Gironcourt-sur-Vraine|88|849
 Vétheuil|95|849
@@ -11425,7 +11426,7 @@ Esquéhéries|02|847
 Saint-Remèze|07|847
 Jauldes|16|847
 Saint-Sornin-Lavolps|19|847
-Talasani|2B|847
+Talasani|2B|847|L
 Saint-Christophe-sur-Guiers|38|847
 Hilsprich|57|847
 Hommarting|57|847
@@ -11434,18 +11435,18 @@ Sainte-Marie-de-Cuines|73|847
 Glaire|08|846
 Les Mazures|08|846
 Lasbordes|11|846
-Tourgéville|14|846
+Tourgéville|14|846|L
 Leuhan|29|846
 Pierreclos|71|846
 Ménigoute|79|846
-Saint-Hilaire-la-Forêt|85|846
+Saint-Hilaire-la-Forêt|85|846|L
 Vallées-d'Antraigues-Asperjoc|07|845
 Pars-lès-Romilly|10|845
 Cravans|17|845
 Varzay|17|845
 Bannay|18|845
 Morthomiers|18|845
-Camlez|22|845
+Camlez|22|845|L
 Douzillac|24|845
 Saint-Germain-la-Campagne|27|845
 Saint-Martin-du-Bois|33|845
@@ -11517,7 +11518,7 @@ Condeissiat|01|839
 Étréaupont|02|839
 Mont-d'Origny|02|839
 Corcelles-lès-Cîteaux|21|839
-Saint-Pôtan|22|839
+Saint-Pôtan|22|839|L
 Nérigean|33|839
 Doazit|40|839
 Siaugues-Sainte-Marie|43|839
@@ -11564,14 +11565,14 @@ Saint-Papoul|11|835
 Saignes|15|835
 Maisons-du-Bois-Lièvremont|25|835
 Naisey-les-Granges|25|835
-Belgodère|2B|835
+Belgodère|2B|835|L
 Dizimieu|38|835
 Samazan|47|835
-Wissant|62|835
+Wissant|62|835|L
 Puisseguin|33|834
 Contest|53|834
 Mortefontaine|60|834
-Wierre-Effroy|62|834
+Wierre-Effroy|62|834|L
 Leutenheim|67|834
 Grézieu-le-Marché|69|834
 Saint-Jean-de-Chevelu|73|834
@@ -11611,12 +11612,12 @@ Saillenard|71|830
 Saint-Bonnet-de-Joux|71|830
 Montagny-les-Lanches|74|830
 Verchaix|74|830
-Grèges|76|830
+Grèges|76|830|L
 Amillis|77|830
 Montolieu|11|829
 Monbazillac|24|829
 Villers-sur-le-Roule|27|829
-Locronan|29|829
+Locronan|29|829|L
 Cauterets|65|829
 Clessé|71|829
 Farges-lès-Chalon|71|829
@@ -11624,7 +11625,7 @@ Vouvant|85|829
 Aspres-sur-Buëch|05|828
 Plats|07|828
 Blangy-le-Château|14|828
-Ballon|17|828
+Ballon|17|828|L
 Saint-Éliph|28|828
 Lopérec|29|828
 Cuguen|35|828
@@ -11658,7 +11659,7 @@ Saales|67|826
 Thal-Marmoutier|67|826
 Sougé-le-Ganelon|72|826
 Notre-Dame-de-Bliquetuit|76|826
-Saint-Pierre-en-Port|76|826
+Saint-Pierre-en-Port|76|826|L
 Sommery|76|826
 Pont-Noyelles|80|826
 Curtafond|01|825
@@ -11684,7 +11685,7 @@ Auzits|12|824
 Neussargues-Moissac|15|824
 Altillac|19|824
 Peyrelevade|19|824
-La Bouillie|22|824
+La Bouillie|22|824|L
 La Chapelle-aux-Filtzméens|35|824
 Escource|40|824
 Noailly|42|824
@@ -11718,7 +11719,7 @@ Langon-sur-Cher|41|821
 Troissy|51|821
 Brecé|53|821
 Acy-en-Multien|60|821
-Saint-Inglevert|62|821
+Saint-Inglevert|62|821|L
 Brullioles|69|821
 Saint-Sulpice|73|821
 Chaintreaux|77|821
@@ -11733,7 +11734,7 @@ Arros-de-Nay|64|820
 Arrest|80|820
 Serres-sur-Arget|09|819
 Leuc|11|819
-Anisy|14|819
+Anisy|14|819|L
 Saint-Victor-de-Malcap|30|819
 Lamothe|43|819
 Carency|62|819
@@ -11766,11 +11767,11 @@ Criquetot-sur-Ouville|76|817
 Parly|89|817
 Montbrehain|02|816
 Pouilley-Français|25|816
-Lampaul-Ploudalmézeau|29|816
+Lampaul-Ploudalmézeau|29|816|L
 Scrignac|29|816
 Grazac|31|816
 Poulaines|36|816
-Virandeville|50|816
+Virandeville|50|816|L
 Noyelles-sur-Escaut|59|816
 Uhart-Cize|64|816
 Montgaillard|65|816
@@ -11808,7 +11809,7 @@ Saint-Vincent-du-Lorouër|72|814
 Raucourt-et-Flaba|08|813
 Dienville|10|813
 Chaudes-Aigues|15|813
-Tréveneuc|22|813
+Tréveneuc|22|813|L
 Castels et Bézenac|24|813
 Pinterville|27|813
 Berneuil-en-Bray|60|813
@@ -11819,7 +11820,7 @@ Grainville-Langannerie|14|812
 Mégrit|22|812
 Vaire|25|812
 Lennon|29|812
-San-Giuliano|2B|812
+San-Giuliano|2B|812|L
 Mosnes|37|812
 Septmoncel les Molunes|39|812
 Birac-sur-Trec|47|812
@@ -11852,10 +11853,10 @@ Capian|33|809
 Champigny-sur-Veude|37|809
 Izeron|38|809
 Thoirette-Coisia|39|809
-Bias|40|809
+Bias|40|809|L
 Mazangé|41|809
 La Chapelle-Glain|44|809
-Grosville|50|809
+Grosville|50|809|L
 Pontmain|53|809
 Naives-Rosières|55|809
 Courcelles-lès-Gisors|60|809
@@ -11873,7 +11874,7 @@ Prunay-en-Yvelines|78|808
 L'Orbrie|85|808
 Guillerval|91|808
 Caugé|27|807
-Santa-Maria-Poggio|2B|807
+Santa-Maria-Poggio|2B|807|L
 Montpouillan|47|807
 Offwiller|67|807
 Gueberschwihr|68|807
@@ -11896,7 +11897,7 @@ Utelle|06|805
 Barbaira|11|805
 Mérignac|16|805
 Cierrey|27|805
-Kerlaz|29|805
+Kerlaz|29|805|L
 Gratens|31|805
 Menville|31|805
 Bonzac|33|805
@@ -11938,7 +11939,7 @@ Cramoisy|60|803
 Elsenheim|67|803
 Galfingue|68|803
 Lescheraines|73|803
-Saint-Rémy-Boscrocourt|76|803
+Saint-Rémy-Boscrocourt|76|803|L
 Tourriers|16|802
 Rouvres|28|802
 Le Castéra|31|802
@@ -11956,7 +11957,7 @@ Mittainvilliers-Vérigny|28|801
 Saint-Gervais|30|801
 Roquefort-sur-Garonne|31|801
 Saulnières|35|801
-Saint-Germain-le-Gaillard|50|801
+Saint-Germain-le-Gaillard|50|801|L
 Marat|63|801
 Dommartin-lès-Cuiseaux|71|801
 Pruillé-l'Éguillé|72|801
@@ -11982,11 +11983,11 @@ Saint-Maximin|30|798
 Moustey|40|798
 Saint-Victor-Malescours|43|798
 Clermont-Dessous|47|798
-Montfarville|50|798
+Montfarville|50|798|L
 Forstfeld|67|798
 Reuil-en-Brie|77|798
 Canals|82|798
-Banville|14|797
+Banville|14|797|L
 Le Pin|14|797
 Landrais|17|797
 La Chapelle-en-Vercors|26|797
@@ -12014,7 +12015,7 @@ Bootzheim|67|795
 Saint-Martin-de-Fraigneau|85|795
 Beaurieux|02|794
 Moulis|09|794
-Beaugeay|17|794
+Beaugeay|17|794|L
 Nancras|17|794
 Taillebourg|17|794
 Chambon-sur-Voueize|23|794
@@ -12044,8 +12045,8 @@ Buthiers|77|792
 Saint-Sulpice-Laurière|87|792
 Tuchan|11|791
 Saint-Julien-de-Chédon|41|791
-Bréville-sur-Mer|50|791
-Craywick|59|791
+Bréville-sur-Mer|50|791|L
+Craywick|59|791|L
 Fresnicourt-le-Dolmen|62|791
 Chênex|74|791
 Émanville|76|791
@@ -12067,7 +12068,7 @@ Gajan|30|789
 Le Val-de-Guéblange|57|789
 Sarraltroff|57|789
 Mélicocq|60|789
-Peuplingues|62|789
+Peuplingues|62|789|L
 Antully|71|789
 Saint-Igny-de-Roche|71|789
 Saint-André-sur-Cailly|76|789
@@ -12088,7 +12089,7 @@ Le Vigean|15|787
 Saint-Maurice-sur-Eygues|26|787
 Monoblet|30|787
 Épuisay|41|787
-Tourville-sur-Sienne|50|787
+Tourville-sur-Sienne|50|787|L
 Ippling|57|787
 Bonneuil-les-Eaux|60|787
 Landrethun-lès-Ardres|62|787
@@ -12115,7 +12116,7 @@ Gargas|31|785
 Palluau-sur-Indre|36|785
 Selommes|41|785
 Bouillé-Ménard|49|785
-Dragey-Ronthon|50|785
+Dragey-Ronthon|50|785|L
 Jeandelaincourt|54|785
 La Celle-sur-Loire|58|785
 Seychalles|63|785
@@ -12142,8 +12143,8 @@ Beuveille|54|783
 Lynde|59|783
 Acq|62|783
 Louvetot|76|783
-Ponts-et-Marais|76|783
-Bouvaincourt-sur-Bresle|80|783
+Ponts-et-Marais|76|783|L
+Bouvaincourt-sur-Bresle|80|783|L
 Villars|84|783
 Coulanges-la-Vineuse|89|783
 Courtois-sur-Yonne|89|783
@@ -12152,7 +12153,7 @@ Serves-sur-Rhône|26|782
 Aigremont|30|782
 Domessargues|30|782
 Quatzenheim|67|782
-Épretot|76|782
+Épretot|76|782|L
 Chamboret|87|782
 Chirac|16|781
 Saint-Vran|22|781
@@ -12223,14 +12224,14 @@ Arvieu|12|774
 Pouillé|41|774
 Saint-Lubin-en-Vergonnois|41|774
 Grand-Auverné|44|774
-Carolles|50|774
+Carolles|50|774|L
 Kalhausen|57|774
 Gauchin-Verloingt|62|774
 Soppe-le-Bas|68|774
 Saint-Nizier-d'Azergues|69|774
 Vallon-sur-Gée|72|774
 La Ferrière-en-Parthenay|79|774
-Graye-sur-Mer|14|773
+Graye-sur-Mer|14|773|L
 Allanche|15|773
 Archiac|17|773
 Saint-Aulaire|19|773
@@ -12239,7 +12240,7 @@ Massieu|38|773
 Lavau-sur-Loire|44|773
 Sainte-Gemmes-le-Robert|53|773
 Haudivillers|60|773
-Saint-Tricat|62|773
+Saint-Tricat|62|773|L
 Maury|66|773
 Saint-Firmin|71|773
 Brannay|89|773
@@ -12313,14 +12314,14 @@ Chemy|59|766
 Hagenthal-le-Haut|68|766
 Mesnil-Panneville|76|766
 Villeconin|91|766
-Formigny La Bataille|14|765
+Formigny La Bataille|14|765|L
 Archingeay|17|765
 Réaux sur Trèfle|17|765
 Chezal-Benoît|18|765
-Yvias|22|765
+Yvias|22|765|L
 Clévilliers|28|765
 Gellainville|28|765
-Le Juch|29|765
+Le Juch|29|765|L
 Pommereuil|59|765
 Monneville|60|765
 Landisacq|61|765
@@ -12329,7 +12330,7 @@ Bagnols|69|765
 Citers|70|765
 Vazerac|82|765
 Le Tablier|85|765
-Talais|33|764
+Talais|33|764|L
 Nanchez|39|764
 Brin-sur-Seille|54|764
 Contrisson|55|764
@@ -12412,7 +12413,7 @@ La Chaussée-sur-Marne|51|758
 Marcillé-la-Ville|53|758
 Concoret|56|758
 Martres-sur-Morge|63|758
-Hélette|64|758
+Hélette|64|758|L
 Rodès|66|758
 Saulnot|70|758
 Vinzelles|71|758
@@ -12420,7 +12421,7 @@ Serraval|74|758
 Salmiech|12|757
 Sainte-Marguerite-d'Elle|14|757
 La Chapelle-de-Surieu|38|757
-Pierreville|50|757
+Pierreville|50|757|L
 Semoutiers-Montsaon|52|757
 Téterchen|57|757
 Awoingt|59|757
@@ -12501,7 +12502,7 @@ Fay|72|751
 Ercheu|80|751
 Champtercier|04|750
 Mirepeisset|11|750
-Plévenon|22|750
+Plévenon|22|750|L
 Francescas|47|750
 Neau|53|750
 Francaltroff|57|750
@@ -12513,7 +12514,7 @@ Massat|09|749
 Badens|11|749
 Marolles|14|749
 Saint-Aubin-sur-Quillebeuf|27|749
-Pianottoli-Caldarello|2A|749
+Pianottoli-Caldarello|2A|749|L
 Croignon|33|749
 Marcillé-Raoul|35|749
 Saint-Pandelon|40|749
@@ -12529,7 +12530,7 @@ Nançay|18|748
 Badecon-le-Pin|36|748
 Wanquetin|62|748
 Schweighouse-Thann|68|748
-Gommerville|76|748
+Gommerville|76|748|L
 Saint-Vaast-d'Équiqueville|76|748
 Saint-Affrique-les-Montagnes|81|748
 Montesquieu|82|748
@@ -12560,7 +12561,7 @@ Saint-Ciers-de-Canesse|33|746
 Yvoy-le-Marron|41|746
 La Roche-Bernard|56|746
 Luemschwiller|68|746
-Colleville|76|746
+Colleville|76|746|L
 Martainville-Épreville|76|746
 Saint-Martin-en-Bière|77|746
 Pavant|02|745
@@ -12592,7 +12593,7 @@ Villeneuve-la-Comtesse|17|743
 Tillenay|21|743
 Bouglainval|28|743
 Chalain-le-Comtal|42|743
-Vains|50|743
+Vains|50|743|L
 Porcaro|56|743
 Bernac-Debat|65|743
 Steinsoultz|68|743
@@ -12606,10 +12607,10 @@ Marsac|16|742
 Le Vieux-Bourg|22|742
 Lougres|25|742
 Sancheville|28|742
-Île-Tudy|29|742
+Île-Tudy|29|742|L
 Chevrières|38|742
 Saint-Julien-sur-Cher|41|742
-Les Moitiers-d'Allonne|50|742
+Les Moitiers-d'Allonne|50|742|L
 Henriville|57|742
 Izel-lès-Hameau|62|742
 Schwenheim|67|742
@@ -12664,7 +12665,7 @@ Champdeuil|77|739
 Saint-Angel|03|738
 Bayel|10|738
 Moncontour|22|738
-Pludual|22|738
+Pludual|22|738|L
 Charancieu|38|738
 Ruffey-sur-Seille|39|738
 Viterne|54|738
@@ -12676,7 +12677,7 @@ Belleville-en-Caux|76|738
 Bougligny|77|738
 Bussy-Saint-Martin|77|738
 Ferdrupt|88|738
-Coti-Chiavari|2A|737
+Coti-Chiavari|2A|737|L
 Le Triadou|34|737
 Bréhémont|37|737
 Châteauvilain|38|737
@@ -12690,7 +12691,7 @@ Daours|80|737
 Celles-sur-Plaine|88|737
 Beuvardes|02|736
 Fiquefleur-Équainville|27|736
-Solaro|2B|736
+Solaro|2B|736|L
 Miramont-de-Comminges|31|736
 Clermont|40|736
 Grandrieu|48|736
@@ -12718,7 +12719,7 @@ Bayon-sur-Gironde|33|734
 Chanteloup-les-Bois|49|734
 Baerenthal|57|734
 Conchy-les-Pots|60|734
-Caffiers|62|734
+Caffiers|62|734|L
 Entraigues|63|734
 Ettendorf|67|734
 Hauteluce|73|734
@@ -12750,7 +12751,7 @@ Sainte-Catherine-de-Fierbois|37|732
 Épercieux-Saint-Paul|42|732
 Esquennoy|60|732
 Pin|70|732
-Woignarue|80|732
+Woignarue|80|732|L
 Val-de-Dagne|11|731
 Virson|17|731
 Beauregard-de-Terrasson|24|731
@@ -12768,7 +12769,7 @@ Villemoyenne|10|730
 Montmérac|16|730
 Recologne|25|730
 Montbrun-Lauragais|31|730
-Regnéville-sur-Mer|50|730
+Regnéville-sur-Mer|50|730|L
 Chaudeney-sur-Moselle|54|730
 Lantéfontaine|54|730
 Belle-Église|60|730
@@ -12782,7 +12783,7 @@ Savignac-Lédrier|24|729
 Plasnes|27|729
 Theuville|28|729
 Monteaux|41|729
-Le Mesnil-au-Val|50|729
+Le Mesnil-au-Val|50|729|L
 Livré-la-Touche|53|729
 Chambley-Bussières|54|729
 Haraucourt|54|729
@@ -12790,8 +12791,8 @@ Baron|60|729
 Balschwiller|68|729
 Vendenesse-lès-Charolles|71|729
 Ectot-l'Auber|76|729
-Flocques|76|729
-Tourville-les-Ifs|76|729
+Flocques|76|729|L
+Tourville-les-Ifs|76|729|L
 Saint-Romans-lès-Melle|79|729
 Sommières-du-Clain|86|729
 Besson|03|728
@@ -12805,7 +12806,7 @@ La Croisille-sur-Briance|87|728
 Vieux|14|727
 Anglards-de-Salers|15|727
 Gilly-lès-Cîteaux|21|727
-Serra-di-Ferro|2A|727
+Serra-di-Ferro|2A|727|L
 Générargues|30|727
 Villiers-au-Bouin|37|727
 Bort-l'Étang|63|727
@@ -12834,7 +12835,7 @@ Boyer|71|725
 Frontenaud|71|725
 Mézières-sur-Ponthouin|72|725
 Marcillé|79|725
-Bourseville|80|725
+Bourseville|80|725|L
 Lamotte-Warfusée|80|725
 Grand'Landes|85|725
 Fayet|02|724
@@ -12860,7 +12861,7 @@ Roudouallec|56|722
 Momères|65|722
 Michelbach-le-Bas|68|722
 Courcoury|17|721
-Pléboulle|22|721
+Pléboulle|22|721|L
 Genouillac|23|721
 Pionnat|23|721
 Vraiville|27|721
@@ -12902,7 +12903,7 @@ Montégut|32|719
 Annoisin-Chatelans|38|719
 Geloux|40|719
 Dolmayrac|47|719
-Tréauville|50|719
+Tréauville|50|719|L
 Champsevraine|52|719
 Lignières-Orgères|53|719
 Nouilly|57|719
@@ -12941,7 +12942,7 @@ Frolois|54|717
 Échauffour|61|717
 Illhaeusern|68|717
 Kirchberg|68|717
-Heuqueville|76|717
+Heuqueville|76|717|L
 Montgé-en-Goële|77|717
 Belloy-sur-Somme|80|717
 Persac|86|717
@@ -13036,7 +13037,7 @@ Assier|46|709
 La Ferrière-Bochard|61|709
 L'Orée-d'Écouves|61|709
 Diéval|62|709
-Nouvelle-Église|62|709
+Nouvelle-Église|62|709|L
 Lahourcade|64|709
 Sames|64|709
 Uhrwiller|67|709
@@ -13071,7 +13072,7 @@ Cruviers-Lascours|30|707
 Berthenay|37|707
 Chemillé-sur-Dême|37|707
 Cuinzier|42|707
-Hauteville-sur-Mer|50|707
+Hauteville-sur-Mer|50|707|L
 Rahling|57|707
 Breilly|80|707
 Seraucourt-le-Grand|02|706
@@ -13109,7 +13110,7 @@ Vy-lès-Lure|70|704
 Marcilly-lès-Buxy|71|704
 Curienne|73|704
 Croix-Mare|76|704
-Hattenville|76|704
+Hattenville|76|704|L
 Caix|80|704
 Cormoz|01|703
 Clans|06|703
@@ -13120,7 +13121,7 @@ Lederzeele|59|703
 Bouzel|63|703
 Saint-Jean-d'Heurs|63|703
 Boult|70|703
-Bec-de-Mortagne|76|703
+Bec-de-Mortagne|76|703|L
 Vayres|87|703
 Guillon-Terre-Plaine|89|703
 Illiat|01|702
@@ -13148,7 +13149,7 @@ Saulon-la-Rue|21|701
 Guitté|22|701
 Parnans|26|701
 Fatouville-Grestain|27|701
-Castellare-di-Casinca|2B|701
+Castellare-di-Casinca|2B|701|L
 Brignon|30|701
 Puymiclan|47|701
 Vauciennes|60|701
@@ -13172,7 +13173,7 @@ Trilbardou|77|700
 Rogny-les-Sept-Écluses|89|700
 Haraucourt|08|699
 Bedenac|17|699
-Saint-Jean-d'Angle|17|699
+Saint-Jean-d'Angle|17|699|L
 Lacropte|24|699
 Cravant-les-Côteaux|37|699
 Rivière|37|699
@@ -13192,7 +13193,7 @@ Draché|37|698
 Marcenod|42|698
 Beuste|64|698
 Galan|65|698
-Rigarda|66|698
+Rigarda|66|698|L
 Saint-Martin-de-la-Porte|73|698
 Berville-en-Caux|76|698
 Adriers|86|698
@@ -13217,7 +13218,7 @@ Chalain-d'Uzore|42|696
 Bonnée|45|696
 Germigny-des-Prés|45|696
 Ousson-sur-Loire|45|696
-Gâvres|56|696
+Gâvres|56|696|L
 Lampertsloch|67|696
 Saint-Cernin-de-Larche|19|695
 Montestruc-sur-Gers|32|695
@@ -13228,8 +13229,8 @@ Tilloy-lez-Cambrai|59|695
 Le Cheix-sur-Morge|63|695
 Oltingue|68|695
 Anost|71|695
-Auppegard|76|695
-Friaucourt|80|695
+Auppegard|76|695|L
+Friaucourt|80|695|L
 Puimoisson|04|694
 Gélannes|10|694
 Aumagne|17|694
@@ -13249,14 +13250,14 @@ Caurel|51|693
 Les Hauts-de-Chée|55|693
 Escherange|57|693
 Cerisy-Belle-Étoile|61|693
-Bidarray|64|693
+Bidarray|64|693|L
 Steinbrunn-le-Haut|68|693
 Loisy|71|693
 Lavardin|72|693
 Ponthévrard|78|693
 Moyenneville|80|693
 Montvicq|03|692
-Aure sur Mer|14|692
+Aure sur Mer|14|692|L
 Tour-en-Bessin|14|692
 Saint-Jean-du-Doigt|29|692
 Monteils|30|692
@@ -13267,7 +13268,7 @@ Sampigny|55|692
 Saint-Quirin|57|692
 Kirchheim|67|692
 Issy-l'Évêque|71|692
-Toussaint|76|692
+Toussaint|76|692|L
 Saint-Priest-Ligoure|87|692
 Crancey|10|691
 Le Monteil|43|691
@@ -13372,7 +13373,7 @@ Travecy|02|685
 Savigny-en-Septaine|18|685
 Manthes|26|685
 Laz|29|685
-Sainte-Marie-du-Mont|50|685
+Sainte-Marie-du-Mont|50|685|L
 Sainte-Suzanne-sur-Vire|50|685
 Cumières|51|685
 L'Épine|51|685
@@ -13426,7 +13427,7 @@ Châlons-du-Maine|53|682
 Errouville|54|682
 Luchy|60|682
 Écuires|62|682
-Gruchet-Saint-Siméon|76|682
+Gruchet-Saint-Siméon|76|682|L
 Mousseaux-lès-Bray|77|682
 Vacognes-Neuilly|14|681
 Saint-Cyr-du-Doret|17|681
@@ -13437,7 +13438,7 @@ Dangolsheim|67|681
 Limersheim|67|681
 La Charmée|71|681
 Chainaz-les-Frasses|74|681
-Sainte-Hélène-Bondeville|76|681
+Sainte-Hélène-Bondeville|76|681|L
 La Croix-en-Brie|77|681
 Champis|07|680
 Sury-en-Vaux|18|680
@@ -13455,7 +13456,7 @@ Bessey-lès-Cîteaux|21|679
 Auradé|32|679
 Cormenon|41|679
 Saint-Barthélemy-Lestra|42|679
-Gratot|50|679
+Gratot|50|679|L
 Monchy-le-Preux|62|679
 Méry-sur-Marne|77|679
 Huchenneville|80|679
@@ -13470,7 +13471,7 @@ Vaux-lès-Saint-Claude|39|678
 Saint-Honoré-les-Bains|58|678
 Griesbach-au-Val|68|678
 Frangy-en-Bresse|71|678
-Anglesqueville-l'Esneval|76|678
+Anglesqueville-l'Esneval|76|678|L
 Larrazet|82|678
 Glun|07|677
 La Saulsotte|10|677
@@ -13479,7 +13480,7 @@ Villefranche-de-Panat|12|677
 Plassac|17|677
 Blaisy-Bas|21|677
 La Feuillée|29|677
-Plovan|29|677
+Plovan|29|677|L
 Bécherel|35|677
 Vicq-sur-Nahon|36|677
 Averdon|41|677
@@ -13558,7 +13559,7 @@ Saint-Pierre-es-Champs|60|672
 Chandai|61|672
 Saint-Julien-sur-Sarthe|61|672
 Murol|63|672
-Ainhoa|64|672
+Ainhoa|64|672|L
 Rustrel|84|672
 Rosnay|85|672
 Magné|86|672
@@ -13583,7 +13584,7 @@ Oisseau-le-Petit|72|671
 Montailleur|73|671
 Auffreville-Brasseuil|78|671
 Sermoyer|01|670
-Tressignaux|22|670
+Tressignaux|22|670|L
 Saint-Laurent|23|670
 Bourdeaux|26|670
 Brosville|27|670
@@ -13631,7 +13632,7 @@ Pommerieux|53|667
 Thury-sous-Clermont|60|667
 Montsecret-Clairefougère|61|667
 Saint-Hilaire-le-Châtel|61|667
-Ispoure|64|667
+Ispoure|64|667|L
 Chargey-lès-Gray|70|667
 Bragny-sur-Saône|71|667
 Bannost-Villegagnon|77|667
@@ -13646,7 +13647,7 @@ Davayat|63|666
 Roppentzwiller|68|666
 Davayé|71|666
 Nanton|71|666
-Saint-Gilles-de-la-Neuville|76|666
+Saint-Gilles-de-la-Neuville|76|666|L
 L'Isle-sur-Serein|89|666
 Lézinnes|89|666
 Poilly-sur-Tholon|89|666
@@ -13663,7 +13664,7 @@ Sailly-en-Ostrevent|62|665
 Verchocq|62|665
 Uhlwiller|67|665
 Volesvres|71|665
-Saint-Jean-de-la-Neuville|76|665
+Saint-Jean-de-la-Neuville|76|665|L
 Autouillet|78|665
 La Villeneuve-en-Chevrie|78|665
 Monbéqui|82|665
@@ -13685,7 +13686,7 @@ Pouyastruc|65|664
 Petersbach|67|664
 Chahaignes|72|664
 Courcemont|72|664
-Thérouldeville|76|664
+Thérouldeville|76|664|L
 Carlus|81|664
 Peypin-d'Aigues|84|664
 Montlaur|12|663
@@ -13703,7 +13704,7 @@ Cagnoncles|59|663
 Quiestède|62|663
 Lobsann|67|663
 Beauvoir-en-Lyons|76|663
-Brachy|76|663
+Brachy|76|663|L
 Fienvillers|80|663
 Montalzat|82|663
 Jeuxey|88|663
@@ -13719,7 +13720,7 @@ Mesves-sur-Loire|58|662
 Lessard-le-National|71|662
 Sainte-Austreberthe|76|662
 Le Barroux|84|662
-Bréville-les-Monts|14|661
+Bréville-les-Monts|14|661|L
 Foussignac|16|661
 Fontaines-en-Sologne|41|661
 Besneville|50|661
@@ -13762,7 +13763,7 @@ Le Mêle-sur-Sarthe|61|659
 Bonnières|62|659
 Gouy-Saint-André|62|659
 Aramits|64|659
-Thil-Manneville|76|659
+Thil-Manneville|76|659|L
 Marchémoret|77|659
 Mittainville|78|659
 Sciecq|79|659
@@ -13864,13 +13865,13 @@ Mareil-sur-Loir|72|653
 Villy-le-Bouveret|74|653
 Poussay|88|653
 Champagne|07|652
-Gonneville-sur-Mer|14|652
+Gonneville-sur-Mer|14|652|L
 Barges|21|652
 Clugnat|23|652
 Chantérac|24|652
 Condé-sur-Risle|27|652
 Gauville-la-Campagne|27|652
-Pietracorbara|2B|652
+Pietracorbara|2B|652|L
 Le Born|31|652
 Le Temple|33|652
 Saint-Hilaire-la-Gravelle|41|652
@@ -13888,7 +13889,7 @@ Cleurie|88|652
 Magnieu|01|651
 Orcières|05|651
 Saint-Ybars|09|651
-Champagne|17|651
+Champagne|17|651|L
 Liginiac|19|651
 Fauverney|21|651
 Étréville|27|651
@@ -13902,17 +13903,17 @@ Blies-Guersviller|57|651
 Kuttolsheim|67|651
 Friesen|68|651
 Ambérieux|69|651
-Normanville|76|651
+Normanville|76|651|L
 Chamvres|89|651
 Massignieu-de-Rives|01|650
 Morgny|27|650
-Primelin|29|650
+Primelin|29|650|L
 Monte|2B|650
 Tendu|36|650
 Gagnac-sur-Cère|46|650
 Saint-Saulge|58|650
 Bourgheim|67|650
-Saint-Martin-du-Bec|76|650
+Saint-Martin-du-Bec|76|650|L
 Jossigny|77|650
 Quiers|77|650
 Goussonville|78|650
@@ -13961,7 +13962,7 @@ Rocquigny|08|647
 Aunac-sur-Charente|16|647
 Saint-Sever-de-Saintonge|17|647
 Neuville Saint Denis|28|647
-Orx|40|647
+Orx|40|647|L
 Esclavolles-Lurey|51|647
 Sommevoire|52|647
 Rochefort-en-Terre|56|647
@@ -14029,9 +14030,9 @@ Livry|58|643
 Talmontiers|60|643
 Lamontgie|63|643
 Isola|06|642
-Asnelles|14|642
+Asnelles|14|642|L
 Balanzac|17|642
-Kerfot|22|642
+Kerfot|22|642|L
 La Forêt-du-Parc|27|642
 Foulbec|27|642
 La Tourette|42|642
@@ -14041,7 +14042,7 @@ Preures|62|642
 Yronde-et-Buron|63|642
 Saint-Jammes|64|642
 Dieffenbach-au-Val|67|642
-Vittefleur|76|642
+Vittefleur|76|642|L
 Puyravault|85|642
 Saint-Hilaire-de-Voust|85|642
 Saint-Maurice-des-Noues|85|642
@@ -14066,7 +14067,7 @@ Romegoux|17|640
 Coly-Saint-Amand|24|640
 Vero|2A|640
 Saunay|37|640
-Benoîtville|50|640
+Benoîtville|50|640|L
 Sepmeries|59|640
 Janville|60|640
 La Tour-d'Auvergne|63|640
@@ -14077,7 +14078,7 @@ Courcebœufs|72|640
 Fréterive|73|640
 Verel-Pragondran|73|640
 Varen|82|640
-Fonds-Saint-Denis|972|640
+Fonds-Saint-Denis|972|640|L
 Saint-Jean-du-Bruel|12|639
 Saint-Philbert-des-Champs|14|639
 Abjat-sur-Bandiat|24|639
@@ -14092,11 +14093,11 @@ Rébénacq|64|639
 Wangen|67|639
 Chalmoux|71|639
 Juvigny|74|639
-Bernières|76|639
+Bernières|76|639|L
 Neuf-Marché|76|639
 Lommoye|78|639
 Rouffiac|81|639
-Rayol-Canadel-sur-Mer|83|639
+Rayol-Canadel-sur-Mer|83|639|L
 Montbeugny|03|638
 Beauvais-sur-Matha|17|638
 Nespouls|19|638
@@ -14105,12 +14106,12 @@ Saint-Hippolyte|37|638
 Chapelle-Voland|39|638
 Montrieux-en-Sologne|41|638
 Rou-Marson|49|638
-Bricquebosq|50|638
-Longueville|50|638
+Bricquebosq|50|638|L
+Longueville|50|638|L
 Lacroix-sur-Meuse|55|638
 Sacy-le-Petit|60|638
 Almenêches|61|638
-Carly|62|638
+Carly|62|638|L
 Valay|70|638
 Signy-Signets|77|638
 Jumeauville|78|638
@@ -14153,7 +14154,7 @@ Rigny|70|636
 Coudrecieux|72|636
 Souligné-Flacé|72|636
 Heugleville-sur-Scie|76|636
-Saint-Riquier-ès-Plains|76|636
+Saint-Riquier-ès-Plains|76|636|L
 Noyelles-sur-Mer|80|636
 Ollières|83|636
 Vétrigne|90|636
@@ -14196,7 +14197,7 @@ Werentzhouse|68|633
 Montigny-lès-Vesoul|70|633
 Le Biot|74|633
 Saint-Eusèbe|74|633
-Saint-Martin-aux-Buneaux|76|633
+Saint-Martin-aux-Buneaux|76|633|L
 Recloses|77|633
 Épinay-sur-Odon|14|632
 Breuvannes-en-Bassigny|52|632
@@ -14223,14 +14224,14 @@ Chaussy|95|631
 Samognat|01|630
 Gizy|02|630
 Chevagnes|03|630
-Tréguidel|22|630
+Tréguidel|22|630|L
 Belleherbe|25|630
 Deluz|25|630
 Dung|25|630
 Notre-Dame-de-l'Isle|27|630
 Availles-sur-Seiche|35|630
 Bouglon|47|630
-Île-aux-Moines|56|630
+Île-aux-Moines|56|630|L
 Banvou|61|630
 Saint-Mars-d'Égrenne|61|630
 Cescau|64|630
@@ -14271,7 +14272,7 @@ Laval-sur-Vologne|88|628
 Saint-Denis-lès-Sens|89|628
 Joigny-sur-Meuse|08|627
 Courtonne-les-Deux-Églises|14|627
-Reviers|14|627
+Reviers|14|627|L
 Saint-Thomas|31|627
 Berru|51|627
 Mézangers|53|627
@@ -14299,7 +14300,7 @@ Barzun|64|626
 Cleebourg|67|626
 Les Sauvages|69|626
 Brevilliers|70|626
-Életot|76|626
+Életot|76|626|L
 Querrieu|80|626
 Roaix|84|626
 Viens|84|626
@@ -14346,7 +14347,7 @@ Boullay-les-Troux|91|624
 Matafelon-Granges|01|623
 Saint-Laurent-d'Olt|12|623
 Loray|25|623
-Taglio-Isolaccio|2B|623
+Taglio-Isolaccio|2B|623|L
 Labarde|33|623
 Salvizinet|42|623
 La Chapelle-sur-Aveyron|45|623
@@ -14385,7 +14386,7 @@ Montigny-aux-Amognes|58|621
 Agnez-lès-Duisans|62|621
 Chamousset|73|621
 Frozes|86|621
-Villerville|14|620
+Villerville|14|620|L
 Saint-Vaize|17|620
 Sancergues|18|620
 Corconne|30|620
@@ -14431,7 +14432,7 @@ Saint-Félix|60|618
 Le Pin-la-Garenne|61|618
 Neuville-sous-Montreuil|62|618
 Saint-Floris|62|618
-Ancourt|76|618
+Ancourt|76|618|L
 Cocherel|77|618
 Iverny|77|618
 Beaumont|89|618
@@ -14440,14 +14441,14 @@ La Faye|16|617
 Penguily|22|617
 Cannes-et-Clairan|30|617
 Le Brignon|43|617
-Saint-Pierre-Langers|50|617
+Saint-Pierre-Langers|50|617|L
 Mailly-Champagne|51|617
 Blies-Ébersing|57|617
 Hilbesheim|57|617
 Saint-Louis|57|617
 La Fermeté|58|617
 Mieuxcé|61|617
-Audinghen|62|617
+Audinghen|62|617|L
 Savins|77|617
 Luzay|79|617
 Valpuiseaux|91|617
@@ -14520,7 +14521,7 @@ Pontoy|57|613
 Neuve-Église|67|613
 Rigny-sur-Arroux|71|613
 Saint-Sernin-du-Plain|71|613
-Rouville|76|613
+Rouville|76|613|L
 Gommecourt|78|613
 Blangy-Tronville|80|613
 Rumigny|80|613
@@ -14580,7 +14581,7 @@ Bersac-sur-Rivalier|87|610
 Danizy|02|609
 Simiane-la-Rotonde|04|609
 Homps|11|609
-Auberville|14|609
+Auberville|14|609|L
 Siccieu-Saint-Julien-et-Carisieu|38|609
 Hastingues|40|609
 Menars|41|609
@@ -14607,11 +14608,11 @@ Hontanx|40|608
 Saint-Vidal|43|608
 Balsièges|48|608
 Hautvillers|51|608
-Audresselles|62|608
+Audresselles|62|608|L
 Saint-Maurice-lès-Châteauneuf|71|608
 Trouville-Alliquerville|76|608
 Allonne|79|608
-Oust-Marest|80|608
+Oust-Marest|80|608|L
 Mauprévoir|86|608
 La Puye|86|608
 Cugny|02|607
@@ -14619,7 +14620,7 @@ Marliens|21|607
 Écaquelon|27|607
 Mézières-en-Vexin|27|607
 Thoiras-Corbès|30|607
-Nouainville|50|607
+Nouainville|50|607|L
 Vautorte|53|607
 Villers-au-Bois|62|607
 Bulhon|63|607
@@ -14657,7 +14658,7 @@ Bettencourt-Saint-Ouen|80|605
 Fontaine|90|605
 Juvincourt-et-Damary|02|604
 Origny-le-Sec|10|604
-La Gripperie-Saint-Symphorien|17|604
+La Gripperie-Saint-Symphorien|17|604|L
 Langouet|35|604
 Sepmes|37|604
 Gy-les-Nonains|45|604
@@ -14670,7 +14671,7 @@ Febvin-Palfart|62|604
 Fresnes-lès-Montauban|62|604
 Momas|64|604
 Saessolsheim|67|604
-Graimbouville|76|604
+Graimbouville|76|604|L
 Saint-Maclou-de-Folleville|76|604
 Miannay|80|604
 Chabrac|16|603
@@ -14726,7 +14727,7 @@ Plaine-de-Walsch|57|601
 Laps|63|601
 Ernolsheim-lès-Saverne|67|601
 Marcolès|15|600
-Moëze|17|600
+Moëze|17|600|L
 Champdôtre|21|600
 Saint-Pierre-du-Val|27|600
 Crachier|38|600
@@ -14784,7 +14785,7 @@ Codolet|30|597
 Rocamadour|46|597
 Thiaville-sur-Meurthe|54|597
 Chémery-les-Deux|57|597
-Bonningues-lès-Calais|62|597
+Bonningues-lès-Calais|62|597|L
 Coyecques|62|597
 Les Angles|66|597
 Soulitré|72|597
@@ -14819,7 +14820,7 @@ Miquelon-Langlade|975|596
 Mailhac|11|595
 Sainte-Eulalie|11|595
 Pont-Melvez|22|595
-Ruca|22|595
+Ruca|22|595|L
 Omessa|2B|595
 Saint-Christophe-de-Double|33|595
 Bouchamps-lès-Craon|53|595
@@ -14844,7 +14845,7 @@ Flaujagues|33|594
 Montaut|40|594
 Champigny-en-Beauce|41|594
 La Chaise-Dieu|43|594
-Teurthéville-Bocage|50|594
+Teurthéville-Bocage|50|594|L
 Humes-Jorquenay|52|594
 Alligny-en-Morvan|58|594
 Raveau|58|594
@@ -14869,7 +14870,7 @@ La Neuville|59|593
 Vieux-Moulin|60|593
 Clairmarais|62|593
 Doudeauville|62|593
-Macaye|64|593
+Macaye|64|593|L
 Mittelbergheim|67|593
 Saint-Igny-de-Vers|69|593
 Valmeinier|73|593
@@ -14966,7 +14967,7 @@ Marquay|24|588
 La Harengère|27|588
 Roinville|28|588
 Collorec|29|588
-Aregno|2B|588
+Aregno|2B|588|L
 Boissières|30|588
 Saint-Pey-de-Castets|33|588
 Cervon|58|588
@@ -14977,7 +14978,7 @@ Breurey-lès-Faverney|70|588
 Varennes-lès-Mâcon|71|588
 Lornay|74|588
 Guillaumes|06|587
-Périers-sur-le-Dan|14|587
+Périers-sur-le-Dan|14|587|L
 Anais|16|587
 Saint-Germain-des-Bois|18|587
 Saint-Puy|32|587
@@ -14986,7 +14987,7 @@ Muirancourt|60|587
 Bernadets|64|587
 Schœnau|67|587
 Sceaux-sur-Huisne|72|587
-Parc-d'Anxtot|76|587
+Parc-d'Anxtot|76|587|L
 Quevillon|76|587
 Méricourt-l'Abbé|80|587
 Noyers|89|587
@@ -15001,7 +15002,7 @@ Appenwihr|68|586
 Linthal|68|586
 Saint-Vincent-en-Bresse|71|586
 Lavernat|72|586
-Vattetot-sous-Beaumont|76|586
+Vattetot-sous-Beaumont|76|586|L
 La Bretonnière-la-Claye|85|586
 Queaux|86|586
 Charmois-l'Orgueilleux|88|586
@@ -15009,7 +15010,7 @@ Mandray|88|586
 Vendhuile|02|585
 Liart|08|585
 Beaurecueil|13|585
-Longues-sur-Mer|14|585
+Longues-sur-Mer|14|585|L
 Salinelles|30|585
 Lestiac-sur-Garonne|33|585
 Panzoult|37|585
@@ -15034,7 +15035,7 @@ Montfaucon|46|584
 Labastide-Cézéracq|64|584
 Verneil-le-Chétif|72|584
 Alvimare|76|584
-Bosville|76|584
+Bosville|76|584|L
 Flagy|77|584
 Serviès|81|584
 Bouillac|82|584
@@ -15152,7 +15153,7 @@ Tilly|27|578
 Montaut|31|578
 Cheminon|51|578
 Boubers-sur-Canche|62|578
-Tubersent|62|578
+Tubersent|62|578|L
 Mons|63|578
 Saint-André-le-Coq|63|578
 Ouanne|89|578
@@ -15197,7 +15198,7 @@ Orgnac-l'Aven|07|575
 Fontcouverte|11|575
 Landes|17|575
 Saint-Pierre-d'Amilly|17|575
-Lanmérin|22|575
+Lanmérin|22|575|L
 Sainte-Marie-d'Attez|27|575
 Puydaniel|31|575
 Coulommiers-la-Tour|41|575
@@ -15222,7 +15223,7 @@ Contigny|03|573
 Montréal|07|573
 Thézan-des-Corbières|11|573
 Nieul-le-Virouil|17|573
-Tréogat|29|573
+Tréogat|29|573|L
 Renneville|31|573
 Beaufort|38|573
 Saint-Laurent-la-Conche|42|573
@@ -15244,7 +15245,7 @@ Favières|54|572
 Epping|57|572
 Gosselming|57|572
 Orrouy|60|572
-Conteville-lès-Boulogne|62|572
+Conteville-lès-Boulogne|62|572|L
 Sologny|71|572
 Bourdeau|73|572
 La Vieux-Rue|76|572
@@ -15319,7 +15320,7 @@ Montesquiou|32|567
 L'Étoile|39|567
 Moissey|39|567
 La Sauvetat-du-Dropt|47|567
-Helleville|50|567
+Helleville|50|567|L
 Saint-Cyr-le-Gravelais|53|567
 Aumont-en-Halatte|60|567
 Échenans-sous-Mont-Vaudois|70|567
@@ -15425,7 +15426,7 @@ La Ferté-Beauharnais|41|561
 Ervauville|45|561
 Aynac|46|561
 Boucheporn|57|561
-Beyrie-sur-Joyeuse|64|561
+Beyrie-sur-Joyeuse|64|561|L
 Lessard-en-Bresse|71|561
 La Chaussée|76|561
 Châtel-Censoir|89|561
@@ -15433,7 +15434,7 @@ Bellicourt|02|560
 Isserpent|03|560
 Fontiès-d'Aude|11|560
 Mouret|12|560
-Petiville|14|560
+Petiville|14|560|L
 Julienne|16|560
 Gomené|22|560
 Murato|2B|560
@@ -15526,7 +15527,7 @@ Le Lorey|50|555
 Saint-André-de-l'Épine|50|555
 Saint-Clément-Rancoudray|50|555
 Belgeard|53|555
-Le Perthus|66|555
+Le Perthus|66|555|L
 Hunawihr|68|555
 Soing-Cubry-Charentenay|70|555
 Chaumont|74|555
@@ -15619,7 +15620,7 @@ Saint-Masmes|51|550
 Réchicourt-le-Château|57|550
 Coupelle-Vieille|62|550
 Montcel|63|550
-Iholdy|64|550
+Iholdy|64|550|L
 Tostat|65|550
 Perreuil|71|550
 Saint-Albain|71|550
@@ -15643,9 +15644,9 @@ Aubencheul-au-Bac|59|549
 Forest-en-Cambrésis|59|549
 La Côte|70|549
 Saint-Germain-sous-Doue|77|549
-Tully|80|549
+Tully|80|549|L
 Noisy-sur-Oise|95|549
-La Cambe|14|548
+La Cambe|14|548|L
 Nohant-en-Goût|18|548
 Ouarville|28|548
 Saint-Mamet|31|548
@@ -15716,7 +15717,7 @@ Mérigny|36|545
 Saint-Malo-des-Trois-Fontaines|56|545
 Saint-Fraimbault|61|545
 Monchy-au-Bois|62|545
-Pihen-lès-Guînes|62|545
+Pihen-lès-Guînes|62|545|L
 Damerey|71|545
 Saint-Christophe|73|545
 La Houssaye-Béranger|76|545
@@ -15761,7 +15762,7 @@ Marigné-Peuton|53|543
 Écouviez|55|543
 Thun-Saint-Martin|59|543
 Francières|60|543
-Saint-Martin-d'Arrossa|64|543
+Saint-Martin-d'Arrossa|64|543|L
 Teillé|72|543
 Saint-Paul-sur-Isère|73|543
 Argœuves|80|543
@@ -15776,7 +15777,7 @@ Chamaret|26|542
 Saint-Jean-de-Serres|30|542
 Endoufielle|32|542
 Les Brulais|35|542
-Barfleur|50|542
+Barfleur|50|542|L
 Nogent-l'Abbesse|51|542
 Catillon-Fumechon|60|542
 Les Hauts-Talican|60|542
@@ -15786,7 +15787,7 @@ Saint-Jean-Saverne|67|542
 La Grande-Verrière|71|542
 Beillé|72|542
 La Bauche|73|542
-Quiberville-sur-Mer|76|542
+Quiberville-sur-Mer|76|542|L
 Coulommes|77|542
 Thenelles|02|541
 Trosly-Loire|02|541
@@ -15811,7 +15812,7 @@ Séranon|06|540
 La Tour|06|540
 Vesdun|18|540
 Mainsat|23|540
-Monacia-d'Aullène|2A|540
+Monacia-d'Aullène|2A|540|L
 Aigaliers|30|540
 La Romieu|32|540
 Arcins|33|540
@@ -15822,11 +15823,11 @@ Guigneville|45|540
 Pomacle|51|540
 Arquian|58|540
 Oxelaëre|59|540
-Leulinghen-Bernes|62|540
+Leulinghen-Bernes|62|540|L
 Waldolwisheim|67|540
 Pusy-et-Épenoux|70|540
 Champagny-en-Vanoise|73|540
-Ouainville|76|540
+Ouainville|76|540|L
 Choisel|78|540
 Aveluy|80|540
 Bouillancourt-en-Séry|80|540
@@ -15845,7 +15846,7 @@ Vaux d'Amognes|58|539
 Hohengœft|67|539
 Vellefaux|70|539
 La Motte-en-Bauges|73|539
-Ypreville-Biville|76|539
+Ypreville-Biville|76|539|L
 Lachapelle-sous-Rougemont|90|539
 Belsentes|07|538
 Vinzieux|07|538
@@ -16011,7 +16012,7 @@ Ville-sur-Lumes|08|530
 Saulgond|16|530
 Le Tronquay|27|530
 Bouville|28|530
-Rogliano|2B|530
+Rogliano|2B|530|L
 Miradoux|32|530
 Viella|32|530
 La Livinière|34|530
@@ -16019,7 +16020,7 @@ Montaud|38|530
 Couddes|41|530
 Le Bessat|42|530
 Les Choux|45|530
-Bricqueville-la-Blouette|50|530
+Bricqueville-la-Blouette|50|530|L
 Saint-Denis-le-Gast|50|530
 Saint-Martin-de-Bonfossé|50|530
 Is-en-Bassigny|52|530
@@ -16063,7 +16064,7 @@ Meilhac|87|529
 Vaumas|03|528
 Laines-aux-Bois|10|528
 Montazels|11|528
-Fontaine-Henry|14|528
+Fontaine-Henry|14|528|L
 Les Moutiers-en-Cinglais|14|528
 Lacapelle-Viescamp|15|528
 Talmay|21|528
@@ -16207,7 +16208,7 @@ Boussières-sur-Sambre|59|522
 Trumilly|60|522
 Esquiule|64|522
 Jettingen|68|522
-Gueures|76|522
+Gueures|76|522|L
 Harcanville|76|522
 Hescamps|80|522
 Chéu|89|522
@@ -16244,7 +16245,7 @@ Plussulien|22|520
 Milhac-de-Nontron|24|520
 Saint-Pierre-de-Frugie|24|520
 Mercey-le-Grand|25|520
-Guiler-sur-Goyen|29|520
+Guiler-sur-Goyen|29|520|L
 Balizac|33|520
 Notre-Dame-de-Londres|34|520
 Ciron|36|520
@@ -16258,10 +16259,10 @@ Saint-Léger|62|520
 Goès|64|520
 La Romaine|70|520
 Monthion|73|520
-Ambrumesnil|76|520
-Aubermesnil-Beaumais|76|520
+Ambrumesnil|76|520|L
+Aubermesnil-Beaumais|76|520|L
 Oudalle|76|520
-Theuville-aux-Maillots|76|520
+Theuville-aux-Maillots|76|520|L
 Mézilles|89|520
 Fesmy-le-Sart|02|519
 Sonnac|12|519
@@ -16345,7 +16346,7 @@ Busserolles|24|516
 Génis|24|516
 Rosay-sur-Lieure|27|516
 Saint-Étienne-l'Allier|27|516
-Calcatoggio|2A|516
+Calcatoggio|2A|516|L
 Campugnan|33|516
 Melleroy|45|516
 Châteauneuf-de-Randon|48|516
@@ -16354,7 +16355,7 @@ Arzviller|57|516
 Bénestroff|57|516
 Lemud|57|516
 Roëllecourt|62|516
-Verlincthun|62|516
+Verlincthun|62|516|L
 Saint-Clément-de-Régnat|63|516
 Asasp-Arros|64|516
 Geispitzen|68|516
@@ -16420,7 +16421,7 @@ Clarens|65|513
 Ordizan|65|513
 Berstheim|67|513
 La Chapelle-Huon|72|513
-Angiens|76|513
+Angiens|76|513|L
 Cardonnette|80|513
 Reao|987|513
 Luzenac|09|512
@@ -16468,7 +16469,7 @@ Les Orres|05|510
 Les Vigneaux|05|510
 Saint-Pierreville|07|510
 Crouay|14|510
-Osmanville|14|510
+Osmanville|14|510|L
 Avy|17|510
 Fontaines-d'Ozillac|17|510
 Écot|25|510
@@ -16486,7 +16487,7 @@ Biltzheim|68|510
 Joncy|71|510
 Villaines-la-Gonais|72|510
 Bailly-en-Rivière|76|510
-Veules-les-Roses|76|510
+Veules-les-Roses|76|510|L
 Épagne-Épagnette|80|510
 Étricourt-Manancourt|80|510
 Entre-deux-Eaux|88|510
@@ -16646,10 +16647,10 @@ Le Gault-Soigny|51|503
 Bronvaux|57|503
 Ernestviller|57|503
 Gondrexange|57|503
-Belle-et-Houllefort|62|503
+Belle-et-Houllefort|62|503|L
 Bourdettes|64|503
 Saint-Christophe-en-Brionnais|71|503
-Longueil|76|503
+Longueil|76|503|L
 Nesle-Normandeuse|76|503
 Vironchaux|80|503
 Souzy-la-Briche|91|503
@@ -16683,7 +16684,7 @@ Meaucé|28|501
 Saint-Pons-la-Calm|30|501
 La Tour-Saint-Gelin|37|501
 Coinces|45|501
-Geffosses|50|501
+Geffosses|50|501|L
 Onville|54|501
 Viscomtat|63|501
 Arras-en-Lavedan|65|501
@@ -16794,7 +16795,7 @@ Saint-Denis-le-Ferment|27|495
 Touget|32|495
 Souvigny-en-Sologne|41|495
 Calignac|47|495
-Montaigu-la-Brisette|50|495
+Montaigu-la-Brisette|50|495|L
 Montenach|57|495
 Bienville|60|495
 Le Vauroux|60|495
@@ -16862,7 +16863,7 @@ Huos|31|491
 Saint-Genès-de-Blaye|33|491
 Bridoré|37|491
 Châtel-en-Trièves|38|491
-Muneville-sur-Mer|50|491
+Muneville-sur-Mer|50|491|L
 Clémery|54|491
 Silfiac|56|491
 Épinoy|62|491
@@ -16888,13 +16889,13 @@ Mœuvres|59|490
 Bléquin|62|490
 Grury|71|490
 Beaurepaire|76|490
-Notre-Dame-du-Bec|76|490
+Notre-Dame-du-Bec|76|490|L
 Sigy-en-Bray|76|490
-Yzengremer|80|490
+Yzengremer|80|490|L
 Cloué|86|490
 Vitrac-Saint-Vincent|16|489
 Saint-Martial-de-Gimel|19|489
-Coatréven|22|489
+Coatréven|22|489|L
 Surtauville|27|489
 Lavergne|46|489
 Saint-Floxel|50|489
@@ -16911,7 +16912,7 @@ Fourneville|14|488
 Champagnac|17|488
 Sainte-Colombe|25|488
 Olargues|34|488
-Saint-Aubin-des-Préaux|50|488
+Saint-Aubin-des-Préaux|50|488|L
 Crillon|60|488
 Giel-Courteilles|61|488
 Montagney|70|488
@@ -16935,7 +16936,7 @@ Vellexon-Queutrey-et-Vaudey|70|487
 Neuvy-Bouin|79|487
 Gouex|86|487
 Saint-Ouen-lès-Parey|88|487
-Grand'Rivière|972|487
+Grand'Rivière|972|487|L
 Vendresse|08|486
 Eyburie|19|486
 Vernierfontaine|25|486
@@ -16960,7 +16961,7 @@ Antogny-le-Tillac|37|485
 Montrond|39|485
 Villerable|41|485
 Neaux|42|485
-Sotteville|50|485
+Sotteville|50|485|L
 Garrebourg|57|485
 Berneville|62|485
 Écoust-Saint-Mein|62|485
@@ -17014,7 +17015,7 @@ Essertenne|71|483
 Paley|77|483
 La Fare-en-Champsaur|05|482
 Machault|08|482
-Ryes|14|482
+Ryes|14|482|L
 Brossac|16|482
 Nonards|19|482
 Liernais|21|482
@@ -17146,7 +17147,7 @@ Servigny-lès-Raville|57|476
 Étaing|62|476
 La Thieuloye|62|476
 Montricher-Albanne|73|476
-Saint-Maclou-la-Brière|76|476
+Saint-Maclou-la-Brière|76|476|L
 Cuisy|77|476
 Châteaudouble|83|476
 Vézelay|89|476
@@ -17211,7 +17212,7 @@ Charmoille|70|473
 Saint-Romain-sous-Gourdon|71|473
 Fontcouverte-la-Toussuire|73|473
 Le Caule-Sainte-Beuve|76|473
-Sainte-Marguerite-sur-Mer|76|473
+Sainte-Marguerite-sur-Mer|76|473|L
 Florimont|90|473
 Curciat-Dongalon|01|472
 Le Montet|03|472
@@ -17240,7 +17241,7 @@ Lintot|76|472
 Maisnières|80|472
 Chassy|89|472
 La Rochette|05|471
-Commes|14|471
+Commes|14|471|L
 Rougnat|23|471
 Brognard|25|471
 Soulaires|28|471
@@ -17324,7 +17325,7 @@ Rouvres-la-Chétive|88|468
 Cœuvres-et-Valsery|02|467
 Fabras|07|467
 Saint-André-de-Cruzières|07|467
-Bény-sur-Mer|14|467
+Bény-sur-Mer|14|467|L
 Siran|15|467
 Plorec-sur-Arguenon|22|467
 Charnay|25|467
@@ -17342,7 +17343,7 @@ Manglieu|63|467
 Saint-Angel|63|467
 Weinbourg|67|467
 Vincelles|71|467
-Bellengreville|76|467
+Bellengreville|76|467|L
 Mouzieys-Teulet|81|467
 Béthines|86|467
 Florémont|88|467
@@ -17373,7 +17374,7 @@ Saumeray|28|465
 Marçay|37|465
 Merlas|38|465
 Bessey|42|465
-Gatteville-le-Phare|50|465
+Gatteville-le-Phare|50|465|L
 Saint-Ail|54|465
 Feigneux|60|465
 Haute-Avesnes|62|465
@@ -17504,7 +17505,7 @@ Taussac-la-Billière|34|460
 Cigogné|37|460
 Mouzay|37|460
 Saint-Georges-de-Baroille|42|460
-Saint-Malo-de-la-Lande|50|460
+Saint-Malo-de-la-Lande|50|460|L
 Vraux|51|460
 Diarville|54|460
 L'Isle-en-Rigault|55|460
@@ -17541,17 +17542,17 @@ Capdrot|24|458
 Saint-Aquilin|24|458
 Varennes|24|458
 Bonlieu-sur-Roubion|26|458
-Île-de-Batz|29|458
+Île-de-Batz|29|458|L
 Saint-Chartier|36|458
 Rilly-sur-Vienne|37|458
 Vasselin|38|458
 Châtenoy|45|458
 Verrie|49|458
-Heugueville-sur-Sienne|50|458
+Heugueville-sur-Sienne|50|458|L
 Lelling|57|458
 Beaumont-en-Cambrésis|59|458
 Courgeoût|61|458
-Beuvrequen|62|458
+Beuvrequen|62|458|L
 Penin|62|458
 Roggenhouse|68|458
 Mantoche|70|458
@@ -17591,7 +17592,7 @@ La Baume-Cornillane|26|456
 Aulas|30|456
 Le Haut-Bréda|38|456
 Saint-Germain-de-Calberte|48|456
-Héauville|50|456
+Héauville|50|456|L
 Xirocourt|54|456
 Havange|57|456
 Roucourt|59|456
@@ -17633,9 +17634,9 @@ Bust|67|454
 Faucogney-et-la-Mer|70|454
 Courgenard|72|454
 Melleray|72|454
-Ganzeville|76|454
+Ganzeville|76|454|L
 La Poterie-Cap-d'Antifer|76|454
-Sauchay|76|454
+Sauchay|76|454|L
 Mons-en-Montois|77|454
 Faucon|84|454
 Saint-Escobille|91|454
@@ -17661,7 +17662,7 @@ Bussy-le-Repos|89|453
 Hottot-les-Bagues|14|452
 Maussac|19|452
 Grand-Camp|27|452
-Piana|2A|452
+Piana|2A|452|L
 Chezelles|36|452
 Montrevel|38|452
 Donzacq|40|452
@@ -17673,7 +17674,7 @@ Lyoffans|70|452
 Vallerois-Lorioz|70|452
 La Celle-en-Morvan|71|452
 Saint-Georges-du-Rosay|72|452
-Ouville-la-Rivière|76|452
+Ouville-la-Rivière|76|452|L
 Villebéon|77|452
 Saint-Bonnet-de-Bellac|87|452
 Dannemoine|89|452
@@ -17691,7 +17692,7 @@ Baigneaux|33|451
 Parleboscq|40|451
 Bully|42|451
 Monbalen|47|451
-Genêts|50|451
+Genêts|50|451|L
 Athée|53|451
 Dornecy|58|451
 Maintenay|62|451
@@ -17739,14 +17740,14 @@ La Flachère|38|449
 Viricelles|42|449
 Saint-Denis-du-Maine|53|449
 Bazoches-au-Houlme|61|449
-Waben|62|449
-Larceveau-Arros-Cibits|64|449
+Waben|62|449|L
+Larceveau-Arros-Cibits|64|449|L
 Saint-Laurent-Bretagne|64|449
 Dolleren|68|449
 Haut-du-Them-Château-Lambert|70|449
 Bonnay-Saint-Ythaire|71|449
 Saint-André|73|449
-Auberville-la-Renault|76|449
+Auberville-la-Renault|76|449|L
 La Ferté-Saint-Samson|76|449
 Remauville|77|449
 Saint-Illiers-le-Bois|78|449
@@ -17783,7 +17784,7 @@ Vialas|48|447
 Thuilley-aux-Groseilles|54|447
 Vendeuil-Caply|60|447
 Esboz-Brest|70|447
-Annouville-Vilmesnil|76|447
+Annouville-Vilmesnil|76|447|L
 Saint-Lambert|78|447
 Saint-Julien-du-Puy|81|447
 Sainte-Hélène|88|447
@@ -17791,7 +17792,7 @@ Saint-Benoît-d'Hébertot|14|446
 Trizac|15|446
 Saint-Saturnin|18|446
 Saint-Jouan-de-l'Isle|22|446
-Goulien|29|446
+Goulien|29|446|L
 Caupenne-d'Armagnac|32|446
 Montchevrier|36|446
 Allier|65|446
@@ -17839,7 +17840,7 @@ Chasselay|38|444
 Pannessières|39|444
 Rahon|39|444
 Dénezé-sous-Doué|49|444
-Bretteville-sur-Ay|50|444
+Bretteville-sur-Ay|50|444|L
 Holling|57|444
 Lohr|67|444
 Parennes|72|444
@@ -17887,7 +17888,7 @@ Moyeuvre-Petite|57|442
 Chepoix|60|442
 Viverols|63|442
 Izeste|64|442
-Saint-Esteben|64|442
+Saint-Esteben|64|442|L
 Brides-les-Bains|73|442
 Planay|73|442
 Chaufour-lès-Bonnières|78|442
@@ -18021,12 +18022,12 @@ Bellechaume|89|436
 Mesnil-Saint-Laurent|02|435
 Hargnies|08|435
 Lunac|12|435
-Maisons|14|435
+Maisons|14|435|L
 Saint-Servais|22|435
 Cesseras|34|435
 Pleure|39|435
 Chaon|41|435
-Anctoville-sur-Boscq|50|435
+Anctoville-sur-Boscq|50|435|L
 La Chaise-Baudouin|50|435
 Saint-Laurent-sur-Othain|55|435
 Brétigny|60|435
@@ -18038,7 +18039,7 @@ Fuilla|66|435
 Mulhausen|67|435
 Saint-Forgeot|71|435
 Bérus|72|435
-Vergetot|76|435
+Vergetot|76|435|L
 Toutencourt|80|435
 Chenevelles|86|435
 Béthemont-la-Forêt|95|435
@@ -18084,7 +18085,7 @@ Laperrière-sur-Saône|21|432
 Pluvet|21|432
 Moutier-Rozeille|23|432
 Saint-Pierre-de-Côle|24|432
-Goulven|29|432
+Goulven|29|432|L
 Lagarde|31|432
 Bessamorel|43|432
 Cavagnac|46|432
@@ -18103,7 +18104,7 @@ Saint-Léon-sur-Vézère|24|431
 Puygiron|26|431
 Saint-Cyr-la-Campagne|27|431
 Panjas|32|431
-Saint-Marcan|35|431
+Saint-Marcan|35|431|L
 Étrepigney|39|431
 Ougney|39|431
 Carennac|46|431
@@ -18118,7 +18119,7 @@ Wolschwiller|68|431
 Bousse|72|431
 Elbeuf-sur-Andelle|76|431
 Étalleville|76|431
-Ocqueville|76|431
+Ocqueville|76|431|L
 Saint-Georges-de-Rex|79|431
 Ovillers-la-Boisselle|80|431
 Cesset|03|430
@@ -18155,7 +18156,7 @@ Cideville|76|430
 Lanas|07|429
 Saint-Martin-aux-Chartrains|14|429
 Fouqueure|16|429
-Île-de-Bréhat|22|429
+Île-de-Bréhat|22|429|L
 Challet|28|429
 Nonvilliers-Grandhoux|28|429
 Pouy-de-Touges|31|429
@@ -18188,7 +18189,7 @@ Bérenx|64|428
 Avrigney-Virey|70|428
 Vitry-sur-Loire|71|428
 Semur-en-Vallon|72|428
-Grainville-Ymauville|76|428
+Grainville-Ymauville|76|428|L
 Saint-Sigismond|85|428
 Fremifontaine|88|428
 Remomeix|88|428
@@ -18234,7 +18235,7 @@ Sanry-sur-Nied|57|426
 Luquet|65|426
 Chichery|89|426
 Gland|02|425
-Castillon|06|425
+Castillon|06|425|L
 Champdolent|17|425
 Saint-Martial-sur-Né|17|425
 Corberon|21|425
@@ -18255,7 +18256,7 @@ Ytres|62|425
 Bonnevent-Velloreille|70|425
 Vions|73|425
 Brémontier-Merval|76|425
-Sausseuzemare-en-Caux|76|425
+Sausseuzemare-en-Caux|76|425|L
 Les Fosses|79|425
 Bovelles|80|425
 Saint-Christ-Briost|80|425
@@ -18277,7 +18278,7 @@ Saint-Nicolas-de-la-Balerme|47|424
 Trépail|51|424
 Agincourt|54|424
 Garchy|58|424
-Audembert|62|424
+Audembert|62|424|L
 Simacourbe|64|424
 Madiran|65|424
 Cantaous|65|424
@@ -18293,7 +18294,7 @@ Maraye-en-Othe|10|423
 Sénergues|12|423
 Tréclun|21|423
 Grâce-Uzel|22|423
-Lannebert|22|423
+Lannebert|22|423|L
 Nogent-le-Sec|27|423
 Sandarville|28|423
 Le Thieulin|28|423
@@ -18330,11 +18331,11 @@ Saint-Laurent-en-Beaumont|38|422
 Burdignes|42|422
 Freybouse|57|422
 Plainval|60|422
-Pernes-lès-Boulogne|62|422
+Pernes-lès-Boulogne|62|422|L
 Le Transloy|62|422
 Hochstett|67|422
 Musièges|74|422
-Le Bourg-Dun|76|422
+Le Bourg-Dun|76|422|L
 Saint-Aignan|82|422
 Bazarnes|89|422
 Lebetain|90|422
@@ -18405,7 +18406,7 @@ Camiran|33|419
 Autrèche|37|419
 Beauchamps-sur-Huillard|45|419
 Saint-Pierre-Lafeuille|46|419
-Beauvoir|50|419
+Beauvoir|50|419|L
 Villey-le-Sec|54|419
 Elvange|57|419
 Monceau-Saint-Waast|59|419
@@ -18450,7 +18451,7 @@ Ramerupt|10|417
 Saint-Coutant-le-Grand|17|417
 Crézancy-en-Sancerre|18|417
 Chevigny-en-Valière|21|417
-Quemperven|22|417
+Quemperven|22|417|L
 Rivières|30|417
 Guebenhouse|57|417
 Vignemont|60|417
@@ -18486,7 +18487,7 @@ Avançon|05|415
 Beaumont-en-Argonne|08|415
 Montoulieu|09|415
 Reux|14|415
-Saint-Sornin|17|415
+Saint-Sornin|17|415|L
 Coust|18|415
 Parassy|18|415
 Vars-sur-Roseix|19|415
@@ -18519,19 +18520,19 @@ Saint-Edmond|71|414
 Bosc-Hyons|76|414
 Nanteau-sur-Essonne|77|414
 Courgent|78|414
-Vaudricourt|80|414
+Vaudricourt|80|414|L
 Barrême|04|413
 Illy|08|413
 Cenne-Monestiés|11|413
 Tournemire|12|413
-Arromanches-les-Bains|14|413
+Arromanches-les-Bains|14|413|L
 Barro|16|413
 Mornay-sur-Allier|18|413
 La Chapelle-Neuve|22|413
 Douville-sur-Andelle|27|413
 Valailles|27|413
 Marchezais|28|413
-Montegrosso|2B|413
+Montegrosso|2B|413|L
 Saint-Ganton|35|413
 Neuil|37|413
 Saint-Eulien|51|413
@@ -18546,7 +18547,7 @@ Bercenay-en-Othe|10|412
 Camboulazet|12|412
 Anglards-de-Saint-Flour|15|412
 Marignac|17|412
-Le Faouët|22|412
+Le Faouët|22|412|L
 Plaisance|24|412
 Murinais|38|412
 Aiglepierre|39|412
@@ -18564,7 +18565,7 @@ Morangles|60|412
 Esquièze-Sère|65|412
 Flacey-en-Bresse|71|412
 Ménetreuil|71|412
-Gerville|76|412
+Gerville|76|412|L
 Saumont-la-Poterie|76|412
 Vassonville|76|412
 Laval-en-Brie|77|412
@@ -18602,7 +18603,7 @@ Villapourçon|58|410
 Cantaing-sur-Escaut|59|410
 Saint-Momelin|59|410
 Quincampoix-Fleuzy|60|410
-Bazinghen|62|410
+Bazinghen|62|410|L
 Saint-Georges-d'Hurtières|73|410
 Beaussault|76|410
 Pézarches|77|410
@@ -18633,7 +18634,7 @@ Saint-Geours-d'Auribat|40|409
 Villesèque|46|409
 Grézet-Cavagnan|47|409
 Trémons|47|409
-Saint-Christophe-du-Foc|50|409
+Saint-Christophe-du-Foc|50|409|L
 Maixe|54|409
 Sailly-lez-Cambrai|59|409
 Airion|60|409
@@ -18645,7 +18646,7 @@ Précilhon|64|409
 Nothalten|67|409
 Obermorschwiller|68|409
 Cenves|69|409
-Maniquerville|76|409
+Maniquerville|76|409|L
 Prunay-le-Temple|78|409
 Grivesnes|80|409
 Sossais|86|409
@@ -18729,7 +18730,7 @@ Gommersdorf|68|406
 Martigny-le-Comte|71|406
 Puygros|73|406
 Hugleville-en-Caux|76|406
-Paluel|76|406
+Paluel|76|406|L
 Nanteuil-sur-Marne|77|406
 Verlin|89|406
 Thelonne|08|405
@@ -18765,8 +18766,8 @@ Palau-de-Cerdagne|66|405
 Eteimbes|68|405
 Anneville-sur-Scie|76|405
 Criquebeuf-en-Caux|76|405
-Limpiville|76|405
-Martigny|76|405
+Limpiville|76|405|L
+Martigny|76|405|L
 Brouvelieures|88|405
 Fourdrain|02|404
 Ferreux-Quincey|10|404
@@ -18783,7 +18784,7 @@ Avrigny|60|404
 Pacé|61|404
 Remigny|71|404
 Saint-Alban-d'Hurtières|73|404
-Gonfreville-Caillot|76|404
+Gonfreville-Caillot|76|404|L
 Hailles|80|404
 Gasques|82|404
 La Malmaison|02|403
@@ -18814,7 +18815,7 @@ Toutry|21|402
 Cohiniac|22|402
 Eygurande-et-Gardedeuil|24|402
 La Haye-Aubrée|27|402
-Villanova|2A|402
+Villanova|2A|402|L
 Caupenne|40|402
 Saint-Priest-la-Prugne|42|402
 Monlet|43|402
@@ -18837,7 +18838,7 @@ Lanarvily|29|401
 Le Menoux|36|401
 Épeigné-les-Bois|37|401
 Lémeré|37|401
-Saint-Jean-le-Thomas|50|401
+Saint-Jean-le-Thomas|50|401|L
 Le Vaumain|60|401
 Le Châtellier|61|401
 Foncquevillers|62|401
@@ -18854,7 +18855,7 @@ Saint-Hilaire|91|401
 Aurouër|03|400
 Soulan|09|400
 Salsigne|11|400
-Saint-Froult|17|400
+Saint-Froult|17|400|L
 Sainte-Gemme-en-Sancerrois|18|400
 Dontreix|23|400
 Montégut-Lauragais|31|400
@@ -18916,7 +18917,7 @@ Flin|54|398
 Savonnières-en-Perthois|55|398
 Monneren|57|398
 Puiseux-en-Bray|60|398
-Armendarits|64|398
+Armendarits|64|398|L
 Grandfontaine|67|398
 Affoux|69|398
 Autrey-lès-Gray|70|398
@@ -18955,10 +18956,10 @@ Herrère|64|397
 Arcizans-Avant|65|397
 Courcelles-la-Forêt|72|397
 Allèves|74|397
-Daubeuf-Serville|76|397
-Gerponville|76|397
+Daubeuf-Serville|76|397|L
+Gerponville|76|397|L
 Neufbosc|76|397
-Thiergeville|76|397
+Thiergeville|76|397|L
 Buigny-lès-Gamaches|80|397
 Le Beaucet|84|397
 Boissey|01|396
@@ -18989,7 +18990,7 @@ Rougnac|16|395
 La Chapelle-Faucher|24|395
 Échourgnac|24|395
 La Motte-Chalancon|26|395
-Galéria|2B|395
+Galéria|2B|395|L
 Saint-Appolinard|38|395
 Monségur|40|395
 Clermont-Soubiran|47|395
@@ -19005,7 +19006,7 @@ La Neuville-lès-Dorengt|02|394
 Montclar|04|394
 Houldizy|08|394
 Lacapelle-del-Fraisse|15|394
-Lanmodez|22|394
+Lanmodez|22|394|L
 Hacqueville|27|394
 Monblanc|32|394
 Monbrun|32|394
@@ -19066,7 +19067,7 @@ Novillers|60|392
 Moriat|63|392
 Mancey|71|392
 Ayn|73|392
-Sotteville-sur-Mer|76|392
+Sotteville-sur-Mer|76|392|L
 La Grimaudière|86|392
 Lavau|89|392
 Amifontaine|02|391
@@ -19092,7 +19093,7 @@ Wickersheim-Wilshausen|67|391
 Piennes-Onvillers|80|391
 Menoncourt|90|391
 Monthois|08|390
-Gonneville-en-Auge|14|390
+Gonneville-en-Auge|14|390|L
 Saint-Germain-en-Montagne|39|390
 Tassenières|39|390
 Villermain|41|390
@@ -19129,7 +19130,7 @@ La Neuve-Grange|27|389
 Venon|27|389
 Cesancey|39|389
 La Chaumusse|39|389
-Valcanville|50|389
+Valcanville|50|389|L
 Vigny|57|389
 Frasnoy|59|389
 Boiry-Sainte-Rictrude|62|389
@@ -19196,7 +19197,7 @@ Marcenat|03|386
 Saint-Genest|03|386
 Montgueux|10|386
 Villesèque-des-Corbières|11|386
-Saint-Étienne-la-Thillaye|14|386
+Saint-Étienne-la-Thillaye|14|386|L
 Saint-Fort-sur-le-Né|16|386
 Semoussac|17|386
 Combressol|19|386
@@ -19273,7 +19274,7 @@ Saint-Cybranet|24|384
 Saint-Agnan-en-Vercors|26|384
 Luplanté|28|384
 Casanova|2B|384
-Saint-Georges-de-Gréhaigne|35|384
+Saint-Georges-de-Gréhaigne|35|384|L
 Thervay|39|384
 Sainte-Colombe-sur-Gand|42|384
 Boësses|45|384
@@ -19344,7 +19345,7 @@ Villes|01|381
 Souligny|10|381
 Ambernac|16|381
 Villejoubert|16|381
-Loire-les-Marais|17|381
+Loire-les-Marais|17|381|L
 Souméras|17|381
 Tugéras-Saint-Maurice|17|381
 Espagnac|19|381
@@ -19437,7 +19438,7 @@ Larreule|65|379
 Bossendorf|67|379
 Granges-le-Bourg|70|379
 Vouhenans|70|379
-Saint-Vaast-Dieppedalle|76|379
+Saint-Vaast-Dieppedalle|76|379|L
 Estrées-Deniécourt|80|379
 Rambures|80|379
 Beauvais-sur-Tescou|81|379
@@ -19467,13 +19468,13 @@ Saint-Jean-Lagineste|46|378
 Xaintrailles|47|378
 Ciez|58|378
 Saint-Léger-en-Bray|60|378
-Echinghen|62|378
+Echinghen|62|378|L
 Liettres|62|378
 Bourg-Bruche|67|378
 Eschbach-au-Val|68|378
 Saint-Pierre-le-Vieux|71|378
-Canehan|76|378
-Thiétreville|76|378
+Canehan|76|378|L
+Thiétreville|76|378|L
 Ocquerre|77|378
 Lageon|79|378
 Havernas|80|378
@@ -19604,7 +19605,7 @@ Neuville|63|373
 Vinzelles|63|373
 Bazillac|65|373
 Altwiller|67|373
-La Gaillarde|76|373
+La Gaillarde|76|373|L
 Saint-Jacques-d'Aliermont|76|373
 Civry-la-Forêt|78|373
 Nurlu|80|373
@@ -19687,7 +19688,7 @@ Fourg|25|370
 Saint-Trojan|33|370
 Tournoisis|45|370
 Castella|47|370
-Anneville-en-Saire|50|370
+Anneville-en-Saire|50|370|L
 Passy-Grigny|51|370
 Doulevant-le-Château|52|370
 Arraye-et-Han|54|370
@@ -19728,11 +19729,11 @@ Charmois|90|369
 Boigneville|91|369
 Quinson|04|368
 Castillon|14|368
-Mosles|14|368
+Mosles|14|368|L
 Bord-Saint-Georges|23|368
 Onans|25|368
 Saint-Germain-le-Gaillard|28|368
-Trébabu|29|368
+Trébabu|29|368|L
 Mandagout|30|368
 Saint-Marcet|31|368
 Sainte-Colombe|35|368
@@ -19743,7 +19744,7 @@ Saint-Jean-lès-Buzy|55|368
 Villers-Brûlin|62|368
 Montreux-Jeune|68|368
 Saint-Bonnet-des-Bruyères|69|368
-Greuville|76|368
+Greuville|76|368|L
 Saint-Cyr-la-Lande|79|368
 Neufmoulin|80|368
 Rouvray|89|368
@@ -19754,7 +19755,7 @@ Gourdon|06|367
 Saint-Jean-d'Aigues-Vives|09|367
 Prugny|10|367
 Sainte-Eulalie-d'Olt|12|367
-Benerville-sur-Mer|14|367
+Benerville-sur-Mer|14|367|L
 Antezant-la-Chapelle|17|367
 Rigney|25|367
 Gajac|33|367
@@ -19806,7 +19807,7 @@ Brousses-et-Villaret|11|365
 Neuvicq-le-Château|17|365
 Le Pescher|19|365
 Thierville|27|365
-Serra-di-Fiumorbo|2B|365
+Serra-di-Fiumorbo|2B|365|L
 Ponteils-et-Brésis|30|365
 Margueron|33|365
 Marnoz|39|365
@@ -19860,7 +19861,7 @@ Valmestroff|57|364
 Irouléguy|64|364
 Orincles|65|364
 Saint-Savin|65|364
-Oms|66|364
+Oms|66|364|L
 Saint-Michel-de-Llotes|66|364
 Lixhausen|67|364
 Gizay|86|364
@@ -19873,7 +19874,7 @@ Quintenic|22|363
 Sarrazac|24|363
 Mouthier-Haute-Pierre|25|363
 Sainte-Lucie-de-Tallano|2A|363
-Algajola|2B|363
+Algajola|2B|363|L
 Potelières|30|363
 Haget|32|363
 Lavardens|32|363
@@ -19884,7 +19885,7 @@ Azay-sur-Indre|37|363
 Queyrières|43|363
 Saint-Projet|46|363
 Saint-Sixte|47|363
-Saint-Jean-de-la-Rivière|50|363
+Saint-Jean-de-la-Rivière|50|363|L
 Morangis|51|363
 Sarrey|52|363
 Houdelmont|54|363
@@ -19892,7 +19893,7 @@ Eswars|59|363
 Lalheue|71|363
 Ratenelle|71|363
 Saint-Point|71|363
-Gueutteville-les-Grès|76|363
+Gueutteville-les-Grès|76|363|L
 Châteaubleau|77|363
 Doudelainville|80|363
 La Neuveville-sous-Châtenois|88|363
@@ -19902,18 +19903,18 @@ Villesiscle|11|362
 Saint-Léger-le-Petit|18|362
 Gissey-sur-Ouche|21|362
 Maël-Pestivien|22|362
-Tréméven|22|362
+Tréméven|22|362|L
 Saint-Quentin-la-Chabanne|23|362
 Lignerolles|27|362
 Bréchamps|28|362
-Barbaggio|2B|362
+Barbaggio|2B|362|L
 La Nouaye|35|362
 Les Hays|39|362
 Lévignacq|40|362
 Thonne-la-Long|55|362
 Laleu|61|362
 Visker|65|362
-Hermeville|76|362
+Hermeville|76|362|L
 Aulnoy|77|362
 Morchain|80|362
 Cambon-lès-Lavaur|81|362
@@ -20121,7 +20122,7 @@ La Salle-en-Beaumont|38|355
 Vaudrey|39|355
 Girac|46|355
 Marcilly|50|355
-Saint-Marcouf|50|355
+Saint-Marcouf|50|355|L
 Bajus|62|355
 Remilly-Wirquin|62|355
 Beauvoir-Wavans|62|355
@@ -20138,7 +20139,7 @@ Souilhe|11|354
 Blay|14|354
 Saint-Mary|16|354
 Bussy|18|354
-Trézény|22|354
+Trézény|22|354|L
 Borrèze|24|354
 Bourgnac|24|354
 Saint-Jean-de-Côle|24|354
@@ -20160,7 +20161,7 @@ Franken|68|354
 Wolfersdorf|68|354
 Meyrieux-Trouet|73|354
 Ancourteville-sur-Héricourt|76|354
-Sauqueville|76|354
+Sauqueville|76|354|L
 Sailly|78|354
 Fayssac|81|354
 La Chapelle-Bâton|86|354
@@ -20289,7 +20290,7 @@ Arthezé|72|350
 Bouër|72|350
 Albiez-Montrond|73|350
 Hauteville|73|350
-Houquetot|76|350
+Houquetot|76|350|L
 Sainte-Marie-au-Bosc|76|350
 Boulancourt|77|350
 Saint-Sauveur-lès-Bray|77|350
@@ -20309,7 +20310,7 @@ Fougerolles|36|349
 Tranzault|36|349
 Marminiac|46|349
 Bourguenolles|50|349
-Champeaux|50|349
+Champeaux|50|349|L
 Saint-Hilaire-le-Grand|51|349
 Mussey-sur-Marne|52|349
 Saint-Aignan-de-Couptrain|53|349
@@ -20336,7 +20337,7 @@ Voulpaix|02|348
 L'Hospitalet-du-Larzac|12|348
 Noailhac|19|348
 Mandres|27|348
-Moncale|2B|348
+Moncale|2B|348|L
 Plagnole|31|348
 Paulnay|36|348
 Avignon-lès-Saint-Claude|39|348
@@ -20344,7 +20345,7 @@ Relans|39|348
 Arsague|40|348
 Vire-sur-Lot|46|348
 Cléré-sur-Layon|49|348
-Fierville-les-Mines|50|348
+Fierville-les-Mines|50|348|L
 Allichamps|52|348
 Fraimbois|54|348
 Vilsberg|57|348
@@ -20378,7 +20379,7 @@ Clairegoutte|70|347
 Fuissé|71|347
 Saint-Sorlin-d'Arves|73|347
 Bertreville-Saint-Ouen|76|347
-Clasville|76|347
+Clasville|76|347|L
 La Madeleine-sur-Loing|77|347
 Hem-Hardinval|80|347
 Massaguel|81|347
@@ -20407,7 +20408,7 @@ Cussy-en-Morvan|71|346
 Vernie|72|346
 Crest-Voland|73|346
 Longuerue|76|346
-Mirville|76|346
+Mirville|76|346|L
 Rolleboise|78|346
 Dommartin|80|346
 Lignières-Châtelain|80|346
@@ -20460,7 +20461,7 @@ Mandrevillars|70|344
 Bourgvilain|71|344
 Montmelard|71|344
 Gréez-sur-Roc|72|344
-Canouville|76|344
+Canouville|76|344|L
 Mathonville|76|344
 Jaulnes|77|344
 Saigneville|80|344
@@ -20530,7 +20531,7 @@ Pierrepont|02|341
 Tupigny|02|341
 Avançon|08|341
 Thennelières|10|341
-Tracy-sur-Mer|14|341
+Tracy-sur-Mer|14|341|L
 Vendes|14|341
 Montboyer|16|341
 Mestes|19|341
@@ -20556,7 +20557,7 @@ Breitenau|67|341
 Geiswasser|68|341
 Bessans|73|341
 Verel-de-Montbel|73|341
-Cuverville|76|341
+Cuverville|76|341|L
 Saint-Aignan-sur-Ry|76|341
 Mauregard|77|341
 Pas-de-Jeu|79|341
@@ -20595,7 +20596,7 @@ Caixon|65|340
 Gavarnie-Gèdre|65|340
 Quers|70|340
 Crannes-en-Champagne|72|340
-Virville|76|340
+Virville|76|340|L
 Tancrou|77|340
 Saint-Généroux|79|340
 Bayonvillers|80|340
@@ -20685,7 +20686,7 @@ Saint-Michel-de-Montaigne|24|336
 Thoraise|25|336
 Romilly-la-Puthenaye|27|336
 Loqueffret|29|336
-Valle-di-Campoloro|2B|336
+Valle-di-Campoloro|2B|336|L
 Flaux|30|336
 Pergain-Taillac|32|336
 Chichilianne|38|336
@@ -20694,7 +20695,7 @@ Chenillé-Champteussé|49|336
 Vaux-sur-Blaise|52|336
 Colombiers|61|336
 Habloville|61|336
-Maninghen-Henne|62|336
+Maninghen-Henne|62|336|L
 Vitrac|63|336
 Buthiers|70|336
 Andrezel|77|336
@@ -21089,7 +21090,7 @@ Saint-Martin-de-Mâcon|79|325
 Bonneville|80|325
 Plessis-Saint-Benoist|91|325
 Le Brethon|03|324
-Étréham|14|324
+Étréham|14|324|L
 La Houblonnière|14|324
 Saint-Félix|17|324
 Noirefontaine|25|324
@@ -21132,7 +21133,7 @@ Goulles|19|323
 Campagnac-lès-Quercy|24|323
 Meslières|25|323
 Trizay-lès-Bonneval|28|323
-Tréouergat|29|323
+Tréouergat|29|323|L
 Sempesserre|32|323
 Bueil-en-Touraine|37|323
 Balanod|39|323
@@ -21213,9 +21214,9 @@ Savignac-sur-Leyze|47|321
 Doville|50|321
 Magneville|50|321
 Varenguebec|50|321
-Le Vast|50|321
+Le Vast|50|321|L
 Les Souhesmes-Rampont|55|321
-Île-d'Arz|56|321
+Île-d'Arz|56|321|L
 Hinckange|57|321
 Léning|57|321
 Candor|60|321
@@ -21223,7 +21224,7 @@ Mosset|66|321
 Zellenberg|68|321
 Bosjean|71|321
 Pruzilly|71|321
-Autigny|76|321
+Autigny|76|321|L
 Imbleville|76|321
 Grattepanche|80|321
 Grosne|90|321
@@ -21306,7 +21307,7 @@ Lamblore|28|318
 Campagne|34|318
 Combes|34|318
 Saint-Jean-d'Hérans|38|318
-Brillevast|50|318
+Brillevast|50|318|L
 Liffol-le-Petit|52|318
 Brieulles-sur-Meuse|55|318
 Mainvillers|57|318
@@ -21489,8 +21490,8 @@ Fournols|63|313
 Saint-Martin-des-Olmes|63|313
 Arbouet-Sussaute|64|313
 Montarlot-lès-Rioz|70|313
-Riville|76|313
-Villainville|76|313
+Riville|76|313|L
+Villainville|76|313|L
 Coullemelle|80|313
 Outrebois|80|313
 Voyenne|02|312
@@ -21535,7 +21536,7 @@ Saint-Julien-Innocence-Eulalie|24|311
 Saint-Louis-en-l'Isle|24|311
 Villers-en-Vexin|27|311
 Ermenonville-la-Grande|28|311
-Tréguennec|29|311
+Tréguennec|29|311|L
 Bragayrac|31|311
 Figarol|31|311
 Saint-Hilaire-sur-Benaize|36|311
@@ -21549,7 +21550,7 @@ Fontenoy-la-Joûte|54|311
 Moyenvic|57|311
 Saint-Jouin-de-Blavou|61|311
 Boulin|65|311
-Llauro|66|311
+Llauro|66|311|L
 Laubach|67|311
 Wolschheim|67|311
 Vauxrenard|69|311
@@ -21577,7 +21578,7 @@ Lupiac|32|310
 Saint-Jean-Poutge|32|310
 La Champenoise|36|310
 Blosville|50|310
-Théville|50|310
+Théville|50|310|L
 Berlancourt|60|310
 Domfront|60|310
 Journy|62|310
@@ -21586,7 +21587,7 @@ Saint-Agoulin|63|310
 Villers-lès-Luxeuil|70|310
 Ruillé-en-Champagne|72|310
 Villard-Sallet|73|310
-Manneville-ès-Plains|76|310
+Manneville-ès-Plains|76|310|L
 Royville|76|310
 Égligny|77|310
 Adilly|79|310
@@ -21649,7 +21650,7 @@ Montigny-en-Morvan|58|308
 Bitry|60|308
 Sévigny|61|308
 Barastre|62|308
-Halinghen|62|308
+Halinghen|62|308|L
 Hauteville|62|308
 Églisolles|63|308
 Montboillon|70|308
@@ -21666,7 +21667,7 @@ Fontan|06|307
 Ussat|09|307
 Crésantignes|10|307
 Curan|12|307
-Bonneville-sur-Touques|14|307
+Bonneville-sur-Touques|14|307|L
 Putot-en-Auge|14|307
 Saint-Samson|14|307
 Benest|16|307
@@ -21707,7 +21708,7 @@ Montigny-sur-Crécy|02|306
 Rocher|07|306
 Aubigny-les-Pothées|08|306
 Gaja-et-Villedieu|11|306
-Pennedepie|14|306
+Pennedepie|14|306|L
 Saint-Preuil|16|306
 Colombiers|17|306
 Saint-Point-Lac|25|306
@@ -21740,7 +21741,7 @@ Marigny-le-Cahouët|21|305
 Sainte-Mondane|24|305
 Le Bizot|25|305
 Saint-Antoine|25|305
-Canari|2B|305
+Canari|2B|305|L
 Santo-Pietro-di-Venaco|2B|305
 Puynormand|33|305
 Le Petit-Pressigny|37|305
@@ -21759,8 +21760,8 @@ Fontenois-lès-Montbozon|70|305
 Neuvillette-en-Charnie|72|305
 École|73|305
 Saint-Pierre-d'Alvey|73|305
-Canville-les-Deux-Églises|76|305
-Hautot-l'Auvray|76|305
+Canville-les-Deux-Églises|76|305|L
+Hautot-l'Auvray|76|305|L
 Saint-Germain-sous-Cailly|76|305
 Dagny|77|305
 Le Plessis-Placy|77|305
@@ -21809,7 +21810,7 @@ Biert|09|303
 Laval-Roquecezière|12|303
 Pierrefiche|12|303
 Jort|14|303
-Mandeville-en-Bessin|14|303
+Mandeville-en-Bessin|14|303|L
 Saint-Médard|16|303
 Darnets|19|303
 Rilhac-Xaintrie|19|303
@@ -21856,7 +21857,7 @@ Saint-Martial-de-Mirambeau|17|302
 Vinon|18|302
 Monestier-Merlines|19|302
 Thoisy-la-Berchère|21|302
-Canale-di-Verde|2B|302
+Canale-di-Verde|2B|302|L
 Ganties|31|302
 Montastruc-de-Salies|31|302
 Saint-Étienne-d'Albagnan|34|302
@@ -21878,11 +21879,11 @@ Pardines|63|302
 La Neuvelle-lès-Lure|70|302
 Bures-en-Bray|76|302
 Lammerville|76|302
-Mentheville|76|302
+Mentheville|76|302|L
 Nantouillet|77|302
 Genneton|79|302
 Hattencourt|80|302
-Saint-Quentin-en-Tourmont|80|302
+Saint-Quentin-en-Tourmont|80|302|L
 Liez|85|302
 Nalliers|86|302
 Le Chalard|87|302
@@ -21971,7 +21972,7 @@ Soudeilles|19|299
 Bonneville-et-Saint-Avit-de-Fumadières|24|299
 Chassant|28|299
 Béraut|32|299
-Sainte-Geneviève|50|299
+Sainte-Geneviève|50|299|L
 Villers-le-Château|51|299
 Vouzy|51|299
 Euffigneix|52|299
@@ -22023,7 +22024,7 @@ Coisevaux|70|298
 Allondaz|73|298
 Hautecour|73|298
 Saint-Martin-d'Arc|73|298
-Méneslies|80|298
+Méneslies|80|298|L
 La Bussière|86|298
 Lignéville|88|298
 Les Clérimois|89|298
@@ -22038,7 +22039,7 @@ Réans|32|297
 Saint-Christoly-Médoc|33|297
 Ousse-Suzan|40|297
 Meslay|41|297
-Sortosville-en-Beaumont|50|297
+Sortosville-en-Beaumont|50|297|L
 Perrancey-les-Vieux-Moulins|52|297
 Hercé|53|297
 La Pellerine|53|297
@@ -22049,7 +22050,7 @@ Virming|57|297
 Écuvilly|60|297
 Grandvillers-aux-Bois|60|297
 Amplier|62|297
-Lantabat|64|297
+Lantabat|64|297|L
 Chis|65|297
 Crastatt|67|297
 Littenheim|67|297
@@ -22107,7 +22108,7 @@ Les Billanges|87|296
 Montcombroux-les-Mines|03|295
 Faucon-de-Barcelonnette|04|295
 Le Carlaret|09|295
-Longueville|14|295
+Longueville|14|295|L
 Ids-Saint-Roch|18|295
 Villac|24|295
 Gamaches-en-Vexin|27|295
@@ -22131,7 +22132,7 @@ Pomps|64|295
 Willer|68|295
 Charcenne|70|295
 Montreuil-le-Henri|72|295
-Saint-Martin-le-Gaillard|76|295
+Saint-Martin-le-Gaillard|76|295|L
 Montigny-le-Guesdier|77|295
 Voulton|77|295
 Davron|78|295
@@ -22214,7 +22215,7 @@ Nampcel|60|293
 Oudeuil|60|293
 Autingues|62|293
 Chérisy|62|293
-Leubringhen|62|293
+Leubringhen|62|293|L
 Rollancourt|62|293
 Troisvaux|62|293
 Cardesse|64|293
@@ -22232,7 +22233,7 @@ Lasserre-de-Prouille|11|292
 Tournissan|11|292
 Lussac|16|292
 Ménétréol-sous-Sancerre|18|292
-Kerbors|22|292
+Kerbors|22|292|L
 Montazeau|24|292
 Fleury-la-Forêt|27|292
 Chauffours|28|292
@@ -22340,7 +22341,7 @@ Dimont|59|289
 La Chapelle-Viel|61|289
 Saint-Hilaire-sur-Risle|61|289
 Moyenneville|62|289
-Saint-Aubin|62|289
+Saint-Aubin|62|289|L
 Aragnouet|65|289
 Reclesne|71|289
 Jongieux|73|289
@@ -22353,12 +22354,12 @@ Banvillars|90|289
 Juvigny|02|288
 Puy-Sanières|05|288
 Châteauneuf-de-Vernoux|07|288
-Grangues|14|288
+Grangues|14|288|L
 Saint-Eugène|17|288
 Lupersat|23|288
 Beleymas|24|288
 Mauzens-et-Miremont|24|288
-Tallone|2B|288
+Tallone|2B|288|L
 Ponsonnas|38|288
 Saint-Paul-lès-Monestier|38|288
 Nevy-lès-Dole|39|288
@@ -22387,7 +22388,7 @@ Dommiers|02|287
 Servais|02|287
 La Faurie|05|287
 Brandonnet|12|287
-Sallenelles|14|287
+Sallenelles|14|287|L
 Angeac-Charente|16|287
 Audrix|24|287
 Lajoux|39|287
@@ -22397,7 +22398,7 @@ Maxou|46|287
 Giffaumont-Champaubert|51|287
 Givrauval|55|287
 Vandenesse|58|287
-Saint-Georges-sur-l'Aa|59|287
+Saint-Georges-sur-l'Aa|59|287|L
 Montabard|61|287
 Adinfer|62|287
 Houeydets|65|287
@@ -22418,7 +22419,7 @@ La Digne-d'Amont|11|286
 Florentin-la-Capelle|12|286
 Saint-Victor-et-Melvieu|12|286
 Grimbosq|14|286
-Vaux-sur-Aure|14|286
+Vaux-sur-Aure|14|286|L
 Junhac|15|286
 Saint-Maudez|22|286
 Saint-Mayme-de-Péreyrol|24|286
@@ -22429,7 +22430,7 @@ Losse|40|286
 Pinay|42|286
 Couteuges|43|286
 Montignac-de-Lauzun|47|286
-La Pernelle|50|286
+La Pernelle|50|286|L
 Le Meix-Saint-Epoing|51|286
 La Dorée|53|286
 Velaine-sous-Amance|54|286
@@ -22476,7 +22477,7 @@ Augea|39|285
 Doucier|39|285
 Le Vernois|39|285
 Bourgougnague|47|285
-La Haye-d'Ectot|50|285
+La Haye-d'Ectot|50|285|L
 Arcis-le-Ponsart|51|285
 Changey|52|285
 Laneuveville-en-Saulnois|57|285
@@ -22589,10 +22590,10 @@ Champfrémont|53|282
 Champvoux|58|282
 Champétières|63|282
 Bernac-Dessus|65|282
-Les Cluses|66|282
+Les Cluses|66|282|L
 Dieffenthal|67|282
 Dénestanville|76|282
-Ingouville|76|282
+Ingouville|76|282|L
 Saint-Ouen-le-Mauger|76|282
 Andechy|80|282
 Englebelmer|80|282
@@ -22656,7 +22657,7 @@ Rupt-en-Woëvre|55|280
 Chérisey|57|280
 Neufvy-sur-Aronde|60|280
 Bécourt|62|280
-Nielles-lès-Calais|62|280
+Nielles-lès-Calais|62|280|L
 Escondeaux|65|280
 Castelnou|66|280
 Burbach|67|280
@@ -22802,12 +22803,12 @@ Flesquières|59|276
 Montay|59|276
 La Mesnière|61|276
 Neuilly-le-Bisson|61|276
-Offrethun|62|276
+Offrethun|62|276|L
 Charmoy|71|276
 Clessy|71|276
 Pontoux|71|276
 Vareilles|71|276
-Bourville|76|276
+Bourville|76|276|L
 Le Retail|79|276
 Bouchoir|80|276
 Équennes-Éramecourt|80|276
@@ -22941,7 +22942,7 @@ Moulines|14|272
 Édon|16|272
 Chirac-Bellevue|19|272
 Glanon|21|272
-Berhet|22|272
+Berhet|22|272|L
 Vaux-sur-Eure|27|272
 Garancières-en-Drouais|28|272
 Calacuccia|2B|272
@@ -22960,7 +22961,7 @@ Prondines|63|272
 Dambenoît-lès-Colombe|70|272
 Roussillon-en-Morvan|71|272
 Saint-Martin-l'Hortier|76|272
-Tocqueville-les-Murs|76|272
+Tocqueville-les-Murs|76|272|L
 Boissy-aux-Cailles|77|272
 Cerneux|77|272
 Villuis|77|272
@@ -22973,7 +22974,7 @@ Moulins-sur-Ouanne|89|272
 Eguenigue|90|272
 Saint-Sulpice-de-Favières|91|272
 Servilly|03|271
-Treilles|11|271
+Treilles|11|271|L
 Litteau|14|271
 Vieillespesse|15|271
 Liourdres|19|271
@@ -23010,7 +23011,7 @@ Burg|65|271
 Sarriac-Bigorre|65|271
 Errevet|70|271
 Oyé|71|271
-Le Hanouard|76|271
+Le Hanouard|76|271|L
 Vincy-Manœuvre|77|271
 Rainville|88|271
 Vault-de-Lugny|89|271
@@ -23104,7 +23105,7 @@ Coussa|09|268
 Lhuître|10|268
 Les Brunels|11|268
 Fumichon|14|268
-Saint-Laurent-sur-Mer|14|268
+Saint-Laurent-sur-Mer|14|268|L
 Vitrac|15|268
 Chaveroche|19|268
 Tudeils|19|268
@@ -23120,7 +23121,7 @@ Mant|40|268
 Saint-Marcel-d'Urfé|42|268
 Beaumont|43|268
 Vazeilles-Limandre|43|268
-Tanis|50|268
+Tanis|50|268|L
 Sarcy|51|268
 Saron-sur-Aube|51|268
 Chatonrupt-Sommermont|52|268
@@ -23172,7 +23173,7 @@ Idaux-Mendy|64|267
 Aucun|65|267
 Tarasteix|65|267
 Bouhans-lès-Lure|70|267
-Veulettes-sur-Mer|76|267
+Veulettes-sur-Mer|76|267|L
 Domèvre-sur-Durbion|88|267
 Mont-lès-Neufchâteau|88|267
 Sainte-Barbe|88|267
@@ -23388,7 +23389,7 @@ Dontrien|51|261
 Montfaucon-d'Argonne|55|261
 Moncy|61|261
 Saint-Nicolas-de-Sommaire|61|261
-Airon-Notre-Dame|62|261
+Airon-Notre-Dame|62|261|L
 Nort-Leulinghem|62|261
 Wail|62|261
 Ahaxe-Alciette-Bascassan|64|261
@@ -23441,8 +23442,8 @@ Boudes|63|260
 Sarniguet|65|260
 Saint-Pierre-dels-Forcats|66|260
 Saint-Germain-lès-Buxy|71|260
-Bénarville|76|260
-Blosseville|76|260
+Bénarville|76|260|L
+Blosseville|76|260|L
 Bouelles|76|260
 Claville-Motteville|76|260
 Coutençon|77|260
@@ -23465,7 +23466,7 @@ Harréville-les-Chanteurs|52|259
 Landroff|57|259
 Rolbing|57|259
 Teneur|62|259
-Wacquinghen|62|259
+Wacquinghen|62|259|L
 Wambercourt|62|259
 Béguios|64|259
 Le Ségur|81|259
@@ -23487,9 +23488,9 @@ Courtefontaine|39|258
 Strenquels|46|258
 Saint Bonnet-Laval|48|258
 Le Loreur|50|258
-Quinéville|50|258
-Le Rozel|50|258
-Tocqueville|50|258
+Quinéville|50|258|L
+Le Rozel|50|258|L
+Tocqueville|50|258|L
 Sompuis|51|258
 Saint-Julien-du-Terroux|53|258
 Bezaumont|54|258
@@ -23546,7 +23547,7 @@ Bézaudun-les-Alpes|06|256
 Droupt-Sainte-Marie|10|256
 Saint-Juéry|12|256
 Ouilly-du-Houley|14|256
-Saint-Côme-de-Fresné|14|256
+Saint-Côme-de-Fresné|14|256|L
 La Chapelle-d'Alagnon|15|256
 Paulhenc|15|256
 Le Chautay|18|256
@@ -23618,7 +23619,7 @@ Chenay|72|255
 Aiguebelette-le-Lac|73|255
 Jarsy|73|255
 Sainte-Geneviève|76|255
-Saint-Pierre-le-Viger|76|255
+Saint-Pierre-le-Viger|76|255|L
 Chevrainvilliers|77|255
 Carnoy-Mametz|80|255
 Aussac|81|255
@@ -23647,7 +23648,7 @@ Vandélicourt|60|254
 Saint-Ellier-les-Bois|61|254
 Affringues|62|254
 Boisleux-Saint-Marc|62|254
-Montauriol|66|254
+Montauriol|66|254|L
 Zehnacker|67|254
 La Sauzière-Saint-Jean|81|254
 Brassac|82|254
@@ -23671,7 +23672,7 @@ Langé|36|253
 Saint-Laurent-Chabreuges|43|253
 Montaut|47|253
 Ventalon en Cévennes|48|253
-Saint-Maurice-en-Cotentin|50|253
+Saint-Maurice-en-Cotentin|50|253|L
 Ventelay|51|253
 Nubécourt|55|253
 Diane-Capelle|57|253
@@ -23689,10 +23690,10 @@ Hautevelle|70|253
 Saint-Vallerin|71|253
 Rochefort|73|253
 Villarembert|73|253
-Oherville|76|253
+Oherville|76|253|L
 Hautefeuille|77|253
 Saint-Martin-du-Fouilloux|79|253
-Allenay|80|253
+Allenay|80|253|L
 Bailleul|80|253
 Pindray|86|253
 Lasserre|09|252
@@ -23705,7 +23706,7 @@ Vervant|17|252
 Dampierre-en-Graçay|18|252
 Saint-Setiers|19|252
 Villaines-en-Duesmois|21|252
-Lanloup|22|252
+Lanloup|22|252|L
 Toulx-Sainte-Croix|23|252
 Saint-Front-d'Alemps|24|252
 Ougney-Douvot|25|252
@@ -23719,7 +23720,7 @@ Saint-Michel|32|252
 Nousse|40|252
 Le Crozet|42|252
 Blavignac|48|252
-Servon|50|252
+Servon|50|252|L
 Bannes|51|252
 Champvoisy|51|252
 Treslon|51|252
@@ -23793,7 +23794,7 @@ Varennes|37|250
 Le Moutaret|38|250
 Vitreux|39|250
 Montjoie-Saint-Martin|50|250
-Saint-Georges-de-la-Rivière|50|250
+Saint-Georges-de-la-Rivière|50|250|L
 Neuviller-sur-Moselle|54|250
 Doméliers|60|250
 Ivors|60|250
@@ -23804,7 +23805,7 @@ Montoussé|65|250
 Levoncourt|68|250
 La Bruère-sur-Loir|72|250
 Montroty|76|250
-Sasseville|76|250
+Sasseville|76|250|L
 Carrépuis|80|250
 Douilly|80|250
 Fréchencourt|80|250
@@ -23917,7 +23918,7 @@ Vaunac|24|247
 Courchapon|25|247
 Courtefontaine|25|247
 Baudreville|28|247
-Cateri|2B|247
+Cateri|2B|247|L
 Sénéchas|30|247
 Lucmau|33|247
 Montels|34|247
@@ -23954,7 +23955,7 @@ Castres|02|246
 Puimichel|04|246
 Boussenac|09|246
 Fontaine|10|246
-Cricquebœuf|14|246
+Cricquebœuf|14|246|L
 Saint-Bonnet-de-Salers|15|246
 Le Noyer|18|246
 Saint-Étienne-aux-Clos|19|246
@@ -23985,11 +23986,11 @@ Westrehem|62|246
 Aren|64|246
 Lasclaveries|64|246
 Pagolle|64|246
-Corsavy|66|246
+Corsavy|66|246|L
 Ottwiller|67|246
 Andelarrot|70|246
 Cromary|70|246
-Fultot|76|246
+Fultot|76|246|L
 Authie|80|246
 Parcy-et-Tigny|02|245
 Saint-Didier-en-Donjon|03|245
@@ -24004,7 +24005,7 @@ Bouilland|21|245
 Calanhel|22|245
 Kerien|22|245
 Lohuec|22|245
-Runan|22|245
+Runan|22|245|L
 Nouziers|23|245
 Saint-Jory-las-Bloux|24|245
 Suze|26|245
@@ -24036,7 +24037,7 @@ Saurier|63|245
 Bendorf|68|245
 Arpenans|70|245
 Le Bouchet-Mont-Charvin|74|245
-Bornambusc|76|245
+Bornambusc|76|245|L
 Cliponville|76|245
 Courtacon|77|245
 Lubine|88|245
@@ -24067,13 +24068,13 @@ Brombos|60|244
 Les Menus|61|244
 Sainte-Opportune|61|244
 Pommier|62|244
-Widehem|62|244
+Widehem|62|244|L
 Buxières-sous-Montaigut|63|244
 Serralongue|66|244
 Mollans|70|244
 Vindecy|71|244
 Verthemex|73|244
-Cailleville|76|244
+Cailleville|76|244|L
 Clos-Fontaine|77|244
 Saint-Léger|77|244
 Saint-Mars-Vieux-Maisons|77|244
@@ -24094,7 +24095,7 @@ Bouy-Luxembourg|10|243
 Monze|11|243
 Soupex|11|243
 Le Cayrol|12|243
-Sainte-Croix-sur-Mer|14|243
+Sainte-Croix-sur-Mer|14|243|L
 Tessel|14|243
 Pillac|16|243
 Biron|17|243
@@ -24160,7 +24161,7 @@ Juré|42|242
 Vivans|42|242
 Saint-Urcisse|47|242
 Hures-la-Parade|48|242
-Lestre|50|242
+Lestre|50|242|L
 Ville-au-Montois|54|242
 Nettancourt|55|242
 Bettange|57|242
@@ -24233,7 +24234,7 @@ Agel|34|240
 Arpheuilles|36|240
 Thémines|46|240
 Saumont|47|240
-Carneville|50|240
+Carneville|50|240|L
 Vésigneul-sur-Marne|51|240
 Melay|52|240
 Abbéville-lès-Conflans|54|240
@@ -24328,7 +24329,7 @@ Loreux|41|238
 Beauregard|46|238
 Corn|46|238
 Cuzac|46|238
-Maupertus-sur-Mer|50|238
+Maupertus-sur-Mer|50|238|L
 Le Mesnil-Villeman|50|238
 Faux-Vésigneul|51|238
 Hallignicourt|52|238
@@ -24404,7 +24405,7 @@ Maennolsheim|67|237
 Auvet-et-la-Chapelotte|70|237
 Ozenay|71|237
 Saint-Ouen-en-Champagne|72|237
-Beuzeville-la-Guérard|76|237
+Beuzeville-la-Guérard|76|237|L
 Mesnil-Martinsart|80|237
 Fiménil|88|237
 Marolles-en-Beauce|91|237
@@ -24424,7 +24425,7 @@ Veyrines-de-Domme|24|236
 Indevillers|25|236
 Landresse|25|236
 Le Mesnil-Jourdain|27|236
-Farinole|2B|236
+Farinole|2B|236|L
 Cambiac|31|236
 Francon|31|236
 Lussan-Adeilhac|31|236
@@ -24473,7 +24474,7 @@ Senven-Léhart|22|235
 Saint-Roman|26|235
 Saint-Jean-de-Rebervilliers|28|235
 Casalabriva|2A|235
-Occhiatana|2B|235
+Occhiatana|2B|235|L
 Cier-de-Luchon|31|235
 His|31|235
 Saint-Christaud|31|235
@@ -24488,7 +24489,7 @@ Sarraziet|40|235
 Vert|40|235
 Grézolles|42|235
 Grézels|46|235
-Octeville-l'Avenel|50|235
+Octeville-l'Avenel|50|235|L
 Bassuet|51|235
 Coolus|51|235
 Pévy|51|235
@@ -24628,7 +24629,7 @@ Moulin-Neuf|09|232
 Chapelle-Vallon|10|232
 Jully-sur-Sarce|10|232
 Fraissé-des-Corbières|11|232
-Vierville-sur-Mer|14|232
+Vierville-sur-Mer|14|232|L
 Saint-Paul|19|232
 Flavignerot|21|232
 Lavaufranche|23|232
@@ -24678,7 +24679,7 @@ Marignac-en-Diois|26|231
 Pierrelongue|26|231
 Vézillon|27|231
 Évisa|2A|231
-Chiatra|2B|231
+Chiatra|2B|231|L
 Albiac|31|231
 Saint-Laurent-des-Combes|33|231
 Viols-en-Laval|34|231
@@ -24749,7 +24750,7 @@ La Llagonne|66|230
 Lorentzen|67|230
 Chassey-lès-Montbozon|70|230
 Le Noyer|73|230
-Butot-Vénesville|76|230
+Butot-Vénesville|76|230|L
 Fromont|77|230
 Warlus|80|230
 Saint-Urcisse|81|230
@@ -24789,7 +24790,7 @@ Saint-Hubert|57|229
 Lonlay-le-Tesson|61|229
 Neuville-sur-Touques|61|229
 Lebiez|62|229
-Lefaux|62|229
+Lefaux|62|229|L
 Lées-Athas|64|229
 Altenheim|67|229
 Schwoben|68|229
@@ -24813,7 +24814,7 @@ Mercœur|19|228
 Sexcles|19|228
 Lechâtelet|21|228
 Noiron-sur-Bèze|21|228
-Trévérec|22|228
+Trévérec|22|228|L
 Cailly-sur-Eure|27|228
 Saint-Pierre-de-Cernières|27|228
 Les Plantiers|30|228
@@ -24853,7 +24854,7 @@ Ouézy|14|227
 Chillac|16|227
 Maisonnais|18|227
 Tanay|21|227
-Troguéry|22|227
+Troguéry|22|227|L
 Arc-sous-Montenot|25|227
 Boussan|31|227
 Juilles|32|227
@@ -24903,7 +24904,7 @@ Saon|14|226
 Charly|18|226
 Cornusse|18|226
 Montberthault|21|226
-Mantallot|22|226
+Mantallot|22|226|L
 Le Bourg-d'Hem|23|226
 Boissy-en-Drouais|28|226
 Condé|36|226
@@ -24929,13 +24930,13 @@ Mhère|58|226
 Escames|60|226
 Canapville|61|226
 Chastreix|63|226
-Ostabat-Asme|64|226
+Ostabat-Asme|64|226|L
 Puydarrieux|65|226
 Calce|66|226
 Vallerois-le-Bois|70|226
 Les Guerreaux|71|226
 Saint-Julien-sur-Dheune|71|226
-Touffreville-sur-Eu|76|226
+Touffreville-sur-Eu|76|226|L
 Châtillon-la-Borde|77|226
 Forceville-en-Vimeu|80|226
 Milhars|81|226
@@ -24962,7 +24963,7 @@ Entraigues|38|225
 Le Leuy|40|225
 Cellé|41|225
 Vebron|48|225
-Clitourps|50|225
+Clitourps|50|225|L
 Haboudange|57|225
 Pagny-lès-Goin|57|225
 Villers-Stoncourt|57|225
@@ -24993,7 +24994,7 @@ This|08|224
 Montardit|09|224
 Boulages|10|224
 Saint-Frichoux|11|224
-Canapville|14|224
+Canapville|14|224|L
 Alleuze|15|224
 Benayes|19|224
 Palisse|19|224
@@ -25058,19 +25059,19 @@ Vers-sous-Sellières|39|223
 Montliard|45|223
 Antagnac|47|223
 Saint-Vincent-de-Lamontjoie|47|223
-Crasville|50|223
+Crasville|50|223|L
 Jonchery-sur-Suippe|51|223
 Sémelay|58|223
 Bournonville|62|223
 Capelle-Fermont|62|223
-Escalles|62|223
+Escalles|62|223|L
 Meaux-la-Montagne|69|223
 Borey|70|223
 Éhuns|70|223
 Farges-lès-Mâcon|71|223
 Doucelles|72|223
 Rouvray-Catillon|76|223
-Sainte-Colombe|76|223
+Sainte-Colombe|76|223|L
 Courcelles-en-Bassée|77|223
 La Boissière-en-Gâtine|79|223
 Caulières|80|223
@@ -25090,14 +25091,14 @@ Canté|09|222
 Raissac-d'Aude|11|222
 Bessuéjouls|12|222
 Bernières-d'Ailly|14|222
-Crépon|14|222
+Crépon|14|222|L
 Coulonges|17|222
 Vitrac-sur-Montane|19|222
 Saint-Maixant|23|222
 Cherval|24|222
 Salles-sous-Bois|26|222
 Croisy-sur-Eure|27|222
-Palasca|2B|222
+Palasca|2B|222|L
 Vignale|2B|222
 Auzas|31|222
 Castillon-Massas|32|222
@@ -25138,7 +25139,7 @@ Saint-Julien-Vocance|07|221
 Lantages|10|221
 Caudebronde|11|221
 Serviès-en-Val|11|221
-Douville-en-Auge|14|221
+Douville-en-Auge|14|221|L
 Fauguernon|14|221
 Loucelles|14|221
 Chatenet|17|221
@@ -25196,7 +25197,7 @@ Cerzat|43|220
 Cabrerets|46|220
 Goujounac|46|220
 Fréchou|47|220
-Canteloup|50|220
+Canteloup|50|220|L
 Le Mesnil-Garnier|50|220
 Marcilly-en-Bassigny|52|220
 Hablainville|54|220
@@ -25302,7 +25303,7 @@ Bugnein|64|218
 Montferrer|66|218
 Saint-Christophe-en-Champagne|72|218
 Conjux|73|218
-Baromesnil|76|218
+Baromesnil|76|218|L
 Ernemont-la-Villette|76|218
 Paray-Douaville|78|218
 Saint-Aubin-Montenoy|80|218
@@ -25350,7 +25351,7 @@ Grattery|70|217
 Vauconcourt-Nervezain|70|217
 Change|71|217
 Boudeville|76|217
-Vinnemerville|76|217
+Vinnemerville|76|217|L
 Marnes|79|217
 Liéramont|80|217
 Mesnil-Saint-Georges|80|217
@@ -25384,7 +25385,7 @@ Arcinges|42|216
 Blaymont|47|216
 Moissac-Vallée-Française|48|216
 Raids|50|216
-Varouville|50|216
+Varouville|50|216|L
 Cuperly|51|216
 Ville-sur-Tourbe|51|216
 Noviant-aux-Prés|54|216
@@ -25442,7 +25443,7 @@ Rochonvillers|57|215
 Cuy|60|215
 Royaucourt|60|215
 Gaudiempré|62|215
-Hervelinghen|62|215
+Hervelinghen|62|215|L
 Hestrus|62|215
 Tilloy-lès-Hermaville|62|215
 Aubusson-d'Auvergne|63|215
@@ -25479,7 +25480,7 @@ Buxeuil|36|214
 Les Arques|46|214
 Bélaye|46|214
 Termes|48|214
-Brainville|50|214
+Brainville|50|214|L
 Florent-en-Argonne|51|214
 Reims-la-Brûlée|51|214
 Herbéviller|54|214
@@ -25508,7 +25509,7 @@ Val-Suzon|21|213
 Saint-Victor|24|213
 Villeneuve-d'Amont|25|213
 Cormainville|28|213
-Belvédère-Campomoro|2A|213
+Belvédère-Campomoro|2A|213|L
 Laval-Saint-Roman|30|213
 Campagne-d'Armagnac|32|213
 Ladevèze-Ville|32|213
@@ -25668,7 +25669,7 @@ Dompierre-sur-Mont|39|210
 Baillou|41|210
 Courtempierre|45|210
 Lacaussade|47|210
-Courtils|50|210
+Courtils|50|210|L
 Saint-Louet-sur-Vire|50|210
 Ambrières|51|210
 Châtillon-sur-Morin|51|210
@@ -25685,7 +25686,7 @@ Sainte-Marguerite-de-Carrouges|61|210
 Morchies|62|210
 Offin|62|210
 Quœux-Haut-Maînil|62|210
-Bussunarits-Sarrasquette|64|210
+Bussunarits-Sarrasquette|64|210|L
 Léren|64|210
 Séby|64|210
 Izaux|65|210
@@ -25806,7 +25807,7 @@ Brie|09|207
 Castelreng|11|207
 Valzergues|12|207
 Beaumesnil|14|207
-Colleville-sur-Mer|14|207
+Colleville-sur-Mer|14|207|L
 Cristot|14|207
 Orgedeuil|16|207
 Ineuil|18|207
@@ -25842,7 +25843,7 @@ Lurbe-Saint-Christau|64|207
 Fillols|66|207
 Belonchamp|70|207
 Chardonnay|71|207
-Crasville-la-Rocquefort|76|207
+Crasville-la-Rocquefort|76|207|L
 Beaucamps-le-Jeune|80|207
 Bussu|80|207
 Thory|80|207
@@ -25853,7 +25854,7 @@ Bompas|09|206
 Rhèges|10|206
 Ville-sur-Arce|10|206
 Bor-et-Bar|12|206
-Colombières|14|206
+Colombières|14|206|L
 Bioussac|16|206
 Épenède|16|206
 Étriac|16|206
@@ -25882,7 +25883,7 @@ Lesse|57|206
 Haucourt|62|206
 Hermin|62|206
 Alçay-Alçabéhéty-Sunharette|64|206
-Jaxu|64|206
+Jaxu|64|206|L
 Lombia|64|206
 Saint-Médard|64|206
 Nestier|65|206
@@ -26024,7 +26025,7 @@ Villedieu-lès-Bailleul|61|203
 Le Wast|62|203
 Villers-sur-Port|70|203
 Blanot|71|203
-Malleville-les-Grès|76|203
+Malleville-les-Grès|76|203|L
 Villefollet|79|203
 Braches|80|203
 Barre|81|203
@@ -26035,7 +26036,7 @@ Nouvron-Vingré|02|202
 Saconin-et-Breuil|02|202
 Selens|02|202
 Neure|03|202
-Canchy|14|202
+Canchy|14|202|L
 Madic|15|202
 Ménétréol-sur-Sauldre|18|202
 Ségur-le-Château|19|202
@@ -26059,7 +26060,7 @@ Aast|64|202
 Bédeille|64|202
 Rexingen|67|202
 Igny|70|202
-Houdetot|76|202
+Houdetot|76|202|L
 Millencourt|80|202
 Trévien|81|202
 Balledent|87|202
@@ -26072,7 +26073,7 @@ Puits-et-Nuisement|10|201
 Villemoiron-en-Othe|10|201
 Airoux|11|201
 Le Brévedent|14|201
-Vauville|14|201
+Vauville|14|201|L
 Fleurac|16|201
 Ballans|17|201
 Neuville|19|201
@@ -26120,7 +26121,7 @@ Cussangy|10|200
 Trouans|10|200
 La Cassaigne|11|200
 Ouffières|14|200
-Plumetot|14|200
+Plumetot|14|200|L
 Boresse-et-Martron|17|200
 La Villedieu|17|200
 Aisy-sous-Thil|21|200
@@ -26200,7 +26201,7 @@ Ouzous|65|199
 Dième|69|199
 Échavanne|70|199
 Culles-les-Roches|71|199
-Brametot|76|199
+Brametot|76|199|L
 Montagudet|82|199
 Vaudéville|88|199
 Châtel-Gérard|89|199
@@ -26292,7 +26293,7 @@ Ricarville-du-Val|76|197
 Saint-Honoré|76|197
 Vanvillé|77|197
 Bermesnil|80|197
-Brutelles|80|197
+Brutelles|80|197|L
 Louvrechy|80|197
 Jouac|87|197
 Le Fugeret|04|196
@@ -26336,8 +26337,8 @@ Montfort|64|196
 Battrans|70|196
 Amanzé|71|196
 Montjay|71|196
-Angerville-Bailleul|76|196
-Criquetot-le-Mauconduit|76|196
+Angerville-Bailleul|76|196|L
+Criquetot-le-Mauconduit|76|196|L
 Offoy|80|196
 Bouloc-en-Quercy|82|196
 Mortagne|88|196
@@ -26354,7 +26355,7 @@ Saint-Pierre-Saint-Jean|07|195
 Argein|09|195
 Briel-sur-Barse|10|195
 Le Fel|12|195
-Le Manoir|14|195
+Le Manoir|14|195|L
 Sourniac|15|195
 Beaumont-sur-Vingeanne|21|195
 Chazeuil|21|195
@@ -26475,7 +26476,7 @@ Folleville|27|193
 Houetteville|27|193
 Notre-Dame-du-Hamel|27|193
 Le Noyer-en-Ouche|27|193
-Sant'Andréa-di-Cotone|2B|193
+Sant'Andréa-di-Cotone|2B|193|L
 Auribail|31|193
 Beauteville|31|193
 Labastide-Savès|32|193
@@ -26623,14 +26624,14 @@ Saudrupt|55|190
 Sancourt|59|190
 Rebreuve-sur-Canche|62|190
 Sadournin|65|190
-Vivès|66|190
+Vivès|66|190|L
 Heiwiller|68|190
 Jasney|70|190
 Morey|71|190
 Versaugues|71|190
 Saint-François-de-Sales|73|190
 Cleuville|76|190
-Drosay|76|190
+Drosay|76|190|L
 Flers|80|190
 Marquaix|80|190
 Suzanne|80|190
@@ -26660,7 +26661,7 @@ Pomarède|46|189
 Pindères|47|189
 Cultures|48|189
 Hémevez|50|189
-Le Mesnil|50|189
+Le Mesnil|50|189|L
 Francheville|51|189
 Rieux|51|189
 Bébing|57|189
@@ -26677,13 +26678,13 @@ Gère-Bélesten|64|189
 Antist|65|189
 Bégole|65|189
 Oléac-Debat|65|189
-Montbolo|66|189
+Montbolo|66|189|L
 Bresilley|70|189
 Montureux-et-Prantigny|70|189
 Bois-Sainte-Marie|71|189
 La Chapelle-du-Mont-de-France|71|189
 Mont-lès-Seurre|71|189
-Crasville-la-Mallet|76|189
+Crasville-la-Mallet|76|189|L
 Lintot-les-Bois|76|189
 Marquivillers|80|189
 Fauroux|82|189
@@ -26719,7 +26720,7 @@ Adon|45|188
 Baleyssagues|47|188
 Le Mesnil-Eury|50|188
 Le Perron|50|188
-Sénoville|50|188
+Sénoville|50|188|L
 Brusson|51|188
 Germigny|51|188
 La Neuville-aux-Larris|51|188
@@ -26791,7 +26792,7 @@ Arancou|64|187
 Barraute-Camu|64|187
 Doazon|64|187
 Larribar-Sorhapuru|64|187
-Tordères|66|187
+Tordères|66|187|L
 Morienne|76|187
 Paroy|77|187
 Sainte-Radégonde|86|187
@@ -26882,7 +26883,7 @@ Liny-devant-Dun|55|185
 Blismes|58|185
 Erquinvillers|60|185
 Moulin-sous-Touvent|60|185
-Airon-Saint-Vaast|62|185
+Airon-Saint-Vaast|62|185|L
 Rimboval|62|185
 Lansac|65|185
 La Lanterne-et-les-Armonts|70|185
@@ -26906,7 +26907,7 @@ Petit-Bersac|24|184
 Saint-Martial-Viveyrol|24|184
 Varize|28|184
 Aullène|2A|184
-Tomino|2B|184
+Tomino|2B|184|L
 Massanes|30|184
 Saint-Léonard|32|184
 Saint-Martin-de-Clelles|38|184
@@ -26974,7 +26975,7 @@ Lussagnet-Lusson|64|183
 Poursiugues-Boucoue|64|183
 Sainte-Colombe-de-la-Commanderie|66|183
 Secenans|70|183
-Saint-Pierre-le-Vieux|76|183
+Saint-Pierre-le-Vieux|76|183|L
 Laucourt|80|183
 Meigneux|80|183
 Mérélessart|80|183
@@ -27061,7 +27062,7 @@ Granges-la-Ville|70|181
 Senoncourt|70|181
 Saint-Georges-de-la-Couée|72|181
 Chevaline|74|181
-Saint-Aubin-sur-Mer|76|181
+Saint-Aubin-sur-Mer|76|181|L
 Villers-sous-Foucarmont|76|181
 Fourcigny|80|181
 Riencourt|80|181
@@ -27082,7 +27083,7 @@ Châtres|24|180
 Saint-Félix-de-Reillac-et-Mortemart|24|180
 Saint-Germain-de-Belvès|24|180
 Manas|26|180
-Pruno|2B|180
+Pruno|2B|180|L
 Seynes|30|180
 L'Isle-Arné|32|180
 Lados|33|180
@@ -27336,7 +27337,7 @@ Malleret-Boussac|23|175
 Saint-Éloi|23|175
 Amathay-Vésigneux|25|175
 Vatteville|27|175
-Centuri|2B|175
+Centuri|2B|175|L
 Tournan|32|175
 Soucia|39|175
 Les Hayes|41|175
@@ -27360,7 +27361,7 @@ Chasselas|71|175
 Cressy-sur-Somme|71|175
 Flagy|71|175
 Feissons-sur-Salins|73|175
-Fongueusemare|76|175
+Fongueusemare|76|175|L
 Sainte-Beuve-en-Rivière|76|175
 Gratibus|80|175
 Montigny-sur-l'Hallue|80|175
@@ -27380,7 +27381,7 @@ Saint-Germain-de-Modéon|21|174
 Longeville|25|174
 Malouy|27|174
 Pré-Saint-Martin|28|174
-Barrettali|2B|174
+Barrettali|2B|174|L
 Assignan|34|174
 La Guerche|37|174
 Bans|39|174
@@ -27431,7 +27432,7 @@ Lérigneux|42|173
 Chanaleilles|43|173
 Marcilhac-sur-Célé|46|173
 La Bonneville|50|173
-Saint-Martin-de-Varreville|50|173
+Saint-Martin-de-Varreville|50|173|L
 Coupray|52|173
 Saint-Ciergues|52|173
 Saint-Vallier-sur-Marne|52|173
@@ -27490,7 +27491,7 @@ Lacapelle-Cabanac|46|172
 Saint-Cirq-Souillaguet|46|172
 Rayet|47|172
 La Chapelle-Urée|50|172
-Saint-Pierre-d'Arthéglise|50|172
+Saint-Pierre-d'Arthéglise|50|172|L
 Flavigny|51|172
 Affléville|54|172
 Manonviller|54|172
@@ -27510,7 +27511,7 @@ Dampierre-en-Bresse|71|172
 Saint-Germain-en-Brionnais|71|172
 Rétonval|76|172
 Sept-Meules|76|172
-Vénestanville|76|172
+Vénestanville|76|172|L
 Lusseray|79|172
 Chipilly|80|172
 Laboulbène|81|172
@@ -27555,7 +27556,7 @@ Sainte-Agathe|63|171
 Singles|63|171
 Audaux|64|171
 Cabidos|64|171
-Lacarre|64|171
+Lacarre|64|171|L
 Luc|65|171
 Champvans|70|171
 La Neuvelle-lès-Scey|70|171
@@ -27639,7 +27640,7 @@ Saint-Privat-du-Dragon|43|169
 Desmonts|45|169
 Calès|46|169
 Frayssinhes|46|169
-Huisnes-sur-Mer|50|169
+Huisnes-sur-Mer|50|169|L
 Tréfols|51|169
 Hardanges|53|169
 Bezange-la-Grande|54|169
@@ -27665,7 +27666,7 @@ Murtin-et-Bogny|08|168
 Neuville-Day|08|168
 Esplas-de-Sérou|09|168
 Soula|09|168
-Cricqueville-en-Bessin|14|168
+Cricqueville-en-Bessin|14|168|L
 Annezay|17|168
 Nantoux|21|168
 Saint-Front-sur-Nizonne|24|168
@@ -27696,7 +27697,7 @@ Sturzelbronn|57|168
 Brinon-sur-Beuvron|58|168
 Camembert|61|168
 Canlers|62|168
-Ainhice-Mongelos|64|168
+Ainhice-Mongelos|64|168|L
 Lème|64|168
 Taron-Sadirac-Viellenave|64|168
 Fontrailles|65|168
@@ -27704,7 +27705,7 @@ Amont-et-Effreney|70|168
 Vougécourt|70|168
 Bourg-le-Comte|71|168
 Bénouville|76|168
-Sorquainville|76|168
+Sorquainville|76|168|L
 Leudon-en-Brie|77|168
 Dominois|80|168
 Fonches-Fonchette|80|168
@@ -27766,7 +27767,7 @@ La Villedieu-en-Fontenette|70|167
 Chapaize|71|167
 Rahay|72|167
 Bois-Héroult|76|167
-Contremoulins|76|167
+Contremoulins|76|167|L
 Villers-sous-Ailly|80|167
 Larroque|81|167
 Saint-Sernin-lès-Lavaur|81|167
@@ -27868,7 +27869,7 @@ Lachapelle-sous-Gerberoy|60|165
 Sully|60|165
 Chaumont|61|165
 Espéchède|64|165
-Suhescun|64|165
+Suhescun|64|165|L
 Uzan|64|165
 Esparros|65|165
 Rasiguères|66|165
@@ -27888,7 +27889,7 @@ Carla-de-Roquefort|09|164
 Montels|09|164
 Magnant|10|164
 Brousse-le-Château|12|164
-Magny-en-Bessin|14|164
+Magny-en-Bessin|14|164|L
 Theil-Rabier|16|164
 Chartuzac|17|164
 Chaumeil|19|164
@@ -27943,7 +27944,7 @@ Ormes|10|163
 Baraigne|11|163
 Davejean|11|163
 Les Costes-Gozon|12|163
-Saint-Pierre-Azif|14|163
+Saint-Pierre-Azif|14|163|L
 Châtignac|16|163
 Oradour|16|163
 Brie-sous-Matha|17|163
@@ -28049,7 +28050,7 @@ Sariac-Magnoac|65|162
 Magnivray|70|162
 Sainte-Marie-en-Chaux|70|162
 Dezize-lès-Maranges|71|162
-La Chapelle-sur-Dun|76|162
+La Chapelle-sur-Dun|76|162|L
 Preuseville|76|162
 Flins-Neuve-Église|78|162
 Fontaine-sur-Maye|80|162
@@ -28075,7 +28076,7 @@ Saint-Sulpice-de-Grimbouville|27|161
 Cuguron|31|161
 Saint-Orens-Pouy-Petit|32|161
 Chamole|39|161
-Fontenay-sur-Mer|50|161
+Fontenay-sur-Mer|50|161|L
 Montgenost|51|161
 Charmes-la-Grande|52|161
 Vicq|52|161
@@ -28174,7 +28175,7 @@ Besain|39|159
 Brévainville|41|159
 Conan|41|159
 Saint-Préjet-d'Allier|43|159
-Ozeville|50|159
+Ozeville|50|159|L
 Fresnes-sur-Apance|52|159
 Flainval|54|159
 Flirey|54|159
@@ -28429,7 +28430,7 @@ Rudeau-Ladosse|24|154
 Barsac|26|154
 Boulc|26|154
 Guitera-les-Bains|2A|154
-Lavatoggio|2B|154
+Lavatoggio|2B|154|L
 Neuffons|33|154
 Besse|38|154
 Patornay|39|154
@@ -28518,7 +28519,7 @@ Saint-Pierre-sur-Vence|08|152
 Bénaix|09|152
 Roquefixade|09|152
 Villanière|11|152
-Colombiers-sur-Seulles|14|152
+Colombiers-sur-Seulles|14|152|L
 Lessard-et-le-Chêne|14|152
 Pierrefitte-en-Auge|14|152
 Rubercy|14|152
@@ -28685,7 +28686,7 @@ Broyes|60|150
 Saint-Brice|61|150
 Caumont|62|150
 Sains-lès-Fressin|62|150
-Tardinghen|62|150
+Tardinghen|62|150|L
 Cordonnet|70|150
 Saint-Eugène|71|150
 La Chapelle-Saint-Martin|73|150
@@ -28752,8 +28753,8 @@ Ménil-Lépinois|08|148
 Vaux-Champagne|08|148
 Herbisse|10|148
 Courcy|14|148
-Heuland|14|148
-Saint-Germain-du-Pert|14|148
+Heuland|14|148|L
+Saint-Germain-du-Pert|14|148|L
 Saint-Louet-sur-Seulles|14|148
 Tournières|14|148
 Courcelles-Frémoy|21|148
@@ -28770,8 +28771,8 @@ Le Poët-Célard|26|148
 Salettes|26|148
 Saint-Agnan-de-Cernières|27|148
 Les Châtelliers-Notre-Dame|28|148
-Cagnano|2B|148
-Pino|2B|148
+Cagnano|2B|148|L
+Pino|2B|148|L
 Boudrac|31|148
 Labarthe|32|148
 Saint-Lizier-du-Planté|32|148
@@ -29075,7 +29076,7 @@ Vy-lès-Filain|70|143
 Anglure-sous-Dun|71|143
 Bouzeron|71|143
 Saint-Colomban-des-Villards|73|143
-Ancretteville-sur-Mer|76|143
+Ancretteville-sur-Mer|76|143|L
 Fréauville|76|143
 Fontaine-le-Sec|80|143
 Hallu|80|143
@@ -29091,7 +29092,7 @@ Vaux-en-Vermandois|02|142
 Saint-Cirgues-de-Prades|07|142
 Erp|09|142
 Miglos|09|142
-Bazenville|14|142
+Bazenville|14|142|L
 Mouzon|16|142
 Lugny-Champagne|18|142
 Saint-Bazile-de-Meyssac|19|142
@@ -29247,7 +29248,7 @@ Benqué-Molère|65|140
 Belmont|70|140
 Marcilly-la-Gueurce|71|140
 Saint-Clément-sur-Guye|71|140
-Écretteville-sur-Mer|76|140
+Écretteville-sur-Mer|76|140|L
 Bus-lès-Artois|80|140
 Magrin|81|140
 Montgaillard|82|140
@@ -29327,7 +29328,7 @@ Cérizols|09|138
 Jaucourt|10|138
 Laroque-de-Fa|11|138
 La Folletière-Abenon|14|138
-Surrain|14|138
+Surrain|14|138|L
 Maconge|21|138
 Saint-Pierre-en-Vaux|21|138
 Nastringues|24|138
@@ -29359,7 +29360,7 @@ Vadans|70|138
 Royer|71|138
 Thil-sur-Arroux|71|138
 Commerveil|72|138
-Auberville-la-Manuel|76|138
+Auberville-la-Manuel|76|138|L
 Tocqueville-en-Caux|76|138
 Fresnoy-en-Chaussée|80|138
 Villers-Campsart|80|138
@@ -29428,7 +29429,7 @@ Proviseux-et-Plesnoy|02|136
 Pourchères|07|136
 Hannappes|08|136
 Les Loges|14|136
-Meuvaines|14|136
+Meuvaines|14|136|L
 Sainte-Honorine-de-Ducy|14|136
 Besse|15|136
 Boisbreteau|16|136
@@ -29583,11 +29584,11 @@ Vauclaix|58|134
 Rhuis|60|134
 Saint-Lambert-sur-Dive|61|134
 Tajan|65|134
-Caixas|66|134
+Caixas|66|134|L
 Belverne|70|134
 Vernois-sur-Mance|70|134
 Contilly|72|134
-Anglesqueville-la-Bras-Long|76|134
+Anglesqueville-la-Bras-Long|76|134|L
 Saâne-Saint-Just|76|134
 Chérigné|79|134
 Maisontiers|79|134
@@ -29643,7 +29644,7 @@ Brethel|61|133
 Roiville|61|133
 Beauvois|62|133
 Moncheaux-lès-Frévent|62|133
-Bunus|64|133
+Bunus|64|133|L
 Louvie-Soubiron|64|133
 Piets-Plasence-Moustrou|64|133
 Hitte|65|133
@@ -29651,8 +29652,8 @@ Libaros|65|133
 Cenans|70|133
 Le Pontet|73|133
 Sainte-Marie-d'Alvey|73|133
-Pleine-Sève|76|133
-Saint-Sylvain|76|133
+Pleine-Sève|76|133|L
+Saint-Sylvain|76|133|L
 Lanches-Saint-Hilaire|80|133
 Asques|82|133
 Beaumont-du-Lac|87|133
@@ -29688,8 +29689,8 @@ Marnans|38|132
 Siévoz|38|132
 Saint-Rirand|42|132
 Saint-Paul-le-Froid|48|132
-Aumeville-Lestre|50|132
-Baubigny|50|132
+Aumeville-Lestre|50|132|L
+Baubigny|50|132|L
 Chanoy|52|132
 Montigny-devant-Sassey|55|132
 Thicourt|57|132
@@ -29697,7 +29698,7 @@ Hannaches|60|132
 Sérévillers|60|132
 Saint-Germain-de-Clairefeuille|61|132
 Bus|62|132
-Colline-Beaumont|62|132
+Colline-Beaumont|62|132|L
 La Renaudie|63|132
 Saint-Alyre-d'Arlanc|63|132
 Les Angles|65|132
@@ -29819,7 +29820,7 @@ Aydie|64|130
 Lay-Lamidou|64|130
 Bouilh-Péreuilh|65|130
 Arboussols|66|130
-Saint-Denis-d'Aclon|76|130
+Saint-Denis-d'Aclon|76|130|L
 Vatierville|76|130
 Vraignes-en-Vermandois|80|130
 Yvrencheux|80|130
@@ -29840,9 +29841,9 @@ L'Échelle|08|129
 Chauffour-lès-Bailly|10|129
 Longsols|10|129
 Salon|10|129
-Brucourt|14|129
-Géfosse-Fontenay|14|129
-Manvieux|14|129
+Brucourt|14|129|L
+Géfosse-Fontenay|14|129|L
+Manvieux|14|129|L
 Badailhac|15|129
 Le Vieux-Cérier|16|129
 Groises|18|129
@@ -29866,7 +29867,7 @@ Moutonne|39|129
 Marpaps|40|129
 Tourailles|41|129
 Chaudeyrolles|43|129
-Turqueville|50|129
+Turqueville|50|129|L
 Cormoyeux|51|129
 Brennes|52|129
 Montreuil-sur-Blaise|52|129
@@ -29900,7 +29901,7 @@ Molleville|11|128
 Tourreilles|11|128
 Combiers|16|128
 Valoreille|25|128
-Pigna|2B|128
+Pigna|2B|128|L
 Cabanac-Cazaux|31|128
 Largillay-Marsonnay|39|128
 Lent|39|128
@@ -29947,7 +29948,7 @@ Surmont|25|127
 La Trinité|27|127
 Havelu|28|127
 Zigliara|2A|127
-Sant'Antonino|2B|127
+Sant'Antonino|2B|127|L
 Moustajon|31|127
 Saint-Lary-Boujean|31|127
 Cuélas|32|127
@@ -30064,7 +30065,7 @@ Cucugnan|11|125
 Ferran|11|125
 Sougraigne|11|125
 Bonnœil|14|125
-Saint-Vaast-en-Auge|14|125
+Saint-Vaast-en-Auge|14|125|L
 Mainzac|16|125
 Les Angles-sur-Corrèze|19|125
 Aloxe-Corton|21|125
@@ -30082,7 +30083,7 @@ Maillas|40|125
 Chambezon|43|125
 Montusclat|43|125
 Saint-Jean-la-Fouillouse|48|125
-Canville-la-Rocque|50|125
+Canville-la-Rocque|50|125|L
 Cheniers|51|125
 Cloyes-sur-Marne|51|125
 Saint-Maurice|52|125
@@ -30100,7 +30101,7 @@ Le Sap-André|61|125
 Ternas|62|125
 Compains|63|125
 Saint-Étienne-des-Champs|63|125
-Gamarthe|64|125
+Gamarthe|64|125|L
 Saucède|64|125
 Gaillagos|65|125
 Fontpédrouse|66|125
@@ -30139,7 +30140,7 @@ Trugny|21|124
 Villers-Rotin|21|124
 Chaux-lès-Passavant|25|124
 Morsan|27|124
-Ersa|2B|124
+Ersa|2B|124|L
 Valle-d'Alesani|2B|124
 Burgalays|31|124
 Saint-André|32|124
@@ -30163,7 +30164,7 @@ Bouhans-lès-Montbozon|70|124
 Villers-Chemin-et-Mont-lès-Étrelles|70|124
 Villers-sur-Saulnot|70|124
 Saint-Nizier-sur-Arroux|71|124
-Veauville-lès-Quelles|76|124
+Veauville-lès-Quelles|76|124|L
 Béthencourt-sur-Somme|80|124
 Soues|80|124
 Thiepval|80|124
@@ -30184,7 +30185,7 @@ Hautefaye|24|123
 Canavaggia|2B|123
 Casabianca|2B|123
 Corscia|2B|123
-Olmeta-di-Capocorso|2B|123
+Olmeta-di-Capocorso|2B|123|L
 Lourde|31|123
 Saint-Araille|31|123
 Bars|32|123
@@ -30286,13 +30287,13 @@ Sagnes-et-Goudoulet|07|121
 Rilly-sur-Aisne|08|121
 Limousis|11|121
 Castelmary|12|121
-Barneville-la-Bertran|14|121
+Barneville-la-Bertran|14|121|L
 Mentières|15|121
 La Ségalassière|15|121
 Veyrières|15|121
 Le Gicq|17|121
 Clomot|21|121
-Lanleff|22|121
+Lanleff|22|121|L
 Ceyroux|23|121
 Sainte-Feyre-la-Montagne|23|121
 Bouillac|24|121
@@ -30333,7 +30334,7 @@ Francalmont|70|121
 Burnand|71|121
 Saint-Didier-en-Brionnais|71|121
 La Chapelle-Saint-Maurice|74|121
-Bertreville|76|121
+Bertreville|76|121|L
 Frucourt|80|121
 Mirvaux|80|121
 Occoches|80|121
@@ -30402,7 +30403,7 @@ Viviers-sur-Artaut|10|119
 Plaigne|11|119
 Lapanouse-de-Cernon|12|119
 Le Bû-sur-Rouvres|14|119
-Périers-en-Auge|14|119
+Périers-en-Auge|14|119|L
 Saint-Étienne-de-Carlat|15|119
 Bors (Canton de Charente-Sud)|16|119
 Bessey-en-Chaume|21|119
@@ -30422,7 +30423,7 @@ Murs|36|119
 Boissia|39|119
 Saint-Arcons-de-Barges|43|119
 Margueray|50|119
-Le Vicel|50|119
+Le Vicel|50|119|L
 Les Charmontois|51|119
 Margny|51|119
 Mont-sur-Courville|51|119
@@ -30626,7 +30627,7 @@ Renaucourt|70|116
 Saint-Martin-de-Salencey|71|116
 Freney|73|116
 Baillolet|76|116
-Ermenouville|76|116
+Ermenouville|76|116|L
 Rennemoulin|78|116
 Brévillers|80|116
 Saint-Aubin-Rivière|80|116
@@ -30731,7 +30732,7 @@ Montambert|58|114
 Saint-Gratien-Savigny|58|114
 Fontaine-les-Bassets|61|114
 Béhagnies|62|114
-Pittefaux|62|114
+Pittefaux|62|114|L
 Momy|64|114
 Montgilbert|73|114
 Puéchoursi|81|114
@@ -30743,7 +30744,7 @@ Ascou|09|113
 Le Bosc|09|113
 Vèbre|09|113
 Villar-Saint-Anselme|11|113
-Englesqueville-en-Auge|14|113
+Englesqueville-en-Auge|14|113|L
 Le Falgoux|15|113
 Saint-Bonnet-de-Condat|15|113
 Curac|16|113
@@ -30787,7 +30788,7 @@ Betoncourt-lès-Brotte|70|113
 Preigney|70|113
 Vandelans|70|113
 Saint-Denis-des-Coudrais|72|113
-Gonzeville|76|113
+Gonzeville|76|113|L
 Baby|77|113
 Boufflers|80|113
 Guizancourt|80|113
@@ -30904,7 +30905,7 @@ Chemilly|70|111
 Contréglise|70|111
 Les Aulneaux|72|111
 Thoiré-sous-Contensor|72|111
-Hermanville|76|111
+Hermanville|76|111|L
 Trayes|79|111
 Irles|80|111
 Potte|80|111
@@ -30991,9 +30992,9 @@ Villiers-le-Duc|21|109
 Saint-Oradoux-près-Crocq|23|109
 Coubjours|24|109
 Narbief|25|109
-Morsiglia|2B|109
+Morsiglia|2B|109|L
 Perelli|2B|109
-Pero-Casevecchie|2B|109
+Pero-Casevecchie|2B|109|L
 Soveria|2B|109
 Bellesserre|31|109
 Fougaron|31|109
@@ -31003,7 +31004,7 @@ Cassagnoles|34|109
 Chanceaux-près-Loches|37|109
 Ardon|39|109
 Villebramar|47|109
-Saint-Germain-de-Varreville|50|109
+Saint-Germain-de-Varreville|50|109|L
 Corfélix|51|109
 Réveillon|51|109
 Villers-le-Sec|51|109
@@ -31168,7 +31169,7 @@ Randevillers|25|106
 Rignosot|25|106
 Ambonil|26|106
 Les Autels-Villevillon|28|106
-Giuncheto|2A|106
+Giuncheto|2A|106|L
 Arlos|31|106
 Bonas|32|106
 Mont-de-Marrast|32|106
@@ -31199,7 +31200,7 @@ Issenhausen|67|106
 Ouge|70|106
 Rupt-sur-Saône|70|106
 La Voivre|70|106
-Colmesnil-Manneville|76|106
+Colmesnil-Manneville|76|106|L
 Rupéreux|77|106
 Hédauville|80|106
 Méricourt-en-Vimeu|80|106
@@ -31253,7 +31254,7 @@ Fontaine-lès-Hermans|62|105
 Magnicourt-sur-Canche|62|105
 Saint-Rémy-au-Bois|62|105
 Arricau-Bordes|64|105
-Taillet|66|105
+Taillet|66|105|L
 Étrelles-et-la-Montbleuse|70|105
 Saint-Broing|70|105
 Theuley|70|105
@@ -31384,7 +31385,7 @@ Sarry|71|103
 Sercy|71|103
 Louzes|72|103
 Les Mées|72|103
-Bertheauville|76|103
+Bertheauville|76|103|L
 Biville-la-Rivière|76|103
 Wiry-au-Mont|80|103
 Gendreville|88|103
@@ -31423,7 +31424,7 @@ Saint-Ouen-de-Pontcheuil|27|102
 Campo|2A|102
 Salice|2A|102
 Pietra-di-Verde|2B|102
-San-Giovanni-di-Moriani|2B|102
+San-Giovanni-di-Moriani|2B|102|L
 Roquelaure-Saint-Aubin|32|102
 Sansan|32|102
 Landerrouet-sur-Ségur|33|102
@@ -31451,12 +31452,12 @@ Gourchelles|60|102
 Parfondeval|61|102
 Saint-Alyre-ès-Montagne|63|102
 Aydius|64|102
-Bustince-Iriberry|64|102
-Orsanco|64|102
+Bustince-Iriberry|64|102|L
+Orsanco|64|102|L
 Mauléon-Barousse|65|102
 Sauto|66|102
 La Boulaye|71|102
-Trémauville|76|102
+Trémauville|76|102|L
 Oroux|79|102
 Montigny-les-Jongleurs|80|102
 Milhavet|81|102
@@ -31473,13 +31474,13 @@ Villers-sur-le-Mont|08|101
 Argançon|10|101
 Fralignes|10|101
 Citou|11|101
-Monfréville|14|101
+Monfréville|14|101|L
 Bazauges|17|101
 Chaume-lès-Baigneux|21|101
 L'Écouvotte|25|101
 Huanne-Montmartin|25|101
 Châteauneuf-de-Bordette|26|101
-Velone-Orneto|2B|101
+Velone-Orneto|2B|101|L
 Bax|31|101
 Gaudonville|32|101
 Saint-Martin-de-l'Arçon|34|101
@@ -31560,7 +31561,7 @@ Jonvelle|70|100
 Sauvigney-lès-Gray|70|100
 Velleclaire|70|100
 Saint-Privé|71|100
-Héberville|76|100
+Héberville|76|100|L
 Fossemanant|80|100
 Rouy-le-Grand|80|100
 Jouqueviel|81|100
@@ -31761,8 +31762,8 @@ Crupies|26|96
 Bailleul-la-Vallée|27|96
 Mondonville-Saint-Jean|28|96
 Poupry|28|96
-Osani|2A|96
-Olcani|2B|96
+Osani|2A|96|L
+Olcani|2B|96|L
 Tox|2B|96
 Nogaret|31|96
 Armous-et-Cau|32|96
@@ -31873,7 +31874,7 @@ Chamberaud|23|94
 Saint-Raphaël|24|94
 Montmahoux|25|94
 Saint-Éman|28|94
-Partinello|2A|94
+Partinello|2A|94|L
 Casties-Labrande|31|94
 Mayres-Savel|38|94
 Recanoz|39|94
@@ -31940,7 +31941,7 @@ Pis|32|93
 Bressieux|38|93
 Mont-Saint-Martin|38|93
 Bouziès|46|93
-Videcosville|50|93
+Videcosville|50|93|L
 Merrey|52|93
 Mont-l'Étroit|54|93
 Bure|55|93
@@ -31969,7 +31970,7 @@ Saint-Michel|09|92
 Vals|09|92
 Praslin|10|92
 La Serpent|11|92
-Englesqueville-la-Percée|14|92
+Englesqueville-la-Percée|14|92|L
 Le Marais-la-Chapelle|14|92
 Verneuil|16|92
 Seigné|17|92
@@ -32058,7 +32059,7 @@ Joncreuil|10|90
 Prémierfait|10|90
 Lafage|11|90
 Balaguier-sur-Rance|12|90
-Cardonville|14|90
+Cardonville|14|90|L
 Lapeyrugue|15|90
 Malbo|15|90
 Romazières|17|90
@@ -32068,7 +32069,7 @@ Champoux|25|90
 Pastricciola|2A|90
 Sampolo|2A|90
 Erbajolo|2B|90
-Ogliastro|2B|90
+Ogliastro|2B|90|L
 Arguenos|31|90
 Bachas|31|90
 Mont-d'Astarac|32|90
@@ -32557,7 +32558,7 @@ Ternant|21|81
 Gémonval|25|81
 Orto|2A|81
 Crocicchia|2B|81
-Meria|2B|81
+Meria|2B|81|L
 Piedicroce|2B|81
 Gouzens|31|81
 Peyrouzet|31|81
@@ -32614,7 +32615,7 @@ Auxant|21|80
 Poncey-sur-l'Ignon|21|80
 Cernay|28|80
 Arro|2A|80
-Avapessa|2B|80
+Avapessa|2B|80|L
 Novella|2B|80
 Saint-Nazaire-des-Gardies|30|80
 Frontignan-de-Comminges|31|80
@@ -32694,7 +32695,7 @@ Quet-en-Beaumont|38|79
 Germigney|39|79
 Mournans-Charbonny|39|79
 Montégut|40|79
-Azeville|50|79
+Azeville|50|79|L
 Queudes|51|79
 Bize|52|79
 Consigny|52|79
@@ -32749,7 +32750,7 @@ Bétous|32|78
 Sère|32|78
 Bief-des-Maisons|39|78
 Darbonnay|39|78
-Audouville-la-Hubert|50|78
+Audouville-la-Hubert|50|78|L
 Arnancourt|52|78
 Bannay|57|78
 Rémécourt|60|78
@@ -32802,7 +32803,7 @@ Villers-sous-Pareid|55|77
 Coudehard|61|77
 Héricourt|62|77
 Urost|64|77
-Saint-Marsal|66|77
+Saint-Marsal|66|77|L
 Trilla|66|77
 Saint-Romain-sous-Versigny|71|77
 Longavesnes|80|77
@@ -32933,7 +32934,7 @@ Bretigney|25|74
 Samson|25|74
 Vauclusotte|25|74
 Aubenasson|26|74
-Grossa|2A|74
+Grossa|2A|74|L
 Santa-Maria-Figaniella|2A|74
 Nocario|2B|74
 Herran|31|74
@@ -32962,7 +32963,7 @@ Gestas|64|74
 Mun|65|74
 Villefranque|65|74
 Nahuja|66|74
-Rainfreville|76|74
+Rainfreville|76|74|L
 Saint-Pierre-des-Jonquières|76|74
 Saulchoy-sous-Poix|80|74
 Labarthe-Bleys|81|74
@@ -32975,7 +32976,7 @@ Champlin|08|73
 Ville-sur-Retourne|08|73
 Illartein|09|73
 Courtauly|11|73
-Asnières-en-Bessin|14|73
+Asnières-en-Bessin|14|73|L
 Les Isles-Bardel|14|73
 Bard-le-Régulier|21|73
 Bussy-la-Pesle|21|73
@@ -33009,7 +33010,7 @@ Nantois|55|73
 Vouthon-Haut|55|73
 Taconnay|58|73
 Marant|62|73
-Ibarrolle|64|73
+Ibarrolle|64|73|L
 Tadousse-Ussau|64|73
 Arbéost|65|73
 Castillon|65|73
@@ -33030,7 +33031,7 @@ Montgon|08|72
 Torcy-le-Petit|10|72
 Artigues|11|72
 Missègre|11|72
-Saint-Pierre-du-Mont|14|72
+Saint-Pierre-du-Mont|14|72|L
 Couffy-sur-Sarsonne|19|72
 Bard-lès-Époisses|21|72
 Billy-lès-Chanceaux|21|72
@@ -33047,7 +33048,7 @@ Puységur|32|72
 Fontenu|39|72
 Bessonies|46|72
 Saint-Bonnet-de-Chirac|48|72
-Hiesville|50|72
+Hiesville|50|72|L
 Givry-lès-Loisy|51|72
 Bouzancourt|52|72
 Daillecourt|52|72
@@ -33450,7 +33451,7 @@ Quilen|62|64
 Bassillon-Vauzé|64|64
 Lucarré|64|64
 Marsas|65|64
-L'Albère|66|64
+L'Albère|66|64|L
 Gambaiseuil|78|64
 Boisbergues|80|64
 Boulaincourt|88|64
@@ -33496,7 +33497,7 @@ Beaurepaire|60|63
 Ménil-Froger|61|63
 La Chapelle-Marcousse|63|63
 Saint-Éloy-la-Glacière|63|63
-Boule-d'Amont|66|63
+Boule-d'Amont|66|63|L
 Larret|70|63
 Plainemont|70|63
 Le Val-de-Gouhenans|70|63
@@ -33520,7 +33521,7 @@ Noiron-sur-Seine|21|62
 Verdonnet|21|62
 Bourniquel|24|62
 Renno|2A|62
-Nonza|2B|62
+Nonza|2B|62|L
 Pietraserena|2B|62
 Saint-Antoine-du-Queyret|33|62
 Mérifons|34|62
@@ -33563,7 +33564,7 @@ Perthes-lès-Brienne|10|61
 Verricourt|10|61
 Aunat|11|61
 Cassaignes|11|61
-Deux-Jumeaux|14|61
+Deux-Jumeaux|14|61|L
 Crézançay-sur-Cher|18|61
 Mauvilly|21|61
 Planay|21|61
@@ -33643,8 +33644,8 @@ Saint-Aquilin-de-Corbion|61|60
 Saint-Germain-près-Herment|63|60
 Bettes|65|60
 Sireix|65|60
-La Bastide|66|60
-Calmeilles|66|60
+La Bastide|66|60|L
+Calmeilles|66|60|L
 Châteney|70|60
 La Chavatte|80|60
 Aingeville|88|60
@@ -33734,7 +33735,7 @@ Ansost|65|58
 Bulan|65|58
 Gourgue|65|58
 Sainte-Marie|65|58
-Taulis|66|58
+Taulis|66|58|L
 Boursières|70|58
 Courtesoult-et-Gatey|70|58
 Noiron|70|58
@@ -33777,7 +33778,7 @@ Broissia|39|57
 Arx|40|57
 Le Plessis-l'Échelle|41|57
 Desges|43|57
-Boutteville|50|57
+Boutteville|50|57|L
 Autigny-le-Petit|52|57
 Humberville|52|57
 Lavilleneuve|52|57
@@ -33882,7 +33883,7 @@ Montussaint|25|54
 Silley-Bléfond|25|54
 Saint-Victor-sur-Avre|27|54
 Saint-Lubin-de-Cravant|28|54
-Bilia|2A|54
+Bilia|2A|54|L
 Felce|2B|54
 Ficaja|2B|54
 Matra|2B|54
@@ -33960,7 +33961,7 @@ La Mazière-aux-Bons-Hommes|23|52
 La Villedieu|23|52
 Altagène|2A|52
 Prato-di-Giovellina|2B|52
-Santa-Reparata-di-Moriani|2B|52
+Santa-Reparata-di-Moriani|2B|52|L
 Lahitère|31|52
 Rieucazé|31|52
 Cambon-et-Salvergues|34|52
@@ -34264,7 +34265,7 @@ Bussières|21|44
 La Villeneuve|23|44
 Bardou|24|44
 Rognon|25|44
-Porri|2B|44
+Porri|2B|44|L
 Larroque-Engalin|32|44
 Ricourt|32|44
 Scieurac-et-Flourès|32|44
@@ -34281,8 +34282,8 @@ Baudrémont|55|44
 Courouvre|55|44
 Léchelle|62|44
 Berbérust-Lias|65|44
-Casefabre|66|44
-Prunet-et-Belpuig|66|44
+Casefabre|66|44|L
+Prunet-et-Belpuig|66|44|L
 Creveney|70|44
 Dampvalley-Saint-Pancras|70|44
 Marast|70|44
@@ -34569,7 +34570,7 @@ Mailholas|31|34
 Chevrotaine|39|34
 Thoissia|39|34
 Reigneville-Bocage|50|34
-Sébeville|50|34
+Sébeville|50|34|L
 Rapsécourt|51|34
 Mirbel|52|34
 Ozières|52|34
@@ -34831,7 +34832,7 @@ La Charce|26|23
 Pelonne|26|23
 Ampriani|2B|23
 Jurvielle|31|23
-Le Mont-Saint-Michel|50|23
+Le Mont-Saint-Michel|50|23|L
 Bannay|51|23
 Aigremont|52|23
 Aizanville|52|23
@@ -34890,7 +34891,7 @@ Sode|31|18
 Taillepied|50|18
 Thuy|65|18
 Chérizet|71|18
-Le Mesnil-Durdent|76|18
+Le Mesnil-Durdent|76|18|L
 Lapège|09|17
 Les Goulles|21|17
 Menesble|21|17
@@ -34915,7 +34916,7 @@ Ranzevelle|70|16
 Urtière|25|15
 Hannocourt|57|15
 Gouy-les-Groseillers|60|15
-Glorianes|66|15
+Glorianes|66|15|L
 Archail|04|14
 Terroles|11|14
 Bourg-d'Oueil|31|14
@@ -34968,8 +34969,8 @@ Leménil-Mitry|54|2`;
   function toutes() {
     if (!liste) {
       liste = BRUT.split('\n').map(l => {
-        const [nom, dept, pop] = l.split('|');
-        return { nom, dept, pop: +pop };
+        const p = l.split('|');
+        return { nom: p[0], dept: p[1], pop: +p[2], littoral: p[3] === 'L' };
       });
     }
     return liste;
@@ -34996,7 +34997,7 @@ Leménil-Mitry|54|2`;
     return eligibles[Math.floor(Math.random() * eligibles.length)];
   }
 
-  /* Les vraies communes voisines : mêmes departement, taille variée */
+  /* Les vraies communes voisines : meme departement, taille variee */
   function voisines(dept, nomExclu, n = 7) {
     const memes = toutes().filter(c => c.dept === dept && c.nom !== nomExclu);
     const melange = memes.slice(0, 60).sort(() => Math.random() - 0.5);

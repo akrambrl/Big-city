@@ -133,6 +133,9 @@ h3 { font-size: .95rem; font-weight: 600; margin: 1em 0 .45em; color: var(--encr
 .carte-profil.ambiance { width: 200px; padding-bottom: 10px; }
 .carte-profil.ambiance .mini-carte { height: 92px; }
 .carte-profil.choisie { border-color: var(--soleil); box-shadow: 0 6px 0 var(--soleil-ombre), 0 14px 30px rgba(30, 60, 90, .22); }
+.carte-profil.apercu-seul { width: min(420px, 92vw); cursor: default; }
+.carte-profil.apercu-seul .mini-carte { height: 150px; }
+.carte-profil.apercu-seul:hover { transform: none; }
 .btn-grand { font-size: 1.1rem; padding: 13px 28px; border-radius: 16px; }
 
 .profils { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 1.2em; }

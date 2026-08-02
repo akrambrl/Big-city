@@ -36,15 +36,14 @@ const UI = (() => {
 
   /* ================= ÉCRAN D'ACCUEIL ================= */
 
-  const DEPTS_LITTORAL = new Set(['06', '83', '13', '34', '30', '11', '66', '2A', '2B',
-    '17', '85', '44', '56', '29', '22', '35', '50', '14', '76', '80', '62', '59', '33', '40', '64',
-    '971', '972', '973', '974', '976']);
-
-  function suggererAmbiance(v) {
-    if (DEPTS_LITTORAL.has(v.dept)) return 'touristique';
+  /* Le décor est celui de la vraie ville : littoral si la commune est
+     au bord de la mer, campagne en dessous de 3 500 habitants. */
+  function ambianceDeLaVille(v) {
+    if (v.littoral) return 'touristique';
     if (v.pop < 3500) return 'rurale';
     return 'moyenne';
   }
+  const NOMS_AMBIANCE = { rurale: '🌾 commune rurale', moyenne: '🏘️ ville', touristique: '⛱️ commune littorale' };
 
   function ecranAccueil() {
     let villeChoisie = null;
@@ -63,8 +62,8 @@ const UI = (() => {
       </div>
       <div id="etape-ambiance" class="etape-ambiance" hidden>
         <p class="ville-choisie" id="ville-choisie-txt"></p>
-        <p class="note">Choisis ton décor — la carte du jeu est stylisée, pas un plan réel :</p>
-        <div class="profils" id="choix-ambiance"></div>
+        <div class="profils" id="apercu-ville"></div>
+        <p class="note" id="note-decor"></p>
         <label class="tranquille"><input type="checkbox" id="mode-tranquille">
           Mode chill — impossible de perdre (les alertes restent)</label>
         <p style="margin-top:1em"><button class="btn btn-grand" id="btn-demarrer"></button></p>
@@ -90,7 +89,7 @@ const UI = (() => {
 
     function choisir(v) {
       villeChoisie = v;
-      ambiance = suggererAmbiance(v);
+      ambiance = ambianceDeLaVille(v);
       champ.value = `${v.nom} (${v.dept})`;
       resultats.innerHTML = '';
       etape.hidden = false;
@@ -98,22 +97,18 @@ const UI = (() => {
         `🏛️ <b>${esc(v.nom)}</b> (${esc(v.dept)}) — ${nb(v.pop)} habitants, et bientôt un maire.`;
       const de = /^[aeiouyhéèêàâîôû]/i.test(v.nom) ? 'd\'' : 'de ';
       document.getElementById('btn-demarrer').textContent = `Devenir maire ${de}${v.nom}`;
-      const choix = document.getElementById('choix-ambiance');
-      choix.innerHTML = Object.entries(PROFILS).map(([id, p]) => `
-        <button class="carte-profil ambiance ${id === ambiance ? 'choisie' : ''}" data-profil="${id}">
-          <canvas class="mini-carte" data-profil-carte="${id}"></canvas>
-          <span class="profil-label">${p.icone} ${p.label}</span>
-        </button>`).join('');
-      choix.querySelectorAll('.mini-carte').forEach(cv => {
-        CarteCommune.dessiner(cv, {
-          commune: v.nom, profil: cv.dataset.profilCarte, mois: 1, equipements: [],
-          population: v.pop, populationInitiale: v.pop, cadre: { voirie: 70 },
-        });
+      document.getElementById('note-decor').textContent =
+        `Décor : ${NOMS_AMBIANCE[ambiance]} — carte stylisée générée pour ${v.nom}, pas un plan réel.`;
+      const apercu = document.getElementById('apercu-ville');
+      apercu.innerHTML = `
+        <div class="carte-profil ambiance choisie apercu-seul">
+          <canvas class="mini-carte" id="mini-carte-ville"></canvas>
+          <span class="profil-label">${NOMS_AMBIANCE[ambiance]}</span>
+        </div>`;
+      CarteCommune.dessiner(document.getElementById('mini-carte-ville'), {
+        commune: v.nom, profil: ambiance, mois: 1, equipements: [],
+        population: v.pop, populationInitiale: v.pop, cadre: { voirie: 70 },
       });
-      choix.querySelectorAll('.carte-profil').forEach(b => b.addEventListener('click', () => {
-        ambiance = b.dataset.profil;
-        choix.querySelectorAll('.carte-profil').forEach(x => x.classList.toggle('choisie', x === b));
-      }));
       etape.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
