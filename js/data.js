@@ -499,6 +499,100 @@ const MODULATEURS_PROFIL = {
 };
 
 /* ------------------------------------------------------------
+   L'AVATAR DU MAIRE — physique, prénom, et profil mental
+   ------------------------------------------------------------ */
+const AVATARS = {
+  homme: ['👨🏻', '👨🏼', '👨🏽', '👨🏾', '👨🏿', '👨‍🦰', '👨‍🦱', '👨‍🦳', '🧔', '👴🏽'],
+  femme: ['👩🏻', '👩🏼', '👩🏽', '👩🏾', '👩🏿', '👩‍🦰', '👩‍🦱', '👩‍🦳', '👱‍♀️', '👵🏽'],
+};
+
+/* Trois questions, quatre sensibilités : le profil dominant gagne */
+const QUESTIONS_PERSO = [
+  { q: 'Ton samedi idéal de maire ?', reponses: [
+    { txt: '☕ Petit-déjeuner avec des investisseurs', trait: 'entrepreneur' },
+    { txt: '🌳 Plantation d\'arbres avec l\'asso locale', trait: 'ecolo' },
+    { txt: '🧀 Le marché : serrer des mains, goûter le fromage', trait: 'populaire' },
+    { txt: '👷 Sur le chantier, casque vissé', trait: 'batisseur' },
+  ] },
+  { q: 'On te donne 100 000 € pour la ville. Réflexe ?', reponses: [
+    { txt: '📈 Je les investis — l\'argent doit rapporter', trait: 'entrepreneur' },
+    { txt: '🚲 Pistes cyclables et fleurs partout', trait: 'ecolo' },
+    { txt: '🎉 Une grande fête pour tout le monde', trait: 'populaire' },
+    { txt: '🧱 On pose la première pierre de quelque chose', trait: 'batisseur' },
+  ] },
+  { q: 'Ta devise de campagne ?', reponses: [
+    { txt: '« Une ville riche est une ville libre »', trait: 'entrepreneur' },
+    { txt: '« La plus belle ville est une ville verte »', trait: 'ecolo' },
+    { txt: '« Les gens d\'abord, le reste suivra »', trait: 'populaire' },
+    { txt: '« Qui ne construit pas recule »', trait: 'batisseur' },
+  ] },
+];
+
+/* Le profil pilote le CABINET : des initiatives automatiques chaque
+   mois, et des chantiers lancés d'office quand la caisse le permet. */
+const TRAITS = {
+  entrepreneur: {
+    nom: 'L\'Entrepreneur', icone: '💰', ligne: 'faire rentrer de l\'argent',
+    desc: 'Pour toi, une ville qui gagne de l\'argent est une ville qui décide de son avenir. Ton cabinet flairera la moindre recette.',
+    initiatives: [
+      { nom: 'Régie publicitaire sur les abribus', effets: { tresorerie: 15000, popularite: -1 }, note: 'Des pubs partout, des sous qui rentrent.' },
+      { nom: 'Renégociation des contrats fournisseurs', effets: { tresorerie: 22000 }, note: 'Le prestataire a pleuré, la caisse a souri.' },
+      { nom: 'Location de la salle des fêtes aux séminaires', effets: { tresorerie: 12000, popularite: -1 }, note: 'Les mariages attendront le dimanche.' },
+      { nom: 'Forum des entreprises locales', effets: { tresorerie: -8000, attractivite: 3 }, note: 'Beaucoup de cartes de visite ont changé de poche.' },
+    ],
+    chantiers: ['parking', 'zone_activite', 'marche'],
+  },
+  ecolo: {
+    nom: 'L\'Écolo', icone: '🌱', ligne: 'verdir la ville',
+    desc: 'Le béton attendra : ton cabinet plantera, piétonnisera et éteindra les lumières inutiles — parfois sans prévenir.',
+    initiatives: [
+      { nom: 'Plantation de 500 arbres', effets: { tresorerie: -10000, cadre_proprete: 3, attractivite: 2 }, note: 'Ça sent la sève et l\'avenir.' },
+      { nom: 'Dimanche sans voiture en centre-ville', effets: { popularite: 2, cadre_proprete: 2 }, note: 'Les vélos jubilent, deux grincheux klaxonnent.' },
+      { nom: 'Prime vélo pour les habitants', effets: { tresorerie: -12000, popularite: 2, attractivite: 1 }, note: 'La ville pédale. Toi aussi, pour l\'exemple.' },
+      { nom: 'Extinction de l\'éclairage après minuit', effets: { tresorerie: 8000, cadre_eclairage: -2 }, note: 'Les étoiles reviennent, les noctambules râlent.' },
+    ],
+    chantiers: ['eclairage_led', 'voirie_refection', 'reseau_eau'],
+  },
+  populaire: {
+    nom: 'Le Populaire', icone: '❤️', ligne: 'chouchouter les habitants',
+    desc: 'Ta politique tient en un mot : les gens. Ton cabinet organisera des fêtes, offrira des cantines — et la caisse suivra comme elle peut.',
+    initiatives: [
+      { nom: 'Fête des voisins géante', effets: { tresorerie: -9000, popularite: 4 }, note: 'Tout le monde connaît le prénom de tout le monde, maintenant.' },
+      { nom: 'Cantine gratuite pendant un mois', effets: { tresorerie: -15000, popularite: 5 }, note: 'Les parents applaudissent des deux mains.' },
+      { nom: 'Tournoi de pétanque intercantonal', effets: { tresorerie: -4000, popularite: 2, attractivite: 1 }, note: 'Une triplette de Marseille a contesté. Classique.' },
+      { nom: 'Permanences du maire au café', effets: { popularite: 3 }, note: 'Tu connais désormais tous les problèmes de plomberie de la ville.' },
+    ],
+    chantiers: ['gymnase', 'creche', 'ecole'],
+  },
+  batisseur: {
+    nom: 'Le Bâtisseur', icone: '🏗️', ligne: 'construire, encore',
+    desc: 'Une grue à l\'horizon vaut tous les sondages. Ton cabinet lancera des chantiers dès que la caisse le permettra.',
+    initiatives: [
+      { nom: 'Constitution d\'une réserve foncière', effets: { tresorerie: -15000, attractivite: 2 }, note: 'Un champ aujourd\'hui, un quartier demain.' },
+      { nom: 'Grand plan de rénovation des façades', effets: { tresorerie: -12000, cadre_logement: 3 }, note: 'La grand-rue a rajeuni de trente ans.' },
+      { nom: 'Salon de l\'immobilier local', effets: { tresorerie: 5000, attractivite: 2 }, note: 'Des maquettes, des promesses, des chèques.' },
+      { nom: 'Étude de sol pour le prochain grand projet', effets: { tresorerie: -6000 }, note: 'Verdict : le sol est un sol. Parfait.' },
+    ],
+    chantiers: ['ecole', 'parking', 'mediatheque', 'gymnase'],
+  },
+};
+
+/* ------------------------------------------------------------
+   OBJECTIFS DE MANDAT — le fil rouge qui encadre la partie
+   ------------------------------------------------------------ */
+const OBJECTIFS = [
+  { id: 'courrier', icone: '📬', texte: 'Réponds à ton premier courrier', xp: 30 },
+  { id: 'chantier', icone: '🏗️', texte: 'Lance ta première construction', xp: 50 },
+  { id: 'mois_positif', icone: '📈', texte: 'Boucle un mois dans le vert', xp: 50 },
+  { id: 'crise', icone: '🚨', texte: 'Gère une crise sans l\'option par défaut', xp: 80, capital: 10 },
+  { id: 'croissance', icone: '👥', texte: 'Gagne 2 % d\'habitants', xp: 80 },
+  { id: 'etoiles', icone: '⭐', texte: 'Atteins 3,5 étoiles', xp: 100 },
+  { id: 'an1', icone: '🎂', texte: 'Termine ta première année', xp: 120, capital: 10 },
+  { id: 'an2', icone: '🏅', texte: 'Termine ta deuxième année', xp: 150 },
+  { id: 'mandat', icone: '🏛️', texte: 'Va au bout du mandat', xp: 0 },
+];
+
+/* ------------------------------------------------------------
    PROGRESSION — niveaux de maire et leurs titres
    ------------------------------------------------------------ */
 const TITRES_MAIRE = [

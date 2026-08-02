@@ -11,7 +11,9 @@ const Engine = (() => {
 
   /* ---------- Création de partie ---------- */
 
-  function nouvellePartie(profilId, tranquille, ville) {
+  const MAIRE_DEFAUT = { prenom: 'Alex', genre: 'homme', emoji: '🧑', trait: 'batisseur' };
+
+  function nouvellePartie(profilId, tranquille, ville, maire) {
     const p = PROFILS[profilId];
     const pop = ville ? ville.pop : p.population;
     S = {
@@ -20,6 +22,7 @@ const Engine = (() => {
       commune: ville ? ville.nom : p.nom,
       dept: ville ? ville.dept : null,
       voisines: ville && ville.voisines ? ville.voisines : null,
+      maire: maire || { ...MAIRE_DEFAUT },
       tranquille: !!tranquille,
       jour: 1, jourDuMois: 1, mois: 1,
 
@@ -76,6 +79,10 @@ const Engine = (() => {
       notifications: [],         // { jour, icone, texte, type: 'alerte'|'info', action, lu }
       historiqueQuestions: [],   // { jour, icone, libelle, note }
       xp: 0, niveau: 1,          // progression du maire
+      objectifIndex: 0,          // fil rouge du mandat
+      initiativeIdx: 0,          // initiatives du cabinet, en boucle
+      dernierCabinetMois: 0,
+      cinematiques: [],          // scènes en attente d'affichage
       epargneCumulee: 0,
       gameOver: null,            // { type, titre, texte }
     };
@@ -517,8 +524,17 @@ const Engine = (() => {
     // courrier du maire (jamais en même temps qu'une crise)
     tirerQuestion();
 
+    // le cabinet applique ta ligne politique (le 15 du mois)
+    if (S.jourDuMois === 15 && S.dernierCabinetMois !== S.mois && S.maire) {
+      S.dernierCabinetMois = S.mois;
+      agirCabinet();
+    }
+
     // paliers
     evaluerPaliers();
+
+    // fil rouge
+    verifierObjectifs();
 
     // clôture mensuelle
     if (S.jourDuMois > CFG.JOURS_PAR_MOIS) cloturerMois();
@@ -830,6 +846,91 @@ const Engine = (() => {
     }
   }
 
+  /* ---------- Le cabinet : ta ligne politique, appliquée pour toi ---------- */
+
+  function traitMaire() { return TRAITS[S.maire.trait] || TRAITS.batisseur; }
+
+  function agirCabinet() {
+    const trait = traitMaire();
+    // tous les trois mois : tenter un chantier conforme à ta ligne —
+    // mais le cabinet ne met JAMAIS la ville en danger (marges larges)
+    if (S.mois % 3 === 0 && S.paliers.fin === 'ok') {
+      for (const id of trait.chantiers) {
+        const def = defEquip(id);
+        const dim = dimEquip(def);
+        const apresTreso = S.tresorerie - dim.cout;
+        const joursApres = apresTreso / (depensesMensuelles() / 30);
+        const chargeNette = dim.entretien + dim.energie - dim.recettes;
+        if (peutConstruire(def).ok && dim.cout * 1.5 <= capaciteInvestissement()
+            && joursApres > 60 && soldeMensuel() - chargeNette > 0) {
+          construire(id);
+          notifier(trait.icone, `Ton cabinet a lancé le chantier : ${def.nom} (${fmtEuro(dim.cout)}). Conforme à ta ligne.`, { type: 'info' });
+          S.cinematiques.push({
+            emoji: def.icone, titre: 'Ton cabinet pose la première pierre',
+            texte: `Fidèle à ta ligne (${trait.ligne}), le cabinet a lancé sans attendre : ${def.nom}, pour ${fmtEuro(dim.cout)}. « Vous nous remercierez », assure Gaston.`,
+          });
+          return;
+        }
+      }
+    }
+    // sinon : une initiative du mois
+    const init = trait.initiatives[S.initiativeIdx % trait.initiatives.length];
+    S.initiativeIdx++;
+    const effets = { ...init.effets };
+    if (effets.tresorerie) {
+      effets.tresorerie = Math.round(effets.tresorerie * echelleVille() / 100) * 100;
+      S.tresorerie += effets.tresorerie;
+      if (effets.tresorerie < 0) S.moisCourant.depExceptionnel -= effets.tresorerie;
+      else S.moisCourant.recSubventions += effets.tresorerie;
+    }
+    const reste = { ...effets }; delete reste.tresorerie;
+    appliquerEffets(reste, 'cabinet');
+    const argent = effets.tresorerie ? ` (${effets.tresorerie > 0 ? '+' : '−'}${fmtEuro(Math.abs(effets.tresorerie))})` : '';
+    log(`${trait.icone} Initiative du cabinet : ${init.nom}${argent}. ${init.note}`);
+    notifier(trait.icone, `Initiative du cabinet : ${init.nom}${argent}.`);
+    S.cinematiques.push({
+      emoji: trait.icone, titre: 'Ton cabinet s\'active',
+      texte: `Fidèle à ta ligne (${trait.ligne}), le cabinet a mis en place : ${init.nom}${argent}. ${init.note}`,
+    });
+  }
+
+  /* ---------- Objectifs de mandat (le fil rouge) ---------- */
+
+  function objectifCourant() {
+    return S.objectifIndex < OBJECTIFS.length ? OBJECTIFS[S.objectifIndex] : null;
+  }
+
+  function objectifAtteint(id) {
+    switch (id) {
+      case 'courrier': return S.historiqueQuestions.length >= 1;
+      case 'chantier': return S.equipements.length >= 1;
+      case 'mois_positif': return S.historique.some(h => h.solde > 0);
+      case 'crise': return S.crisesGerees >= 1;
+      case 'croissance': return S.population >= S.populationInitiale * 1.02;
+      case 'etoiles': return noteVille().note >= 70;
+      case 'an1': return S.mois > 12;
+      case 'an2': return S.mois > 24;
+      case 'mandat': return S.mois > CFG.MANDAT_MOIS;
+      default: return false;
+    }
+  }
+
+  let verifEnCours = false;
+  function verifierObjectifs() {
+    if (verifEnCours || !S || S.gameOver) return;
+    verifEnCours = true;
+    let obj = objectifCourant();
+    while (obj && objectifAtteint(obj.id)) {
+      S.objectifIndex++;
+      if (obj.xp) gagnerXP(obj.xp);
+      if (obj.capital) S.capitalPrefecture = clamp100(S.capitalPrefecture + obj.capital);
+      log(`🎯 Objectif atteint : ${obj.texte} (+${obj.xp} XP${obj.capital ? `, +${obj.capital} capital` : ''}).`);
+      notifier('🎯', `Objectif atteint : ${obj.texte} !`);
+      obj = objectifCourant();
+    }
+    verifEnCours = false;
+  }
+
   /* ---------- Note de la ville ---------- */
 
   function noteVille() {
@@ -891,6 +992,9 @@ const Engine = (() => {
       S.notifications ??= []; S.historiqueQuestions ??= [];
       S.pileQuestions ??= []; S.prochaineQuestionJour ??= S.jour + 5;
       S.questionActive ??= null; S.niveauEntretien ??= 'normal';
+      S.maire ??= { ...MAIRE_DEFAUT };
+      S.objectifIndex ??= 0; S.initiativeIdx ??= 0;
+      S.dernierCabinetMois ??= 0; S.cinematiques ??= [];
       return S;
     } catch (e) { return null; }
   }
@@ -921,7 +1025,7 @@ const Engine = (() => {
     resoudreQuestion,
     faireMissionRedressement, missionRedressementDispo, joursRedressementRestants,
     noteVille, notifsNonLues, marquerNotifsLues,
-    titreMaire, xpPourNiveau,
+    titreMaire, xpPourNiveau, traitMaire, objectifCourant,
     recettes, depenses, totalRecettes, depensesMensuelles, soldeMensuel,
     joursDeTresorerie, tauxEndettement, encoursDette, recettesAnnuelles,
     cadreDeVie, saturation, capaciteEquipements, capaciteInvestissement, reserveFonctionnement,

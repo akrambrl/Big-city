@@ -13,15 +13,48 @@ const UI = (() => {
   let notifsOuvertes = false;
   let questionEnAttente = false; // « Plus tard » : la question reste due, mais on peut naviguer
   let dernierNiveauVu = null;    // détection des passages de niveau
+  let dernierObjectifVu = null;  // détection des objectifs atteints
   let communeSuivie = null;
   let finJouee = false;
 
   /* Gaston, l'adjoint : une bulle par-dessus les grands moments */
   function bulleAdjoint(type) {
     const phrases = PHRASES_ADJOINT[type] || PHRASES_ADJOINT.courrier;
-    const p = phrases[Math.floor(Math.random() * phrases.length)];
+    let p = phrases[Math.floor(Math.random() * phrases.length)];
+    if (E.etat && E.etat.maire && E.etat.maire.genre === 'femme') p = p.replace(/patron\b/g, 'patronne');
     return `<div class="adjoint"><span class="adjoint-avatar">${ADJOINT.icone}</span>
       <div class="adjoint-bulle"><b>${ADJOINT.nom}</b> — ${p}</div></div>`;
+  }
+
+  /* ---- Cinématique : letterbox, tableaux successifs ---- */
+
+  function cinematique(panneaux, onFin) {
+    let i = 0;
+    const fin = () => { modalRoot().innerHTML = ''; if (onFin) onFin(); };
+    const montrer = () => {
+      const p = panneaux[i];
+      modalRoot().innerHTML = `
+      <div class="cine">
+        <div class="cine-barre"></div>
+        <div class="cine-panneau">
+          <div class="cine-emoji">${p.emoji}</div>
+          <p class="cine-titre">${p.titre}</p>
+          <p class="cine-texte">${p.texte}</p>
+          <div class="cine-boutons">
+            ${panneaux.length > 1 ? '<button class="btn-lien cine-lien" id="cine-passer">Passer ≫</button>' : ''}
+            <button class="btn" id="cine-suite">${i === panneaux.length - 1 ? 'C\'est parti' : 'Continuer ▸'}</button>
+          </div>
+        </div>
+        <div class="cine-barre"></div>
+      </div>`;
+      document.getElementById('cine-suite').addEventListener('click', () => {
+        FX.son('clic');
+        if (++i < panneaux.length) montrer(); else fin();
+      });
+      const passer = document.getElementById('cine-passer');
+      if (passer) passer.addEventListener('click', fin);
+    };
+    montrer();
   }
 
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -114,15 +147,130 @@ const UI = (() => {
 
     document.getElementById('btn-demarrer').addEventListener('click', () => {
       if (!villeChoisie) return;
-      E.nouvellePartie(ambiance, document.getElementById('mode-tranquille').checked, {
-        nom: villeChoisie.nom, dept: villeChoisie.dept, pop: villeChoisie.pop,
-        voisines: COMMUNES_FR.voisines(villeChoisie.dept, villeChoisie.nom, 7),
-      });
+      FX.son('clic');
+      ecranAvatar(villeChoisie, ambiance, document.getElementById('mode-tranquille').checked);
+    });
+  }
+
+  /* ---- Création de l'avatar : physique, prénom ---- */
+
+  function ecranAvatar(ville, ambiance, chill) {
+    let genre = null, emoji = null;
+    app().innerHTML = `
+    <div class="accueil">
+      <p class="surtitre">${esc(ville.nom)} · Élections municipales</p>
+      <h1>Qui es-<span class="filet">tu</span> ?</h1>
+      <p class="sous-titre">${esc(ville.nom)} veut savoir qui se présente. Fais bonne impression.</p>
+      <section class="carte carte-creation">
+        <h2>Tu es…</h2>
+        <div class="presets choix-genres">
+          <button class="preset choix-genre" data-genre="homme"><span class="preset-nom">👨 Un homme</span></button>
+          <button class="preset choix-genre" data-genre="femme"><span class="preset-nom">👩 Une femme</span></button>
+        </div>
+        <div id="bloc-tete" hidden>
+          <h2>Ta tête de campagne</h2>
+          <div class="grille-tetes" id="grille-tetes"></div>
+        </div>
+        <div id="bloc-prenom" hidden>
+          <h2>Ton prénom</h2>
+          <input type="text" id="prenom-maire" maxlength="20" placeholder="Camille, Yanis, Fatou…" autocomplete="off">
+        </div>
+        <p style="margin-top:1.2em"><button class="btn btn-grand" id="btn-avatar-ok" disabled>Continuer ▸</button></p>
+      </section>
+    </div>`;
+
+    const majBouton = () => {
+      document.getElementById('btn-avatar-ok').disabled =
+        !(genre && emoji && document.getElementById('prenom-maire').value.trim().length >= 2);
+    };
+    app().querySelectorAll('.choix-genre').forEach(b => b.addEventListener('click', () => {
+      genre = b.dataset.genre; emoji = null;
+      app().querySelectorAll('.choix-genre').forEach(x => x.classList.toggle('actif', x === b));
+      const grille = document.getElementById('grille-tetes');
+      grille.innerHTML = AVATARS[genre].map(a => `<button class="choix-tete" data-emoji="${a}">${a}</button>`).join('');
+      document.getElementById('bloc-tete').hidden = false;
+      document.getElementById('bloc-prenom').hidden = false;
+      grille.querySelectorAll('.choix-tete').forEach(x => x.addEventListener('click', () => {
+        emoji = x.dataset.emoji;
+        grille.querySelectorAll('.choix-tete').forEach(y => y.classList.toggle('actif', y === x));
+        FX.son('clic');
+        majBouton();
+      }));
+      majBouton();
+    }));
+    document.getElementById('prenom-maire').addEventListener('input', majBouton);
+    document.getElementById('btn-avatar-ok').addEventListener('click', () => {
+      const prenom = document.getElementById('prenom-maire').value.trim();
+      FX.son('clic');
+      ecranQuiz(ville, ambiance, chill, { prenom, genre, emoji });
+    });
+  }
+
+  /* ---- Le quiz de personnalité : 3 questions, un profil ---- */
+
+  function ecranQuiz(ville, ambiance, chill, maire) {
+    const scores = { entrepreneur: 0, ecolo: 0, populaire: 0, batisseur: 0 };
+    let i = 0;
+    const poser = () => {
+      const q = QUESTIONS_PERSO[i];
+      app().innerHTML = `
+      <div class="accueil">
+        <p class="surtitre">Question ${i + 1} / ${QUESTIONS_PERSO.length}</p>
+        <h1>${maire.emoji}</h1>
+        <p class="sous-titre">${esc(q.q)}</p>
+        <div class="crise-options quiz-options">
+          ${q.reponses.map((r, j) => `<button class="option-crise reponse-perso" data-j="${j}">
+            <span class="opt-titre">${r.txt}</span></button>`).join('')}
+        </div>
+      </div>`;
+      app().querySelectorAll('.reponse-perso').forEach(b => b.addEventListener('click', () => {
+        scores[q.reponses[parseInt(b.dataset.j, 10)].trait]++;
+        FX.son('clic');
+        if (++i < QUESTIONS_PERSO.length) poser();
+        else {
+          maire.trait = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+          ecranTrait(ville, ambiance, chill, maire);
+        }
+      }));
+    };
+    poser();
+  }
+
+  /* ---- Révélation du profil, puis lancement ---- */
+
+  function ecranTrait(ville, ambiance, chill, maire) {
+    const trait = TRAITS[maire.trait];
+    app().innerHTML = `
+    <div class="accueil">
+      <p class="surtitre">Profil de campagne</p>
+      <h1>${trait.icone} ${trait.nom}</h1>
+      <p class="sous-titre">${trait.desc}</p>
+      <section class="carte carte-creation">
+        <p class="note">💼 Concrètement : chaque mois, ton cabinet mettra en place des actions dans ta ligne
+        (<b>${trait.ligne}</b>) — sans te demander ton avis. C'est ça, avoir une équipe.</p>
+        <p class="ville-choisie">${maire.emoji} <b>${esc(maire.prenom)}</b>, candidat${maire.genre === 'femme' ? 'e' : ''}
+          à ${esc(ville.nom)} (${nb(ville.pop)} hab.)</p>
+        <p style="margin-top:1em"><button class="btn btn-grand" id="btn-lancer">🗳️ Lancer la campagne</button></p>
+      </section>
+    </div>`;
+    document.getElementById('btn-lancer').addEventListener('click', () => {
+      E.nouvellePartie(ambiance, chill, {
+        nom: ville.nom, dept: ville.dept, pop: ville.pop,
+        voisines: COMMUNES_FR.voisines(ville.dept, ville.nom, 7),
+      }, maire);
       E.sauvegarder();
       vueActive = 'carte';
-      FX.son('niveau');
-      rendre();
-      modaleIntro();
+      const titre = maire.genre === 'femme' ? 'Madame la Maire' : 'Monsieur le Maire';
+      cinematique([
+        { emoji: '🗳️', titre: 'Soir d\'élection', texte: `${ville.nom}, 20 heures. La salle des fêtes retient son souffle. Les enveloppes s'ouvrent une à une, quelqu'un fait tomber l'urne.` },
+        { emoji: '🎉', titre: `Élu${maire.genre === 'femme' ? 'e' : ''} !`, texte: `« ${maire.prenom}… 54,2 % des voix ! » La foule applaudit, un mousseux tiède est débouché. Te voilà ${titre} de ${ville.nom}.` },
+        { emoji: '🏛️', titre: 'Premier jour', texte: `Lundi, 8 heures. Gaston t'attend sur le perron de la mairie avec une pile de dossiers et un café. « Bienvenue, ${maire.genre === 'femme' ? 'patronne' : 'patron'}. On commence ? »` },
+      ], () => {
+        FX.son('niveau');
+        FX.confettis();
+        rendre();
+        modaleIntro();
+      });
     });
   }
 
@@ -137,13 +285,22 @@ const UI = (() => {
     const clNote = note.note >= 60 ? 'bonne' : note.note >= 40 ? 'moyenne' : 'mauvaise';
 
     /* passage de niveau : fanfare et confettis */
-    if (communeSuivie !== S.commune) { communeSuivie = S.commune; dernierNiveauVu = S.niveau; finJouee = false; }
+    if (communeSuivie !== S.commune) {
+      communeSuivie = S.commune; dernierNiveauVu = S.niveau;
+      dernierObjectifVu = S.objectifIndex; finJouee = false;
+    }
     if (dernierNiveauVu !== null && S.niveau > dernierNiveauVu) {
       FX.son('niveau');
       FX.confettis(['⭐', '🎉', '✨']);
       toast(`⭐ Niveau ${S.niveau} — te voilà « ${E.titreMaire()} » !`);
+    } else if (dernierObjectifVu !== null && S.objectifIndex > dernierObjectifVu) {
+      const fait = OBJECTIFS[S.objectifIndex - 1];
+      FX.son('argent');
+      FX.confettis(['🎯', '✨', '🏅']);
+      toast(`🎯 Objectif atteint : ${fait.texte} !`);
     }
     dernierNiveauVu = S.niveau;
+    dernierObjectifVu = S.objectifIndex;
 
     app().innerHTML = `
     <div class="coque">
@@ -152,7 +309,7 @@ const UI = (() => {
           <span class="note-etoile">⭐</span><span class="note-val">${sur5}</span><span class="note-max">/5</span>
         </button>
         <div class="titre-app">
-          <span class="nom-ville">${esc(S.commune)}</span>
+          <span class="nom-ville">${S.maire ? S.maire.emoji + ' ' : ''}${esc(S.commune)}</span>
           <span class="date-app">${NOMS_MOIS[E.moisCalendaire()]} · j${S.jourDuMois} · an ${E.annee()} · niv ${S.niveau}${S.tranquille ? ' · 🕊️' : ''}</span>
         </div>
         <div class="chips-haut">
@@ -162,6 +319,7 @@ const UI = (() => {
           <button id="btn-notifs" class="btn-cloche" title="Notifications">🔔${nonLues ? `<span class="pastille">${nonLues}</span>` : ''}</button>
         </div>
       </header>
+      ${htmlBarreObjectif(S)}
       ${htmlStripAlerte(S)}
       <main class="vue vue-${vueActive}">${htmlVue(S)}</main>
       <div class="pilule-temps">
@@ -207,6 +365,14 @@ const UI = (() => {
   });
 
   const EMOJI_SAISON = { hiver: '❄️', printemps: '🌱', ete: '☀️', automne: '🍂' };
+
+  /* Le fil rouge : l'objectif en cours, toujours visible */
+  function htmlBarreObjectif(S) {
+    const obj = E.objectifCourant();
+    if (!obj) return '';
+    return `<div class="barre-objectif">🎯 <b>Objectif :</b> ${obj.icone} ${obj.texte}
+      <span class="obj-recompense">+${obj.xp} XP${obj.capital ? ` · +${obj.capital} 🏛️` : ''}</span></div>`;
+  }
 
   /* Bandeau fin sous le header : uniquement l'urgent */
   function htmlStripAlerte(S) {
@@ -458,8 +624,20 @@ const UI = (() => {
       ['🌳 Cadre de vie', note.composantes.cadre, 'ce qui fait rester'],
     ];
     const etoiles = Math.round(note.note / 20);
+    const trait = E.traitMaire();
+    const titre = S.maire.genre === 'femme' ? 'Madame la Maire' : 'Monsieur le Maire';
     return `
     <div class="defilable">
+      <section class="carte carte-maire">
+        <div class="fiche-maire">
+          <span class="maire-avatar">${S.maire.emoji}</span>
+          <div>
+            <p class="maire-nom">${esc(S.maire.prenom)} — ${titre} de ${esc(S.commune)}</p>
+            <p class="maire-trait">${trait.icone} <b>${trait.nom}</b> · ligne politique : ${trait.ligne}</p>
+            <p class="note-inline">Ton cabinet agit chaque mois dans ce sens, sans te demander. C'est ça, une équipe.</p>
+          </div>
+        </div>
+      </section>
       <section class="carte">
         <h2>⭐ Niveau ${S.niveau} — ${E.titreMaire()}</h2>
         <div class="composante"><span class="comp-nom">Progression</span>
@@ -937,9 +1115,28 @@ const UI = (() => {
 
   function afficherModalesAutomatiques(S) {
     if (S.gameOver) return modaleFin(S);
+    /* scènes en attente (initiatives du cabinet, etc.) */
+    if (S.cinematiques && S.cinematiques.length) {
+      const scenes = S.cinematiques.splice(0);
+      E.sauvegarder();
+      return cinematique(scenes, () => rendre());
+    }
     const evt = E.evenementDu();
     if (evt) return modaleEvenementDiffere(evt);
-    if (S.criseActive && S.jour === S.criseActive.jourDebut) return modaleCrise(S);
+    if (S.criseActive && S.jour === S.criseActive.jourDebut) {
+      /* mise en scène du coup de fil nocturne, une seule fois */
+      if (!S.criseActive.cineVue) {
+        S.criseActive.cineVue = true;
+        E.sauvegarder();
+        const crise = CRISES.find(x => x.id === S.criseActive.criseId);
+        const patron = S.maire && S.maire.genre === 'femme' ? 'patronne' : 'patron';
+        return cinematique([{
+          emoji: crise.icone, titre: '3 h 12 du matin',
+          texte: `Le téléphone sonne. C'est Gaston, la voix blanche : « Désolé de te réveiller, ${patron}… ${crise.nom}. Il faut décider. Vite. »`,
+        }], () => modaleCrise(S));
+      }
+      return modaleCrise(S);
+    }
     if (S.questionActive && !questionEnAttente) return modaleQuestion(S);
   }
 

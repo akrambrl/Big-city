@@ -21,6 +21,17 @@ Le jeu embarque **les 34 957 communes de France** (population INSEE, via geo.api
 
 Le **décor s'adapte automatiquement à la vraie ville** : les ~1 500 communes littorales (classées par distance au trait de côte, outre-mer inclus) ont la mer, la plage et le port ; en dessous de 3 500 habitants c'est la campagne et son massif forestier ; sinon la ville classique et sa rivière. La carte reste stylisée (générée procéduralement à partir du nom de la commune) — ce n'est pas un plan réel, et c'est dit au joueur.
 
+## Ton maire : un avatar physique et mental
+
+Avant de gouverner, tu te présentes : **homme ou femme**, ta tête de campagne (dix visages au choix), ton prénom — puis un **quiz de personnalité** en trois questions détermine ton profil : 💰 L'Entrepreneur, 🌱 L'Écolo, ❤️ Le Populaire ou 🏗️ Le Bâtisseur.
+
+Ce profil pilote **ton cabinet, qui agit sans te demander** : chaque mois une initiative dans ta ligne (l'Entrepreneur monte une régie publicitaire, l'Écolo plante 500 arbres, le Populaire offre la cantine…), et tous les trois mois le cabinet **lance de lui-même un chantier** conforme à ta politique quand la caisse le permet — avec des garde-fous : il ne met jamais la ville en danger.
+
+## Encadré comme un jeu à scénario
+
+- **Cinématiques** en letterbox : le soir d'élection en trois tableaux, le coup de téléphone à 3 h 12 avant chaque crise, les initiatives du cabinet mises en scène.
+- **Objectifs de mandat** en fil rouge, toujours affichés sous le header : réponds à ton premier courrier → lance ta première construction → boucle un mois dans le vert → gère une crise sans l'option par défaut → … jusqu'au bout du mandat. Chaque objectif rapporte XP et parfois du capital préfecture.
+
 ## La boucle de jeu
 
 1. **Avance les jours** (▶ +1 jour / ⏩ +7 jours).

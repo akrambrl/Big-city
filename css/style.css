@@ -620,6 +620,77 @@ hr { border: none; border-top: 3px solid var(--bord); border-radius: 2px; margin
 .liste-effets { list-style: none; font-size: .92rem; margin: .5em 0; }
 .liste-effets li { padding: 2px 0; color: var(--encre-2); }
 
+/* ---------- Cinématiques (letterbox) ---------- */
+.cine {
+  position: fixed; inset: 0; z-index: 80;
+  background: radial-gradient(900px 600px at 50% 35%, #27394B 0%, #101A24 75%);
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.cine-barre { height: 9vh; background: #000; flex-shrink: 0; }
+.cine-panneau {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 20px; text-align: center;
+  animation: cine-entree .5s ease-out;
+}
+@keyframes cine-entree { from { opacity: 0; transform: translateY(18px); } }
+.cine-emoji { font-size: 4.2rem; filter: drop-shadow(0 8px 22px rgba(0, 0, 0, .5)); }
+.cine-titre {
+  font-family: var(--jeu); font-weight: 700; font-size: 1.5rem; color: #FFF6E3;
+  letter-spacing: .02em; text-wrap: balance;
+}
+.cine-texte {
+  font-family: var(--recit); font-style: italic; font-size: 1.12rem; line-height: 1.6;
+  color: #D9CFBB; max-width: 32em; text-wrap: pretty;
+}
+.cine-boutons { display: flex; align-items: center; gap: 18px; margin-top: 10px; }
+.cine-lien { color: #8FA6B8; }
+@media (prefers-reduced-motion: reduce) { .cine-panneau { animation: none; } }
+
+/* ---------- Création de l'avatar ---------- */
+.carte-creation { max-width: 560px; margin: 0 auto; text-align: left; }
+.choix-genres .preset.actif {
+  background: linear-gradient(180deg, #FFF0CE, #FFE3AE);
+  border-color: var(--soleil); box-shadow: 0 3px 0 var(--soleil-ombre);
+}
+.grille-tetes { display: flex; flex-wrap: wrap; gap: 8px; }
+.choix-tete {
+  width: 56px; height: 56px; font-size: 1.9rem; cursor: pointer;
+  background: #FFFDF4; border: 2.5px solid var(--bord-fort); border-radius: 14px;
+  box-shadow: 0 3px 0 rgba(138, 93, 51, .22);
+  transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
+}
+.choix-tete:hover { transform: translateY(-3px) scale(1.06); }
+.choix-tete.actif { border-color: var(--soleil); background: #FFF0CE; box-shadow: 0 3px 0 var(--soleil-ombre); transform: scale(1.08); }
+#prenom-maire {
+  width: 100%; padding: 11px 16px; font-size: 1rem; font-weight: 500;
+  background: #FFFDF4; color: var(--encre);
+  border: 2.5px solid var(--bord-fort); border-radius: 12px;
+}
+#prenom-maire:focus { outline: 3px solid var(--soleil); outline-offset: 2px; }
+.quiz-options { max-width: 480px; margin: 0 auto; text-align: left; }
+
+/* ---------- Fiche du maire & objectif ---------- */
+.fiche-maire { display: flex; gap: 14px; align-items: center; }
+.maire-avatar {
+  flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(180deg, #BFE3F7, #8FCBEE);
+  border: 3px solid var(--bord-fort);
+  display: flex; align-items: center; justify-content: center; font-size: 2.1rem;
+  box-shadow: 0 3px 0 rgba(138, 93, 51, .25);
+}
+.maire-nom { font-weight: 700; font-size: 1.02rem; }
+.maire-trait { font-size: .9rem; color: var(--encre-2); }
+
+.barre-objectif {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  background: #EAF4FD; border-bottom: 2px solid #A8CBE8;
+  padding: 6px 12px; font-size: .84rem;
+}
+.obj-recompense {
+  margin-left: auto; background: #FFE3AE; color: #9A6A10;
+  border-radius: 999px; padding: 1px 10px; font-size: .74rem; font-weight: 700;
+}
+
 /* ---------- Gaston, l'adjoint ---------- */
 .adjoint { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 1em; }
 .adjoint-avatar {
