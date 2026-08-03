@@ -11,13 +11,18 @@ const Engine = (() => {
 
   /* ---------- Création de partie ---------- */
 
-  function nouvellePartie(profilId, tranquille) {
+  const MAIRE_DEFAUT = { prenom: 'Alex', genre: 'homme', emoji: '🧑', trait: 'batisseur' };
+
+  function nouvellePartie(profilId, tranquille, ville, maire) {
     const p = PROFILS[profilId];
-    const pop = p.population;
+    const pop = ville ? ville.pop : p.population;
     S = {
       version: 1,
       profil: profilId,
-      commune: p.nom,
+      commune: ville ? ville.nom : p.nom,
+      dept: ville ? ville.dept : null,
+      voisines: ville && ville.voisines ? ville.voisines : null,
+      maire: maire || { ...MAIRE_DEFAUT },
       tranquille: !!tranquille,
       jour: 1, jourDuMois: 1, mois: 1,
 
@@ -34,6 +39,7 @@ const Engine = (() => {
       tauxChangeCeMois: false,
       exonerationMois: 0,
 
+      niveauEntretien: 'normal',
       budgetVoirie: Math.round(pop * COEF.VOIRIE_PLEIN),
       budgetProprete: Math.round(pop * 1.0),
 
@@ -41,10 +47,13 @@ const Engine = (() => {
       emprunts: [],
       avanceTreso: null,         // { mensualite, moisRestants }
       effetsDifferes: [],        // { jour, effets?|evenement?, note?, source }
-      subventions: [],           // { equipId, jourVerdict, statut }
       offresEnCours: [],         // offres privées disponibles
       offresRefusees: [],
       prochaineOffreJour: 40 + Math.floor(Math.random() * 30),
+
+      questionActive: null,      // id de la question du courrier du maire
+      pileQuestions: [],         // pioche mélangée, retirée sans remise
+      prochaineQuestionJour: 4 + Math.floor(Math.random() * 4),
 
       criseActive: null,         // { criseId, jourDebut, coutCourant }
       derniereCriseJour: -999,
@@ -67,11 +76,18 @@ const Engine = (() => {
       dernierDiagnostic: null,
 
       journal: [],
+      notifications: [],         // { jour, icone, texte, type: 'alerte'|'info', action, lu }
+      historiqueQuestions: [],   // { jour, icone, libelle, note }
+      xp: 0, niveau: 1,          // progression du maire
+      objectifIndex: 0,          // fil rouge du mandat
+      initiativeIdx: 0,          // initiatives du cabinet, en boucle
+      dernierCabinetMois: 0,
+      cinematiques: [],          // scènes en attente d'affichage
       epargneCumulee: 0,
       gameOver: null,            // { type, titre, texte }
     };
     S.tresorerie = Math.round(depensesMensuelles() * COEF.TRESO_INIT_MOIS);
-    log(`🎉 Vous voilà maire de ${p.nom} (${fmtNb(pop)} hab.). Le conseil municipal vous souhaite « bon courage », avec un sourire en coin.`);
+    log(`🎉 Te voilà maire de ${S.commune} (${fmtNb(pop)} hab.). Le conseil municipal te souhaite « bon courage », avec un sourire en coin.`);
     log(`💶 Trésorerie de départ : ${fmtEuro(S.tresorerie)}. Taux communal : ${S.taux} %.`);
     return S;
   }
@@ -100,7 +116,7 @@ const Engine = (() => {
     if (S.exonerationMois > 0) fisc *= 0.95;
     const dotation = S.population * CFG.DOTATION_HAB_AN / 12;
     let services = S.population * COEF.SERVICES_BASE;
-    for (const e of S.equipements) services += defEquip(e.type).recettes;
+    for (const e of S.equipements) services += dimEquip(defEquip(e.type)).recettes;
     return { fiscalite: Math.round(fisc), dotation: Math.round(dotation), services: Math.round(services) };
   }
 
@@ -109,7 +125,7 @@ const Engine = (() => {
     let energie = S.population * COEF.ENERGIE_BASE;
     let entretien = S.population * COEF.ENTRETIEN_BASE + S.budgetVoirie + S.budgetProprete;
     for (const e of S.equipements) {
-      const d = defEquip(e.type);
+      const d = dimEquip(defEquip(e.type));
       energie += d.energie;
       entretien += d.entretien;
     }
@@ -129,7 +145,7 @@ const Engine = (() => {
 
   function capaciteEquipements() {
     let cap = S.populationInitiale * COEF.CAPACITE_BASE;
-    for (const e of S.equipements) cap += defEquip(e.type).capacite;
+    for (const e of S.equipements) cap += dimEquip(defEquip(e.type)).capacite;
     cap += S.capaciteMalus || 0;
     return Math.max(1, cap);
   }
@@ -143,6 +159,25 @@ const Engine = (() => {
   function capaciteInvestissement() { return Math.max(0, S.tresorerie - reserveFonctionnement()); }
 
   function defEquip(id) { return EQUIPEMENTS.find(e => e.id === id); }
+
+  /* Les équipements sont calibrés pour 12 000 hab. : on les met à
+     l'échelle de la ville réelle (une médiathèque de métropole n'est
+     pas une médiathèque de village). */
+  function echelleVille() {
+    return clamp(S.populationInitiale / 12000, 0.12, 40);
+  }
+
+  function dimEquip(def) {
+    const k = echelleVille();
+    return {
+      ...def,
+      cout: Math.max(20000, Math.round(def.cout * k / 10000) * 10000),
+      entretien: Math.round(def.entretien * k / 100) * 100,
+      energie: Math.round(def.energie * k / 100) * 100,
+      recettes: Math.round(def.recettes * k / 100) * 100,
+      capacite: Math.round(def.capacite * k / 100) * 100,
+    };
+  }
 
   /* ---------- Fiscalité ---------- */
 
@@ -163,22 +198,13 @@ const Engine = (() => {
 
   /* ---------- Construction ---------- */
 
-  function subventionAccordee(equipId) {
-    return S.subventions.find(s => s.equipId === equipId && s.statut === 'accordee');
-  }
-
-  function coutNet(def) {
-    const sub = subventionAccordee(def.id);
-    return sub ? Math.round(def.cout * (1 - CFG.SUBVENTION_TAUX)) : def.cout;
-  }
-
   function peutConstruire(def) {
     if (S.paliers.fin === 'redressement') return { ok: false, msg: 'Investissements gelés (plan de redressement).' };
     if (!def.repetable && !def.chantier && S.equipements.some(e => e.type === def.id))
       return { ok: false, msg: 'Déjà construit.' };
     if (def.chantier === 'eclairage' && S.equipements.some(e => e.type === def.id))
       return { ok: false, msg: 'Déjà réalisé.' };
-    if (coutNet(def) > capaciteInvestissement())
+    if (dimEquip(def).cout > capaciteInvestissement())
       return { ok: false, msg: 'Capacité d\'investissement insuffisante (15 jours de fonctionnement sanctuarisés).' };
     return { ok: true };
   }
@@ -187,9 +213,7 @@ const Engine = (() => {
     const def = defEquip(equipId);
     const test = peutConstruire(def);
     if (!test.ok) return test;
-    const cout = coutNet(def);
-    const sub = subventionAccordee(equipId);
-    if (sub) { sub.statut = 'consommee'; S.moisCourant.recSubventions += def.cout - cout; }
+    const cout = dimEquip(def).cout;
     S.tresorerie -= cout;
     S.equipements.push({ type: equipId, mois: S.mois });
     if (def.chantier === 'voirie') S.cadre.voirie = 95;
@@ -198,17 +222,39 @@ const Engine = (() => {
     if (def.effets.popularite) S.popularite = clamp100(S.popularite + def.effets.popularite);
     if (def.proximite) S.cadre.proximite = clamp100(S.cadre.proximite + 6);
     const charge = def.entretien + def.energie - def.recettes;
-    log(`🏗️ ${def.nom} : ${fmtEuro(cout)}${sub ? ' (subvention déduite)' : ''}. ${charge > 0 ? `Nouvelle charge de fonctionnement : ${fmtEuro(charge)}/mois, à vie.` : charge < 0 ? `Gain de fonctionnement : ${fmtEuro(-charge)}/mois.` : ''}`);
+    log(`🏗️ ${def.nom} : ${fmtEuro(cout)}. ${charge > 0 ? `Nouvelle charge de fonctionnement : ${fmtEuro(charge)}/mois, à vie.` : charge < 0 ? `Gain de fonctionnement : ${fmtEuro(-charge)}/mois.` : ''}`);
+    gagnerXP(25);
     return { ok: true };
   }
 
-  /* ---------- Subventions (département / région / Europe) ---------- */
+  /* ---------- Entretien de la ville : trois niveaux, c'est tout ---------- */
 
-  function deposerDossier(equipId) {
-    if (S.subventions.some(s => s.equipId === equipId && (s.statut === 'instruction' || s.statut === 'accordee')))
-      return { ok: false, msg: 'Un dossier existe déjà pour cet équipement.' };
-    S.subventions.push({ equipId, jourVerdict: S.jour + CFG.SUBVENTION_DELAI_JOURS, statut: 'instruction' });
-    log(`📁 Dossier de subvention déposé pour « ${defEquip(equipId).nom} ». Verdict sous ${CFG.SUBVENTION_DELAI_JOURS} jours.`);
+  const NIVEAUX_ENTRETIEN = {
+    eco:    { facteur: 0.5, nom: 'Éco' },
+    normal: { facteur: 1.0, nom: 'Normal' },
+    soigne: { facteur: 1.6, nom: 'Soigné' },
+  };
+
+  function budgetsEntretien(niveau, pop) {
+    const f = NIVEAUX_ENTRETIEN[niveau].facteur;
+    return {
+      voirie: Math.round(pop * COEF.VOIRIE_PLEIN * f),
+      proprete: Math.round(pop * 1.0 * f),
+    };
+  }
+
+  function coutEntretien(niveau) {
+    const b = budgetsEntretien(niveau, S.population);
+    return b.voirie + b.proprete;
+  }
+
+  function reglerEntretien(niveau) {
+    if (!NIVEAUX_ENTRETIEN[niveau]) return { ok: false };
+    S.niveauEntretien = niveau;
+    const b = budgetsEntretien(niveau, S.population);
+    S.budgetVoirie = b.voirie;
+    S.budgetProprete = b.proprete;
+    log(`🧹 Entretien de la ville réglé sur « ${NIVEAUX_ENTRETIEN[niveau].nom} » (${fmtEuro(b.voirie + b.proprete)}/mois).`);
     return { ok: true };
   }
 
@@ -264,15 +310,20 @@ const Engine = (() => {
 
   /* ---------- Offres privées ---------- */
 
+  function montantOffre(o) {
+    return Math.max(20000, Math.round(o.montant * echelleVille() / 10000) * 10000);
+  }
+
   function accepterOffre(offreId) {
     const i = S.offresEnCours.findIndex(o => o.id === offreId);
     if (i < 0) return { ok: false };
     const o = OFFRES_PRIVEES.find(x => x.id === offreId);
+    const montant = montantOffre(o);
     S.offresEnCours.splice(i, 1);
-    S.tresorerie += o.montant;
-    S.moisCourant.recSubventions += o.montant;
+    S.tresorerie += montant;
+    S.moisCourant.recSubventions += montant;
     S.effetsDifferes.push({ jour: S.jour + o.delai, evenement: o.evenement, source: o.nom });
-    log(`💼 ${o.nom} : ${fmtEuro(o.montant)} encaissés. Une créance est inscrite dans la file des effets différés (J+${o.delai}).`);
+    log(`💼 ${o.nom} : ${fmtEuro(montant)} encaissés. La contrepartie arrivera à J+${o.delai}.`);
     return { ok: true };
   }
 
@@ -285,7 +336,7 @@ const Engine = (() => {
 
   /* ---------- Crises ---------- */
 
-  function facteurPopulation() { return clamp(S.population / 12000, 0.35, 2.5); }
+  function facteurPopulation() { return clamp(S.population / 12000, 0.15, 40); }
 
   function tenterCrise() {
     if (S.criseActive || S.gameOver) return;
@@ -307,6 +358,7 @@ const Engine = (() => {
     S.derniereCriseJour = S.jour;
     S.crisesCooldown[crise.id] = S.jour + crise.cooldown;
     log(`🚨 CRISE — ${crise.nom}. Le coût augmente chaque jour sans décision (option par défaut sous ${CFG.CRISE_DELAI_JOURS} jours).`);
+    notifier(crise.icone, `Crise : ${crise.nom} ! Le coût grimpe chaque jour.`, { type: 'alerte', action: 'crise' });
   }
 
   function escaladerCrise() {
@@ -350,19 +402,62 @@ const Engine = (() => {
       S.effetsDifferes.push({ jour: S.jour + d.jours, effets: d.effets, evenement: d.evenement, note: d.note, source: crise.nom });
     }
     if (parDefaut || opt.defaut) S.crisesRatees++; else S.crisesGerees++;
+    gagnerXP(parDefaut || opt.defaut ? 5 : 40);
     S.criseActive = null;
     log(`${crise.icone} ${crise.nom} — option ${opt.cle} : « ${opt.libelle} ». Coût : ${fmtEuro(cout)}.${opt.capital ? ` Capital préfecture −${opt.capital}.` : ''}`);
     return { ok: true };
+  }
+
+  /* ---------- Courrier du maire (questions à choix multiples) ---------- */
+
+  function tirerQuestion() {
+    if (S.questionActive || S.criseActive || S.gameOver) return;
+    if (S.jour < S.prochaineQuestionJour) return;
+    const sais = saison();
+    // on repioche dans le paquet mélangé ; on saute les questions hors saison
+    for (let essais = 0; essais < QUESTIONS.length + 1; essais++) {
+      if (!S.pileQuestions.length) {
+        S.pileQuestions = QUESTIONS.map(q => q.id).sort(() => Math.random() - 0.5);
+      }
+      const id = S.pileQuestions.pop();
+      const q = QUESTIONS.find(x => x.id === id);
+      if (q.saisons && !q.saisons.includes(sais)) continue;
+      S.questionActive = id;
+      log(`📬 Courrier du maire : « ${q.texte} »`);
+      notifier('📬', 'Nouveau courrier : les habitants attendent ta réponse.', { action: 'question' });
+      return;
+    }
+  }
+
+  function resoudreQuestion(indexOption) {
+    const q = QUESTIONS.find(x => x.id === S.questionActive);
+    if (!q) return { ok: false };
+    const opt = q.options[indexOption];
+    const effets = { ...opt.effets };
+    if (effets.tresorerie) effets.tresorerie = Math.round(effets.tresorerie * facteurPopulation());
+    appliquerEffets(effets, 'courrier du maire');
+    S.questionActive = null;
+    S.prochaineQuestionJour = S.jour + 6 + Math.floor(Math.random() * 7);
+    log(`${q.icone} ${opt.libelle} — ${opt.note}`);
+    S.historiqueQuestions.unshift({ jour: S.jour, icone: q.icone, libelle: opt.libelle, note: opt.note });
+    if (S.historiqueQuestions.length > 30) S.historiqueQuestions.pop();
+    gagnerXP(15);
+    return { ok: true, note: opt.note, icone: q.icone };
   }
 
   /* ---------- Effets génériques ---------- */
 
   function appliquerEffets(eff, source) {
     if (!eff) return;
-    if (eff.tresorerie) { S.tresorerie += eff.tresorerie; if (eff.tresorerie < 0) S.moisCourant.depExceptionnel -= eff.tresorerie; }
+    if (eff.tresorerie) {
+      const v = Math.round(eff.tresorerie * (Math.abs(eff.tresorerie) >= 100000 ? echelleVille() : 1));
+      S.tresorerie += v;
+      if (v < 0) S.moisCourant.depExceptionnel -= v;
+    }
     if (eff.popularite) S.popularite = clamp100(S.popularite + eff.popularite);
     if (eff.attractivite) S.attractivite = clamp100(S.attractivite + eff.attractivite);
     if (eff.cadre_voirie) S.cadre.voirie = clamp100(S.cadre.voirie + eff.cadre_voirie);
+    if (eff.cadre_eclairage) S.cadre.eclairage = clamp100(S.cadre.eclairage + eff.cadre_eclairage);
     if (eff.cadre_logement) S.cadre.logement = clamp100(S.cadre.logement + eff.cadre_logement);
     if (eff.cadre_proprete) S.cadre.proprete = clamp100(S.cadre.proprete + eff.cadre_proprete);
     if (eff.capacite) S.capaciteMalus = (S.capaciteMalus || 0) + eff.capacite;
@@ -377,7 +472,8 @@ const Engine = (() => {
   /* ---------- Tick quotidien ---------- */
 
   function avancerJour() {
-    if (S.gameOver || S.criseActive) return; // une crise bloque le temps tant qu'on n'a pas tranché (ou reporté)
+    // une crise ou une question en attente bloque le temps tant qu'on n'a pas répondu
+    if (S.gameOver || S.criseActive || S.questionActive) return;
     tickInterne();
   }
 
@@ -408,19 +504,6 @@ const Engine = (() => {
     S.effetsDifferes = S.effetsDifferes.filter(e => e.jour > S.jour || e.evenement);
     // (les événements différés à choix sont présentés par l'UI via evenementDu())
 
-    // subventions : verdicts
-    for (const s of S.subventions) {
-      if (s.statut === 'instruction' && s.jourVerdict <= S.jour) {
-        if (Math.random() < CFG.SUBVENTION_SUCCES) {
-          s.statut = 'accordee';
-          log(`✅ Subvention accordée pour « ${defEquip(s.equipId).nom} » : ${Math.round(CFG.SUBVENTION_TAUX * 100)} % du coût pris en charge.`);
-        } else {
-          s.statut = 'refusee';
-          log(`❌ Dossier de subvention refusé pour « ${defEquip(s.equipId).nom} ». « Dossier incomplet », paraît-il.`);
-        }
-      }
-    }
-
     // offres privées : apparition
     if (S.jour >= S.prochaineOffreJour && S.offresEnCours.length === 0) {
       const dispo = OFFRES_PRIVEES.filter(o => !S.offresRefusees.includes(o.id) &&
@@ -428,7 +511,8 @@ const Engine = (() => {
       if (dispo.length) {
         const o = dispo[Math.floor(Math.random() * dispo.length)];
         S.offresEnCours.push({ id: o.id });
-        log(`💼 Offre privée : ${o.nom} propose ${fmtEuro(o.montant)}. Rien n'est jamais gratuit (voir Aides & finances).`);
+        log(`💼 Offre privée : ${o.nom} propose ${fmtEuro(o.montant)}. Rien n'est jamais gratuit.`);
+        notifier(o.icone, `${o.nom} te propose ${fmtEuro(montantOffre(o))}. Rien n'est jamais gratuit…`, { action: 'business' });
       }
       S.prochaineOffreJour = S.jour + 60 + Math.floor(Math.random() * 40);
     }
@@ -437,8 +521,20 @@ const Engine = (() => {
     escaladerCrise();
     tenterCrise();
 
+    // courrier du maire (jamais en même temps qu'une crise)
+    tirerQuestion();
+
+    // le cabinet applique ta ligne politique (le 15 du mois)
+    if (S.jourDuMois === 15 && S.dernierCabinetMois !== S.mois && S.maire) {
+      S.dernierCabinetMois = S.mois;
+      agirCabinet();
+    }
+
     // paliers
     evaluerPaliers();
+
+    // fil rouge
+    verifierObjectifs();
 
     // clôture mensuelle
     if (S.jourDuMois > CFG.JOURS_PAR_MOIS) cloturerMois();
@@ -488,6 +584,13 @@ const Engine = (() => {
     }
     if (S.exonerationMois > 0) S.exonerationMois--;
 
+    // l'entretien suit la population au niveau choisi
+    if (S.niveauEntretien) {
+      const b = budgetsEntretien(S.niveauEntretien, S.population);
+      S.budgetVoirie = b.voirie;
+      S.budgetProprete = b.proprete;
+    }
+
     // capital préfecture
     let regen = CFG.CAPITAL_PREF_REGEN;
     if (S.paliers.fin !== 'ok') regen -= CFG.CAPITAL_PREF_MALUS_ALERTE;
@@ -512,6 +615,8 @@ const Engine = (() => {
     S.mois++;
     const migTxt = migration.delta === 0 ? 'population stable' : `${migration.delta > 0 ? '+' : ''}${fmtNb(migration.delta)} habitants`;
     log(`📅 Clôture de ${NOMS_MOIS[moisCalendaire()]} : solde ${solde >= 0 ? '+' : ''}${fmtEuro(solde)}, ${migTxt}.`);
+    notifier('📅', `Bilan du mois : ${solde >= 0 ? '+' : '−'}${fmtEuro(Math.abs(solde))}, ${migTxt}.`);
+    gagnerXP(solde > 0 ? 20 : 10);
   }
 
   function majCadreDeVie() {
@@ -567,6 +672,7 @@ const Engine = (() => {
   function evaluerPaliers() {
     if (S.gameOver) return;
     const P = S.paliers;
+    const avantFin = P.fin, avantDemo = P.demo;
 
     /* Défaite n°1 — financière */
     const jours = joursDeTresorerie();
@@ -615,6 +721,16 @@ const Engine = (() => {
       P.demo = 'ok';
       if (perte < p2 - 1) P.declinApplique = false;
     }
+
+    /* notifications sur aggravation seulement */
+    if (P.fin === 'alerte' && avantFin === 'ok')
+      notifier('🟧', 'Alerte budgétaire : moins de 15 jours de caisse !', { type: 'alerte', action: 'business' });
+    if (P.fin === 'redressement' && avantFin !== 'redressement')
+      notifier('🟥', `Trésorerie négative ! ${CFG.REDRESSEMENT_JOURS} jours pour te rattraper, sinon tu perds la ville.`, { type: 'alerte', action: 'business' });
+    if (P.demo === 'alerte' && avantDemo === 'ok')
+      notifier('🟧', 'Les habitants commencent à partir (−5 %).', { type: 'alerte', action: 'diag' });
+    if (P.demo === 'declin' && avantDemo !== 'declin')
+      notifier('🟥', 'Exode ! Plus de 10 % de départs — à −15 %, c\'est fini.', { type: 'alerte', action: 'diag' });
   }
 
   function joursRedressementRestants() {
@@ -629,10 +745,15 @@ const Engine = (() => {
   function faireMissionRedressement() {
     if (!missionRedressementDispo()) return { ok: false };
     S.missionFaiteJour = S.jour;
-    S.tresorerie += CFG.MISSION_REDRESSEMENT;
-    S.moisCourant.recSubventions += CFG.MISSION_REDRESSEMENT;
-    log(`🗂️ Mission de redressement accomplie : +${fmtEuro(CFG.MISSION_REDRESSEMENT)}.`);
+    const gain = montantMission();
+    S.tresorerie += gain;
+    S.moisCourant.recSubventions += gain;
+    log(`🗂️ Mission de redressement accomplie : +${fmtEuro(gain)}.`);
     return { ok: true };
+  }
+
+  function montantMission() {
+    return Math.round(CFG.MISSION_REDRESSEMENT * echelleVille() / 100) * 100;
   }
 
   function defaite(type, titre, texte) {
@@ -678,9 +799,9 @@ const Engine = (() => {
   }
 
   function projeterConstruction(equipId) {
-    const def = defEquip(equipId);
+    const def = dimEquip(defEquip(equipId));
     const delta = -(def.entretien + def.energie) + def.recettes;
-    return { def, cout: coutNet(def), ...projeter({ coutImmediat: coutNet(def), deltaMensuel: delta }) };
+    return { def, cout: def.cout, ...projeter({ coutImmediat: def.cout, deltaMensuel: delta }) };
   }
 
   function projeterTaux(nouveau) {
@@ -707,6 +828,144 @@ const Engine = (() => {
     return { taux: c.taux, mensualite: m, ...projeter({ gainImmediat: capital, deltaMensuel: -m }) };
   }
 
+  /* ---------- Progression du maire ---------- */
+
+  function xpPourNiveau(niveau) { return 150 + 50 * niveau; }
+
+  function titreMaire() {
+    return TITRES_MAIRE[Math.min(S.niveau - 1, TITRES_MAIRE.length - 1)];
+  }
+
+  function gagnerXP(pts) {
+    S.xp = (S.xp || 0) + pts;
+    while (S.xp >= xpPourNiveau(S.niveau)) {
+      S.xp -= xpPourNiveau(S.niveau);
+      S.niveau++;
+      log(`⭐ Niveau ${S.niveau} — te voilà « ${titreMaire()} » !`);
+      notifier('⭐', `Niveau ${S.niveau} : te voilà « ${titreMaire()} » !`);
+    }
+  }
+
+  /* ---------- Le cabinet : ta ligne politique, appliquée pour toi ---------- */
+
+  function traitMaire() { return TRAITS[S.maire.trait] || TRAITS.batisseur; }
+
+  function agirCabinet() {
+    const trait = traitMaire();
+    // tous les trois mois : tenter un chantier conforme à ta ligne —
+    // mais le cabinet ne met JAMAIS la ville en danger (marges larges)
+    if (S.mois % 3 === 0 && S.paliers.fin === 'ok') {
+      for (const id of trait.chantiers) {
+        const def = defEquip(id);
+        const dim = dimEquip(def);
+        const apresTreso = S.tresorerie - dim.cout;
+        const joursApres = apresTreso / (depensesMensuelles() / 30);
+        const chargeNette = dim.entretien + dim.energie - dim.recettes;
+        if (peutConstruire(def).ok && dim.cout * 1.5 <= capaciteInvestissement()
+            && joursApres > 60 && soldeMensuel() - chargeNette > 0) {
+          construire(id);
+          notifier(trait.icone, `Ton cabinet a lancé le chantier : ${def.nom} (${fmtEuro(dim.cout)}). Conforme à ta ligne.`, { type: 'info' });
+          S.cinematiques.push({
+            emoji: def.icone, titre: 'Ton cabinet pose la première pierre',
+            texte: `Fidèle à ta ligne (${trait.ligne}), le cabinet a lancé sans attendre : ${def.nom}, pour ${fmtEuro(dim.cout)}. « Vous nous remercierez », assure Gaston.`,
+          });
+          return;
+        }
+      }
+    }
+    // sinon : une initiative du mois
+    const init = trait.initiatives[S.initiativeIdx % trait.initiatives.length];
+    S.initiativeIdx++;
+    const effets = { ...init.effets };
+    if (effets.tresorerie) {
+      effets.tresorerie = Math.round(effets.tresorerie * echelleVille() / 100) * 100;
+      S.tresorerie += effets.tresorerie;
+      if (effets.tresorerie < 0) S.moisCourant.depExceptionnel -= effets.tresorerie;
+      else S.moisCourant.recSubventions += effets.tresorerie;
+    }
+    const reste = { ...effets }; delete reste.tresorerie;
+    appliquerEffets(reste, 'cabinet');
+    const argent = effets.tresorerie ? ` (${effets.tresorerie > 0 ? '+' : '−'}${fmtEuro(Math.abs(effets.tresorerie))})` : '';
+    log(`${trait.icone} Initiative du cabinet : ${init.nom}${argent}. ${init.note}`);
+    notifier(trait.icone, `Initiative du cabinet : ${init.nom}${argent}.`);
+    S.cinematiques.push({
+      emoji: trait.icone, titre: 'Ton cabinet s\'active',
+      texte: `Fidèle à ta ligne (${trait.ligne}), le cabinet a mis en place : ${init.nom}${argent}. ${init.note}`,
+    });
+  }
+
+  /* ---------- Objectifs de mandat (le fil rouge) ---------- */
+
+  function objectifCourant() {
+    return S.objectifIndex < OBJECTIFS.length ? OBJECTIFS[S.objectifIndex] : null;
+  }
+
+  function objectifAtteint(id) {
+    switch (id) {
+      case 'courrier': return S.historiqueQuestions.length >= 1;
+      case 'chantier': return S.equipements.length >= 1;
+      case 'mois_positif': return S.historique.some(h => h.solde > 0);
+      case 'crise': return S.crisesGerees >= 1;
+      case 'croissance': return S.population >= S.populationInitiale * 1.02;
+      case 'etoiles': return noteVille().note >= 70;
+      case 'an1': return S.mois > 12;
+      case 'an2': return S.mois > 24;
+      case 'mandat': return S.mois > CFG.MANDAT_MOIS;
+      default: return false;
+    }
+  }
+
+  let verifEnCours = false;
+  function verifierObjectifs() {
+    if (verifEnCours || !S || S.gameOver) return;
+    verifEnCours = true;
+    let obj = objectifCourant();
+    while (obj && objectifAtteint(obj.id)) {
+      S.objectifIndex++;
+      if (obj.xp) gagnerXP(obj.xp);
+      if (obj.capital) S.capitalPrefecture = clamp100(S.capitalPrefecture + obj.capital);
+      log(`🎯 Objectif atteint : ${obj.texte} (+${obj.xp} XP${obj.capital ? `, +${obj.capital} capital` : ''}).`);
+      notifier('🎯', `Objectif atteint : ${obj.texte} !`);
+      obj = objectifCourant();
+    }
+    verifEnCours = false;
+  }
+
+  /* ---------- Note de la ville ---------- */
+
+  function noteVille() {
+    const jours = joursDeTresorerie();
+    const finances = S.tresorerie < 0 ? 0 : clamp100(jours / 45 * 100) * (tauxEndettement() > 1 ? 0.6 : 1);
+    const composantes = {
+      finances,
+      popularite: S.popularite,
+      attractivite: S.attractivite,
+      cadre: cadreDeVie(),
+    };
+    const note = clamp100(finances * 0.25 + S.popularite * 0.3 + S.attractivite * 0.2 + composantes.cadre * 0.25);
+    return { note, sur20: Math.round(note / 5), composantes };
+  }
+
+  /* ---------- Notifications ---------- */
+
+  function notifier(icone, texte, options = {}) {
+    S.notifications.unshift({
+      jour: S.jour, icone, texte,
+      type: options.type || 'info',
+      action: options.action || null,
+      lu: false,
+    });
+    if (S.notifications.length > 60) S.notifications.pop();
+  }
+
+  function notifsNonLues() {
+    return S.notifications.filter(n => !n.lu).length;
+  }
+
+  function marquerNotifsLues() {
+    for (const n of S.notifications) n.lu = true;
+  }
+
   /* ---------- Journal & format ---------- */
 
   function log(txt) {
@@ -728,6 +987,14 @@ const Engine = (() => {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return null;
       S = JSON.parse(raw);
+      /* migration des anciennes sauvegardes */
+      S.xp ??= 0; S.niveau ??= 1;
+      S.notifications ??= []; S.historiqueQuestions ??= [];
+      S.pileQuestions ??= []; S.prochaineQuestionJour ??= S.jour + 5;
+      S.questionActive ??= null; S.niveauEntretien ??= 'normal';
+      S.maire ??= { ...MAIRE_DEFAUT };
+      S.objectifIndex ??= 0; S.initiativeIdx ??= 0;
+      S.dernierCabinetMois ??= 0; S.cinematiques ??= [];
       return S;
     } catch (e) { return null; }
   }
@@ -744,21 +1011,27 @@ const Engine = (() => {
     appliquerEffets(opt.effets, def.titre);
     S.effetsDifferes = S.effetsDifferes.filter(e => e !== evt);
     log(`📜 ${def.titre} — ${opt.libelle}. ${opt.note}`);
+    gagnerXP(10);
   }
 
   return {
     get etat() { return S; },
     nouvellePartie, charger, sauvegarder, effacerSauvegarde,
     avancerJour, reporterCrise,
-    changerTaux, construire, peutConstruire, deposerDossier, subventionAccordee, coutNet,
+    changerTaux, construire, peutConstruire,
+    reglerEntretien, coutEntretien, NIVEAUX_ENTRETIEN,
     emprunter, conditionsEmprunt, mensualite, aideEtat,
     accepterOffre, refuserOffre, resoudreCrise, evenementDu, resoudreEvenement,
+    resoudreQuestion,
     faireMissionRedressement, missionRedressementDispo, joursRedressementRestants,
+    noteVille, notifsNonLues, marquerNotifsLues,
+    titreMaire, xpPourNiveau, traitMaire, objectifCourant,
     recettes, depenses, totalRecettes, depensesMensuelles, soldeMensuel,
     joursDeTresorerie, tauxEndettement, encoursDette, recettesAnnuelles,
     cadreDeVie, saturation, capaciteEquipements, capaciteInvestissement, reserveFonctionnement,
     projeterConstruction, projeterTaux, projeterEmprunt, penalitePopularite,
-    calculerMigration, moisCalendaire, saison, annee, defEquip,
+    calculerMigration, moisCalendaire, saison, annee, defEquip, dimEquip, montantMission,
+    montantOffre,
     fmtEuro, fmtNb,
   };
 })();

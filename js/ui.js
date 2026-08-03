@@ -1,43 +1,277 @@
 /* ============================================================
-   BIG CITY — Interface
-   Rendu des écrans, modales de projection, crises, diagnostic.
+   BIG CITY — Interface « app »
+   Header : note de la ville, argent, population, notifications.
+   Barre du bas : Carte · Courrier · Construire · Business.
+   Pilule flottante pour avancer le temps.
    ============================================================ */
 
 const UI = (() => {
   const app = () => document.getElementById('app');
   const modalRoot = () => document.getElementById('modal-root');
   const E = Engine;
-  let ongletActif = 'tableau';
+  let vueActive = 'carte';
+  let notifsOuvertes = false;
+  let questionEnAttente = false; // « Plus tard » : la question reste due, mais on peut naviguer
+  let dernierNiveauVu = null;    // détection des passages de niveau
+  let dernierObjectifVu = null;  // détection des objectifs atteints
+  let communeSuivie = null;
+  let finJouee = false;
+
+  /* Gaston, l'adjoint : une bulle par-dessus les grands moments */
+  function bulleAdjoint(type) {
+    const phrases = PHRASES_ADJOINT[type] || PHRASES_ADJOINT.courrier;
+    let p = phrases[Math.floor(Math.random() * phrases.length)];
+    if (E.etat && E.etat.maire && E.etat.maire.genre === 'femme') p = p.replace(/patron\b/g, 'patronne');
+    return `<div class="adjoint"><span class="adjoint-avatar">${ADJOINT.icone}</span>
+      <div class="adjoint-bulle"><b>${ADJOINT.nom}</b> — ${p}</div></div>`;
+  }
+
+  /* ---- Cinématique : letterbox, tableaux successifs ---- */
+
+  function cinematique(panneaux, onFin) {
+    let i = 0;
+    const fin = () => { modalRoot().innerHTML = ''; if (onFin) onFin(); };
+    const montrer = () => {
+      const p = panneaux[i];
+      modalRoot().innerHTML = `
+      <div class="cine">
+        <div class="cine-barre"></div>
+        <div class="cine-panneau">
+          <div class="cine-emoji">${p.emoji}</div>
+          <p class="cine-titre">${p.titre}</p>
+          <p class="cine-texte">${p.texte}</p>
+          <div class="cine-boutons">
+            ${panneaux.length > 1 ? '<button class="btn-lien cine-lien" id="cine-passer">Passer ≫</button>' : ''}
+            <button class="btn" id="cine-suite">${i === panneaux.length - 1 ? 'C\'est parti' : 'Continuer ▸'}</button>
+          </div>
+        </div>
+        <div class="cine-barre"></div>
+      </div>`;
+      document.getElementById('cine-suite').addEventListener('click', () => {
+        FX.son('clic');
+        if (++i < panneaux.length) montrer(); else fin();
+      });
+      const passer = document.getElementById('cine-passer');
+      if (passer) passer.addEventListener('click', fin);
+    };
+    montrer();
+  }
 
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const eur = E.fmtEuro, nb = E.fmtNb;
   const signe = (v, fmt = eur) => (v >= 0 ? '+' : '−') + fmt(Math.abs(v));
+  const eurCourt = (v) => {
+    const a = Math.abs(v);
+    if (a >= 1e6) return (v / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' M€';
+    if (a >= 1e4) return Math.round(v / 1000).toLocaleString('fr-FR') + ' k€';
+    return Math.round(v).toLocaleString('fr-FR') + ' €';
+  };
 
   /* ================= ÉCRAN D'ACCUEIL ================= */
 
+  /* Le décor est celui de la vraie ville : littoral si la commune est
+     au bord de la mer, campagne en dessous de 3 500 habitants. */
+  function ambianceDeLaVille(v) {
+    if (v.littoral) return 'touristique';
+    if (v.pop < 3500) return 'rurale';
+    return 'moyenne';
+  }
+  const NOMS_AMBIANCE = { rurale: '🌾 commune rurale', moyenne: '🏘️ ville', touristique: '⛱️ commune littorale' };
+
   function ecranAccueil() {
+    let villeChoisie = null;
+    let ambiance = 'moyenne';
     app().innerHTML = `
     <div class="accueil">
-      <h1>🏛️ Big City</h1>
-      <p class="sous-titre">Monsieur le Maire, la commune vous attend.<br>
-      Chaque équipement construit coûte pour toujours. Chaque aide se paie un jour. Vous étiez prévenu.</p>
-      <div class="profils">
-        ${Object.entries(PROFILS).map(([id, p]) => `
-          <button class="carte-profil" data-profil="${id}">
-            <span class="profil-icone">${p.icone}</span>
-            <span class="profil-label">${p.label}</span>
-            <span class="profil-nom">${p.nom} — ${nb(p.population)} hab.</span>
-            <span class="profil-desc">${p.desc}</span>
-          </button>`).join('')}
+      <p class="surtitre">Deviens maire · De ta vraie ville</p>
+      <h1>Big <span class="filet">City</span></h1>
+      <p class="sous-titre">Les ${COMMUNES_FR.nombre.toLocaleString('fr-FR')} communes de France t'attendent — la tienne aussi.
+      Chaque bâtiment coûte pour toujours, chaque aide se paie un jour. Tu étais prévenu.</p>
+      <div class="recherche-bloc">
+        <input type="search" id="recherche-ville" placeholder="🔎 Cherche ta ville… (Lyon, Guingamp, Aubervilliers…)"
+          autocomplete="off" spellcheck="false">
+        <div id="resultats-villes" class="resultats" role="listbox"></div>
+        <button id="ville-hasard" class="btn-lien">🎲 Une commune au hasard</button>
       </div>
-      <label class="tranquille"><input type="checkbox" id="mode-tranquille">
-        Mode « ville tranquille » — sans condition de défaite (les alertes restent affichées)</label>
+      <div id="etape-ambiance" class="etape-ambiance" hidden>
+        <p class="ville-choisie" id="ville-choisie-txt"></p>
+        <div class="profils" id="apercu-ville"></div>
+        <p class="note" id="note-decor"></p>
+        <label class="tranquille"><input type="checkbox" id="mode-tranquille">
+          Mode chill — impossible de perdre (les alertes restent)</label>
+        <p style="margin-top:1em"><button class="btn btn-grand" id="btn-demarrer"></button></p>
+      </div>
     </div>`;
-    app().querySelectorAll('.carte-profil').forEach(b => b.addEventListener('click', () => {
-      E.nouvellePartie(b.dataset.profil, document.getElementById('mode-tranquille').checked);
-      E.sauvegarder();
-      rendre();
+
+    const champ = document.getElementById('recherche-ville');
+    const resultats = document.getElementById('resultats-villes');
+    const etape = document.getElementById('etape-ambiance');
+
+    function afficherResultats() {
+      const villes = COMMUNES_FR.chercher(champ.value);
+      resultats.innerHTML = villes.map((v, i) =>
+        `<button class="resultat-ville" data-i="${i}" role="option">
+          <b>${esc(v.nom)}</b> <span class="badge">${esc(v.dept)}</span>
+          <span class="resultat-pop">${nb(v.pop)} hab.</span>
+        </button>`).join('');
+      resultats.querySelectorAll('.resultat-ville').forEach(b =>
+        b.addEventListener('click', () => choisir(villes[parseInt(b.dataset.i, 10)])));
+    }
+    champ.addEventListener('input', afficherResultats);
+    document.getElementById('ville-hasard').addEventListener('click', () => choisir(COMMUNES_FR.auHasard()));
+
+    function choisir(v) {
+      villeChoisie = v;
+      ambiance = ambianceDeLaVille(v);
+      champ.value = `${v.nom} (${v.dept})`;
+      resultats.innerHTML = '';
+      etape.hidden = false;
+      document.getElementById('ville-choisie-txt').innerHTML =
+        `🏛️ <b>${esc(v.nom)}</b> (${esc(v.dept)}) — ${nb(v.pop)} habitants, et bientôt un maire.`;
+      const de = /^[aeiouyhéèêàâîôû]/i.test(v.nom) ? 'd\'' : 'de ';
+      document.getElementById('btn-demarrer').textContent = `Devenir maire ${de}${v.nom}`;
+      document.getElementById('note-decor').textContent =
+        `Décor : ${NOMS_AMBIANCE[ambiance]} — carte stylisée générée pour ${v.nom}, pas un plan réel.`;
+      const apercu = document.getElementById('apercu-ville');
+      apercu.innerHTML = `
+        <div class="carte-profil ambiance choisie apercu-seul">
+          <canvas class="mini-carte" id="mini-carte-ville"></canvas>
+          <span class="profil-label">${NOMS_AMBIANCE[ambiance]}</span>
+        </div>`;
+      CarteCommune.dessiner(document.getElementById('mini-carte-ville'), {
+        commune: v.nom, profil: ambiance, mois: 1, equipements: [],
+        population: v.pop, populationInitiale: v.pop, cadre: { voirie: 70 },
+      });
+      etape.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    document.getElementById('btn-demarrer').addEventListener('click', () => {
+      if (!villeChoisie) return;
+      FX.son('clic');
+      ecranAvatar(villeChoisie, ambiance, document.getElementById('mode-tranquille').checked);
+    });
+  }
+
+  /* ---- Création de l'avatar : physique, prénom ---- */
+
+  function ecranAvatar(ville, ambiance, chill) {
+    let genre = null, emoji = null;
+    app().innerHTML = `
+    <div class="accueil">
+      <p class="surtitre">${esc(ville.nom)} · Élections municipales</p>
+      <h1>Qui es-<span class="filet">tu</span> ?</h1>
+      <p class="sous-titre">${esc(ville.nom)} veut savoir qui se présente. Fais bonne impression.</p>
+      <section class="carte carte-creation">
+        <h2>Tu es…</h2>
+        <div class="presets choix-genres">
+          <button class="preset choix-genre" data-genre="homme"><span class="preset-nom">👨 Un homme</span></button>
+          <button class="preset choix-genre" data-genre="femme"><span class="preset-nom">👩 Une femme</span></button>
+        </div>
+        <div id="bloc-tete" hidden>
+          <h2>Ta tête de campagne</h2>
+          <div class="grille-tetes" id="grille-tetes"></div>
+        </div>
+        <div id="bloc-prenom" hidden>
+          <h2>Ton prénom</h2>
+          <input type="text" id="prenom-maire" maxlength="20" placeholder="Camille, Yanis, Fatou…" autocomplete="off">
+        </div>
+        <p style="margin-top:1.2em"><button class="btn btn-grand" id="btn-avatar-ok" disabled>Continuer ▸</button></p>
+      </section>
+    </div>`;
+
+    const majBouton = () => {
+      document.getElementById('btn-avatar-ok').disabled =
+        !(genre && emoji && document.getElementById('prenom-maire').value.trim().length >= 2);
+    };
+    app().querySelectorAll('.choix-genre').forEach(b => b.addEventListener('click', () => {
+      genre = b.dataset.genre; emoji = null;
+      app().querySelectorAll('.choix-genre').forEach(x => x.classList.toggle('actif', x === b));
+      const grille = document.getElementById('grille-tetes');
+      grille.innerHTML = AVATARS[genre].map(a => `<button class="choix-tete" data-emoji="${a}">${a}</button>`).join('');
+      document.getElementById('bloc-tete').hidden = false;
+      document.getElementById('bloc-prenom').hidden = false;
+      grille.querySelectorAll('.choix-tete').forEach(x => x.addEventListener('click', () => {
+        emoji = x.dataset.emoji;
+        grille.querySelectorAll('.choix-tete').forEach(y => y.classList.toggle('actif', y === x));
+        FX.son('clic');
+        majBouton();
+      }));
+      majBouton();
     }));
+    document.getElementById('prenom-maire').addEventListener('input', majBouton);
+    document.getElementById('btn-avatar-ok').addEventListener('click', () => {
+      const prenom = document.getElementById('prenom-maire').value.trim();
+      FX.son('clic');
+      ecranQuiz(ville, ambiance, chill, { prenom, genre, emoji });
+    });
+  }
+
+  /* ---- Le quiz de personnalité : 3 questions, un profil ---- */
+
+  function ecranQuiz(ville, ambiance, chill, maire) {
+    const scores = { entrepreneur: 0, ecolo: 0, populaire: 0, batisseur: 0 };
+    let i = 0;
+    const poser = () => {
+      const q = QUESTIONS_PERSO[i];
+      app().innerHTML = `
+      <div class="accueil">
+        <p class="surtitre">Question ${i + 1} / ${QUESTIONS_PERSO.length}</p>
+        <h1>${maire.emoji}</h1>
+        <p class="sous-titre">${esc(q.q)}</p>
+        <div class="crise-options quiz-options">
+          ${q.reponses.map((r, j) => `<button class="option-crise reponse-perso" data-j="${j}">
+            <span class="opt-titre">${r.txt}</span></button>`).join('')}
+        </div>
+      </div>`;
+      app().querySelectorAll('.reponse-perso').forEach(b => b.addEventListener('click', () => {
+        scores[q.reponses[parseInt(b.dataset.j, 10)].trait]++;
+        FX.son('clic');
+        if (++i < QUESTIONS_PERSO.length) poser();
+        else {
+          maire.trait = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+          ecranTrait(ville, ambiance, chill, maire);
+        }
+      }));
+    };
+    poser();
+  }
+
+  /* ---- Révélation du profil, puis lancement ---- */
+
+  function ecranTrait(ville, ambiance, chill, maire) {
+    const trait = TRAITS[maire.trait];
+    app().innerHTML = `
+    <div class="accueil">
+      <p class="surtitre">Profil de campagne</p>
+      <h1>${trait.icone} ${trait.nom}</h1>
+      <p class="sous-titre">${trait.desc}</p>
+      <section class="carte carte-creation">
+        <p class="note">💼 Concrètement : chaque mois, ton cabinet mettra en place des actions dans ta ligne
+        (<b>${trait.ligne}</b>) — sans te demander ton avis. C'est ça, avoir une équipe.</p>
+        <p class="ville-choisie">${maire.emoji} <b>${esc(maire.prenom)}</b>, candidat${maire.genre === 'femme' ? 'e' : ''}
+          à ${esc(ville.nom)} (${nb(ville.pop)} hab.)</p>
+        <p style="margin-top:1em"><button class="btn btn-grand" id="btn-lancer">🗳️ Lancer la campagne</button></p>
+      </section>
+    </div>`;
+    document.getElementById('btn-lancer').addEventListener('click', () => {
+      E.nouvellePartie(ambiance, chill, {
+        nom: ville.nom, dept: ville.dept, pop: ville.pop,
+        voisines: COMMUNES_FR.voisines(ville.dept, ville.nom, 7),
+      }, maire);
+      E.sauvegarder();
+      vueActive = 'carte';
+      const titre = maire.genre === 'femme' ? 'Madame la Maire' : 'Monsieur le Maire';
+      cinematique([
+        { emoji: '🗳️', titre: 'Soir d\'élection', texte: `${ville.nom}, 20 heures. La salle des fêtes retient son souffle. Les enveloppes s'ouvrent une à une, quelqu'un fait tomber l'urne.` },
+        { emoji: '🎉', titre: `Élu${maire.genre === 'femme' ? 'e' : ''} !`, texte: `« ${maire.prenom}… 54,2 % des voix ! » La foule applaudit, un mousseux tiède est débouché. Te voilà ${titre} de ${ville.nom}.` },
+        { emoji: '🏛️', titre: 'Premier jour', texte: `Lundi, 8 heures. Gaston t'attend sur le perron de la mairie avec une pile de dossiers et un café. « Bienvenue, ${maire.genre === 'femme' ? 'patronne' : 'patron'}. On commence ? »` },
+      ], () => {
+        FX.son('niveau');
+        FX.confettis();
+        rendre();
+        modaleIntro();
+      });
+    });
   }
 
   /* ================= RENDU PRINCIPAL ================= */
@@ -45,214 +279,264 @@ const UI = (() => {
   function rendre() {
     const S = E.etat;
     if (!S) return ecranAccueil();
-    app().innerHTML = `
-      ${htmlEntete(S)}
-      ${htmlBandeaux(S)}
-      <nav class="onglets">
-        ${[['tableau', '🏛️ Tableau de bord'], ['budget', '💶 Budget'], ['construire', '🏗️ Construire'],
-           ['aides', '🤝 Aides & finances'], ['journal', '📜 Journal']]
-          .map(([id, lbl]) => `<button class="onglet ${ongletActif === id ? 'actif' : ''}" data-onglet="${id}">${lbl}</button>`).join('')}
-      </nav>
-      <main class="contenu">${htmlOnglet(S)}</main>`;
+    const note = E.noteVille();
+    const nonLues = E.notifsNonLues();
+    const sur5 = (note.note / 20).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const clNote = note.note >= 60 ? 'bonne' : note.note >= 40 ? 'moyenne' : 'mauvaise';
 
-    app().querySelectorAll('.onglet').forEach(b => b.addEventListener('click', () => { ongletActif = b.dataset.onglet; rendre(); }));
+    /* passage de niveau : fanfare et confettis */
+    if (communeSuivie !== S.commune) {
+      communeSuivie = S.commune; dernierNiveauVu = S.niveau;
+      dernierObjectifVu = S.objectifIndex; finJouee = false;
+    }
+    if (dernierNiveauVu !== null && S.niveau > dernierNiveauVu) {
+      FX.son('niveau');
+      FX.confettis(['⭐', '🎉', '✨']);
+      toast(`⭐ Niveau ${S.niveau} — te voilà « ${E.titreMaire()} » !`);
+    } else if (dernierObjectifVu !== null && S.objectifIndex > dernierObjectifVu) {
+      const fait = OBJECTIFS[S.objectifIndex - 1];
+      FX.son('argent');
+      FX.confettis(['🎯', '✨', '🏅']);
+      toast(`🎯 Objectif atteint : ${fait.texte} !`);
+    }
+    dernierNiveauVu = S.niveau;
+    dernierObjectifVu = S.objectifIndex;
+
+    app().innerHTML = `
+    <div class="coque">
+      <header class="barre-haut">
+        <button id="btn-note" class="badge-note ${clNote}" title="La note de ta ville — touche pour le détail">
+          <span class="note-etoile">⭐</span><span class="note-val">${sur5}</span><span class="note-max">/5</span>
+        </button>
+        <div class="titre-app">
+          <span class="nom-ville">${S.maire ? S.maire.emoji + ' ' : ''}${esc(S.commune)}</span>
+          <span class="date-app">${NOMS_MOIS[E.moisCalendaire()]} · j${S.jourDuMois} · an ${E.annee()} · niv ${S.niveau}${S.tranquille ? ' · 🕊️' : ''}</span>
+        </div>
+        <div class="chips-haut">
+          <span class="chip-ressource ${S.tresorerie < 0 ? 'alerte' : ''}" title="Trésorerie">💰 ${eurCourt(S.tresorerie)}</span>
+          <span class="chip-ressource" title="Population">👥 ${nb(S.population)}</span>
+          <button id="btn-son" class="btn-cloche" title="${FX.muet ? 'Réactiver le son' : 'Couper le son'}">${FX.muet ? '🔇' : '🔊'}</button>
+          <button id="btn-notifs" class="btn-cloche" title="Notifications">🔔${nonLues ? `<span class="pastille">${nonLues}</span>` : ''}</button>
+        </div>
+      </header>
+      ${htmlBarreObjectif(S)}
+      ${htmlStripAlerte(S)}
+      <main class="vue vue-${vueActive}">${htmlVue(S)}</main>
+      <div class="pilule-temps">
+        <button id="btn-jour" class="btn-temps">▶ +1 jour</button>
+        <button id="btn-semaine" class="btn-temps">⏩ +7</button>
+      </div>
+      <nav class="barre-bas">
+        ${[['carte', '🗺️', 'Carte'], ['courrier', '📬', 'Courrier'], ['construire', '🏗️', 'Construire'], ['business', '💼', 'Business']]
+          .map(([id, ic, lbl]) => `<button class="nav-btn ${vueActive === id ? 'actif' : ''}" data-vue="${id}">
+            <span class="nav-ic">${ic}${id === 'courrier' && S.questionActive ? '<span class="pastille">1</span>' : ''}</span>
+            <span class="nav-lbl">${lbl}</span></button>`).join('')}
+      </nav>
+      ${notifsOuvertes ? htmlPanneauNotifs(S) : ''}
+    </div>`;
+
+    app().querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => {
+      vueActive = b.dataset.vue; notifsOuvertes = false; rendre();
+    }));
+    const carte = document.getElementById('carte');
+    if (carte) {
+      const placerMarqueur = () => {
+        const m = document.getElementById('btn-crise-carte');
+        if (!m || !S.criseActive) return;
+        const p = CarteCommune.versEcranPct(CarteCommune.posCrise(S.criseActive.criseId, S.profil));
+        m.style.left = p.x.toFixed(1) + '%';
+        m.style.top = p.y.toFixed(1) + '%';
+        m.style.display = p.visible ? '' : 'none';
+      };
+      CarteCommune.attacher(carte, S, placerMarqueur);
+      CarteCommune.dessiner(carte, S);
+    }
     brancherEvenements(S);
     afficherModalesAutomatiques(S);
   }
 
-  function htmlEntete(S) {
-    const jours = E.joursDeTresorerie();
-    const solde = E.soldeMensuel();
-    const cadre = E.cadreDeVie();
-    const clTreso = S.tresorerie < 0 ? 'rouge' : jours < 15 ? 'orange' : '';
-    const perte = (S.populationInitiale - S.population) / S.populationInitiale * 100;
-    const clPop = perte >= 10 ? 'rouge' : perte >= 5 ? 'orange' : '';
-    return `
-    <header class="entete">
-      <div class="titre-ligne">
-        <h1>${PROFILS[S.profil].icone} ${esc(S.commune)}</h1>
-        <div class="date-jeu">Année ${E.annee()} · ${NOMS_MOIS[E.moisCalendaire()]} · jour ${S.jourDuMois}/30
-          <span class="mandat">— mandat : mois ${Math.min(S.mois, CFG.MANDAT_MOIS)}/${CFG.MANDAT_MOIS}${S.tranquille ? ' · 🕊️ ville tranquille' : ''}</span></div>
-        <div class="controles-temps">
-          <button id="btn-jour" class="btn-temps">▶ +1 jour</button>
-          <button id="btn-semaine" class="btn-temps">⏩ +7 jours</button>
-          <button id="btn-nouvelle" class="btn-lien" title="Abandonner et recommencer">Nouvelle partie</button>
-        </div>
-      </div>
-      <div class="jauges">
-        <div class="jauge ${clTreso}"><span class="jauge-nom">Trésorerie</span>
-          <span class="jauge-val">${eur(S.tresorerie)}</span>
-          <span class="jauge-sub">${S.tresorerie < 0 ? '⚠ négative' : Math.round(jours) + ' jours'}</span></div>
-        <div class="jauge ${clPop}"><span class="jauge-nom">Population</span>
-          <span class="jauge-val">${nb(S.population)}</span>
-          <span class="jauge-sub">${S.dernierSoldeMigratoire === 0 ? 'stable' : signe(S.dernierSoldeMigratoire, nb) + ' le mois dernier'}</span></div>
-        ${jauge100('Popularité', S.popularite)}
-        ${jauge100('Attractivité', S.attractivite)}
-        ${jauge100('Cadre de vie', cadre)}
-        ${jauge100('Capital préfecture', S.capitalPrefecture, true)}
-        <div class="jauge"><span class="jauge-nom">Solde mensuel</span>
-          <span class="jauge-val ${solde < 0 ? 'texte-rouge' : ''}">${signe(solde)}</span>
-          <span class="jauge-sub">fonctionnement</span></div>
-      </div>
-    </header>`;
+  let minuteurRedim = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(minuteurRedim);
+    minuteurRedim = setTimeout(() => {
+      const carte = document.getElementById('carte');
+      if (carte && E.etat) CarteCommune.dessiner(carte, E.etat);
+    }, 150);
+  });
+
+  const EMOJI_SAISON = { hiver: '❄️', printemps: '🌱', ete: '☀️', automne: '🍂' };
+
+  /* Le fil rouge : l'objectif en cours, toujours visible */
+  function htmlBarreObjectif(S) {
+    const obj = E.objectifCourant();
+    if (!obj) return '';
+    return `<div class="barre-objectif">🎯 <b>Objectif :</b> ${obj.icone} ${obj.texte}
+      <span class="obj-recompense">+${obj.xp} XP${obj.capital ? ` · +${obj.capital} 🏛️` : ''}</span></div>`;
   }
 
-  function jauge100(nom, v, pref = false) {
-    const cl = v < 25 ? 'rouge' : v < 45 ? 'orange' : '';
-    return `<div class="jauge ${cl}"><span class="jauge-nom">${nom}</span>
-      <span class="jauge-val">${Math.round(v)}<span class="sur100">/100</span></span>
-      <div class="barre"><div class="barre-rempli ${pref ? 'pref' : ''}" style="width:${Math.round(v)}%"></div></div></div>`;
-  }
-
-  function htmlBandeaux(S) {
-    const b = [];
-    if (S.paliers.fin === 'alerte')
-      b.push(`<div class="bandeau orange">🟧 <b>Alerte budgétaire</b> — moins de 15 jours de trésorerie. Pistes : relever le taux communal, geler un chantier, solliciter l'État (onglet Aides).</div>`);
-    if (S.paliers.fin === 'redressement') {
-      const j = E.joursRedressementRestants();
-      b.push(`<div class="bandeau rouge">🟥 <b>Plan de redressement</b> — ${j} jour(s) pour revenir à l'équilibre, sinon mise sous tutelle. Investissements gelés, emprunt coupé, taux plancher 15 %.
-        ${E.missionRedressementDispo() ? `<button id="btn-mission" class="btn-mini">🗂️ Mission du jour (+${eur(CFG.MISSION_REDRESSEMENT)})</button>` : '<span class="fait">mission du jour accomplie ✓</span>'}</div>`);
-    }
-    if (S.paliers.demo === 'alerte')
-      b.push(`<div class="bandeau orange">🟧 <b>Alerte démographique</b> — plus de 5 % de la population est partie. <button id="btn-diag" class="btn-mini">Voir le diagnostic</button></div>`);
-    if (S.paliers.demo === 'declin')
-      b.push(`<div class="bandeau rouge">🟥 <b>Déclin démographique</b> — plus de 10 % de départs. Le conseil s'inquiète. À −15 %, le mandat prend fin. <button id="btn-diag" class="btn-mini">Voir le diagnostic</button></div>`);
+  /* Bandeau fin sous le header : uniquement l'urgent */
+  function htmlStripAlerte(S) {
+    const morceaux = [];
     if (S.criseActive) {
       const c = CRISES.find(x => x.id === S.criseActive.criseId);
-      b.push(`<div class="bandeau rouge">🚨 <b>Crise en cours : ${c.nom}</b> — coût actuel ${eur(S.criseActive.coutCourant)}, il augmente chaque jour. <button id="btn-crise" class="btn-mini">Décider</button></div>`);
+      morceaux.push(`<span>🚨 ${c.nom} — ${eurCourt(S.criseActive.coutCourant)}</span><button id="btn-crise" class="btn-mini">Décider</button>`);
     }
-    return b.length ? `<div class="bandeaux">${b.join('')}</div>` : '';
+    if (S.paliers.fin === 'redressement') {
+      morceaux.push(`<span>🟥 Redressement : ${E.joursRedressementRestants()} j restants</span>
+        ${E.missionRedressementDispo() ? `<button id="btn-mission" class="btn-mini">🗂️ Mission (+${eurCourt(E.montantMission())})</button>` : '<span class="fait">✓</span>'}`);
+    } else if (S.paliers.fin === 'alerte') {
+      morceaux.push(`<span>🟧 Caisse basse (${Math.max(0, Math.round(E.joursDeTresorerie()))} j)</span>`);
+    }
+    if (S.paliers.demo !== 'ok') {
+      morceaux.push(`<span>${S.paliers.demo === 'declin' ? '🟥 Exode' : '🟧 Départs'}</span><button id="btn-diag" class="btn-mini">Pourquoi ?</button>`);
+    }
+    return morceaux.length ? `<div class="strip-alerte">${morceaux.map(m => `<span class="strip-item">${m}</span>`).join('')}</div>` : '';
   }
 
-  /* ================= ONGLETS ================= */
+  /* ================= VUES ================= */
 
-  function htmlOnglet(S) {
-    switch (ongletActif) {
-      case 'tableau': return htmlTableau(S);
-      case 'budget': return htmlBudget(S);
-      case 'construire': return htmlConstruire(S);
-      case 'aides': return htmlAides(S);
-      case 'journal': return htmlJournal(S);
+  function htmlVue(S) {
+    switch (vueActive) {
+      case 'carte': return htmlVueCarte(S);
+      case 'courrier': return htmlVueCourrier(S);
+      case 'construire': return htmlVueConstruire(S);
+      case 'business': return htmlVueBusiness(S);
+      case 'note': return htmlVueNote(S);
     }
   }
 
-  /* ---- Tableau de bord ---- */
+  /* ---- 🗺️ Carte ---- */
 
-  function htmlTableau(S) {
-    const solde = E.soldeMensuel();
-    const jours = E.joursDeTresorerie();
-    const dette = E.tauxEndettement() * 100;
-    const sat = E.saturation();
-    const mig = E.calculerMigration();
+  function htmlVueCarte(S) {
+    const saison = E.saison();
+    const crise = S.criseActive ? CRISES.find(x => x.id === S.criseActive.criseId) : null;
+    const posC = crise ? CarteCommune.posCrise(crise.id, S.profil) : null;
     return `
-    <div class="grille-2">
-      <section class="carte">
-        <h2>Les trois chiffres qui comptent</h2>
-        <div class="ratios">
-          ${ratio('Solde mensuel', signe(solde), solde < 0, 'recettes − dépenses de fonctionnement · alerte si < 0')}
-          ${ratio('Jours de trésorerie', S.tresorerie < 0 ? '—' : Math.round(jours) + ' j', jours < 15, 'trésorerie ÷ dépense quotidienne · alerte si < 15 j')}
-          ${ratio('Taux d\'endettement', dette.toFixed(0) + ' %', dette > 100, 'encours ÷ recettes annuelles · alerte si > 100 %')}
-        </div>
-      </section>
-      <section class="carte">
-        <h2>Population & migration</h2>
-        <p>Tendance actuelle : <b>${signe(Math.round(S.population * mig.diagnostic.soldePct / 100), nb)} hab./mois</b>
-           (arrivées ${mig.diagnostic.arrivee.toFixed(2)} % − départs ${mig.diagnostic.depart.toFixed(2)} %).</p>
-        <p>Saturation des services : <b>${sat.toFixed(1)} %</b> — capacité d'accueil ${nb(E.capaciteEquipements())} hab.
-           ${sat > 0 ? '<span class="texte-orange">La commune grandit plus vite que ses équipements.</span>' : ''}</p>
-        <button class="btn" id="btn-diag2">🔎 Diagnostic des départs</button>
-      </section>
-    </div>
-    <div class="grille-2">
-      <section class="carte">
-        <h2>Trésorerie (fin de mois)</h2>
-        ${graphique(S.historique.map(h => h.tresorerie), '#2f6fb6', v => eur(v), S.tresorerie)}
-      </section>
-      <section class="carte">
-        <h2>Population (fin de mois)</h2>
-        ${graphique(S.historique.map(h => h.populationFin), '#2e7d52', v => nb(v) + ' hab.', S.population)}
-      </section>
-    </div>
-    <section class="carte">
-      <h2>Cadre de vie — le détail</h2>
-      <p class="note">Ce qui fait rester les habitants. Négliger une composante, c'est les regarder partir.</p>
-      ${composantesCadre(S)}
-    </section>`;
+    <div class="carte-monde pleine">
+      <canvas id="carte" role="img" aria-label="Plan de la commune de ${esc(S.commune)}"></canvas>
+      <span class="chip-carte">${EMOJI_SAISON[saison]} ${saison === 'ete' ? 'été' : saison}</span>
+      <div class="cartouche">
+        <div class="surcart">Commune de</div>
+        <div class="nomcart">${esc(S.commune)}</div>
+        <div class="echelle">500 m</div>
+      </div>
+      <div class="zoom-controles">
+        <button id="zoom-plus" class="btn-zoom" title="Zoomer">+</button>
+        <button id="zoom-moins" class="btn-zoom" title="Dézoomer — découvre les villes voisines">−</button>
+        <button id="zoom-reset" class="btn-zoom" title="Recentrer sur ta commune">⌖</button>
+      </div>
+      <span class="chip-aide">🖐️ glisse · 🔍 zoome · dézoome pour voir les villes voisines</span>
+      ${crise ? `<button class="marqueur-crise" id="btn-crise-carte" title="${crise.nom} — touche pour décider"
+        style="left:${(posC.x * 100).toFixed(1)}%;top:${(posC.y * 100).toFixed(1)}%">${crise.icone}</button>` : ''}
+    </div>`;
   }
 
-  function ratio(nom, val, alerte, aide) {
-    return `<div class="ratio ${alerte ? 'alerte' : ''}" title="${aide}">
-      <span class="ratio-val">${val}</span><span class="ratio-nom">${nom}</span></div>`;
+  /* ---- 📬 Courrier ---- */
+
+  function htmlVueCourrier(S) {
+    const q = S.questionActive ? QUESTIONS.find(x => x.id === S.questionActive) : null;
+    return `
+    <div class="defilable">
+      ${q ? `
+      <section class="carte courrier-actif">
+        <h2>📬 Nouveau courrier</h2>
+        <p class="crise-texte">${q.icone} ${q.texte}</p>
+        <button class="btn" id="btn-repondre">Répondre</button>
+      </section>` : `
+      <section class="carte">
+        <h2>📬 Boîte aux lettres</h2>
+        <p class="note">Rien à signer pour l'instant. Avance les jours, le courrier arrive tout seul — et il n'attend jamais longtemps.</p>
+      </section>`}
+      ${S.historiqueQuestions.length ? `
+      <section class="carte">
+        <h2>Tes dernières décisions</h2>
+        <ul class="liste-decisions">
+          ${S.historiqueQuestions.map(h => `<li><span class="jour-tag">J${h.jour}</span> ${h.icone} <b>${h.libelle}</b><br><span class="decision-note">${h.note}</span></li>`).join('')}
+        </ul>
+      </section>` : ''}
+    </div>`;
   }
 
-  function composantesCadre(S) {
-    const comp = [
-      ['Éclairage public', S.cadre.eclairage, 20], ['État de la voirie', S.cadre.voirie, 25],
-      ['Propreté & déchets', S.cadre.proprete, 20], ['Logements vacants', S.cadre.logement, 15],
-      ['Équipements de proximité', S.cadre.proximite, 20],
-    ];
-    return `<div class="composantes">${comp.map(([n, v, p]) => `
-      <div class="composante"><span class="comp-nom">${n} <em>(${p} %)</em></span>
-        <div class="barre grande"><div class="barre-rempli ${v < 40 ? 'basse' : ''}" style="width:${Math.round(v)}%"></div></div>
-        <span class="comp-val">${Math.round(v)}</span></div>`).join('')}</div>`;
+  /* ---- 🏗️ Construire ---- */
+
+  function htmlVueConstruire(S) {
+    return `
+    <div class="defilable">
+      <p class="avert">⚠️ <b>Chaque bâtiment coûte tous les mois, pour toujours.</b> Tu verras la projection avant de valider.</p>
+      <div class="grille-cartes">
+        ${EQUIPEMENTS.map(def => {
+          const test = E.peutConstruire(def);
+          const dim = E.dimEquip(def);
+          const charge = dim.entretien + dim.energie - dim.recettes;
+          const dejaN = S.equipements.filter(e => e.type === def.id).length;
+          return `<div class="carte equip ${test.ok ? '' : 'grise'}">
+            <h3>${def.icone} ${def.nom} ${dejaN ? `<span class="badge">×${dejaN}</span>` : ''}</h3>
+            <p class="equip-desc">${def.desc}</p>
+            <div class="equip-chiffres">
+              <span>💰 <b>${eur(dim.cout)}</b></span>
+              <span>${charge > 0 ? '📉' : '📈'} <b class="${charge > 0 ? 'texte-rouge' : 'texte-vert'}">${charge >= 0 ? '−' : '+'}${eur(Math.abs(charge))}/mois</b></span>
+              ${dim.capacite ? `<span>👥 +${nb(dim.capacite)}</span>` : ''}
+              ${def.effets.attractivite ? `<span>✨ +${def.effets.attractivite}</span>` : ''}
+              ${def.effets.popularite ? `<span>❤️ +${def.effets.popularite}</span>` : ''}
+            </div>
+            <div class="equip-actions">
+              <button class="btn btn-construire" data-equip="${def.id}" ${test.ok ? '' : 'disabled'}>Construire</button>
+            </div>
+            ${!test.ok ? `<p class="note-inline">${test.msg}</p>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
   }
 
-  /* Petit graphique SVG mono-série (ligne fine, grille discrète, dernier point étiqueté) */
-  function graphique(valeurs, couleur, fmt, valActuelle) {
-    if (valeurs.length < 2) return `<p class="note">Valeur actuelle : <b>${fmt(valActuelle)}</b> — l'historique se dessine à partir du 2ᵉ mois.</p>`;
-    const W = 420, H = 120, P = 6;
-    const min = Math.min(...valeurs, 0), max = Math.max(...valeurs);
-    const y = v => H - P - (max === min ? 0.5 : (v - min) / (max - min)) * (H - 2 * P);
-    const x = i => P + i * (W - 2 * P) / (valeurs.length - 1);
-    const pts = valeurs.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-    const zeroY = min < 0 ? y(0) : null;
-    const der = valeurs[valeurs.length - 1];
-    return `<svg viewBox="0 0 ${W} ${H}" class="graph" role="img" aria-label="Évolution : dernière valeur ${fmt(der)}">
-      ${zeroY !== null ? `<line x1="${P}" x2="${W - P}" y1="${zeroY}" y2="${zeroY}" class="graph-zero"/>` : ''}
-      <polyline points="${pts}" fill="none" stroke="${couleur}" stroke-width="2" stroke-linejoin="round"/>
-      <circle cx="${x(valeurs.length - 1)}" cy="${y(der)}" r="3.5" fill="${couleur}"/>
-    </svg>
-    <p class="graph-legende">Dernière clôture : <b>${fmt(der)}</b> · ${valeurs.length} mois</p>`;
-  }
+  /* ---- 💼 Business ---- */
 
-  /* ---- Budget ---- */
-
-  function htmlBudget(S) {
+  function htmlVueBusiness(S) {
     const r = E.recettes(), d = E.depenses();
-    const solde = E.soldeMensuel();
-    const lignes = (items) => items.map(([n, v, note]) =>
-      `<tr><td>${n}${note ? ` <span class="note-inline">${note}</span>` : ''}</td><td class="mont ${v < 0 ? 'texte-rouge' : ''}">${v < 0 ? '−' : ''}${eur(Math.abs(v))}</td></tr>`).join('');
+    const rec = r.fiscalite + r.dotation + r.services;
+    const dep = d.personnel + d.energie + d.entretien + d.dette;
+    const solde = rec - dep;
+    const c = E.conditionsEmprunt();
     const chargesEquip = S.equipements.map(e => {
       const def = E.defEquip(e.type);
-      const net = def.entretien + def.energie - def.recettes;
-      return [`${def.icone} ${def.nom}`, -net, 'ligne à vie'];
-    });
+      const dim = E.dimEquip(def);
+      return [def, dim.entretien + dim.energie - dim.recettes];
+    }).filter(([, net]) => net !== 0);
+    const presetsEmprunt = [
+      ['Petit', arrondi50k(S.population * 40)],
+      ['Moyen', arrondi50k(S.population * 80)],
+      ['Gros', arrondi50k(S.population * 160)],
+    ];
     return `
-    <div class="grille-2">
+    <div class="defilable">
       <section class="carte">
-        <h2>Section fonctionnement — chaque mois</h2>
+        <h2>📊 Le budget, en bref</h2>
         <table class="table-budget">
-          <tr class="entete-table"><td>Recettes</td><td class="mont">${eur(r.fiscalite + r.dotation + r.services)}</td></tr>
-          ${lignes([
-            [`Fiscalité locale (taux ${S.taux} %${S.exonerationMois ? ', exonération en cours' : ''})`, r.fiscalite],
-            ['Dotation de l\'État', r.dotation, `${CFG.DOTATION_HAB_AN} €/hab/an`],
-            ['Recettes de service', r.services],
-          ])}
-          <tr class="entete-table"><td>Dépenses</td><td class="mont">−${eur(d.personnel + d.energie + d.entretien + d.dette)}</td></tr>
-          ${lignes([
-            ['Personnel (incompressible)', -d.personnel],
-            ['Énergie & fluides', -d.energie],
-            ['Entretien du patrimoine', -d.entretien],
-            ['Remboursements d\'emprunt' + (S.avanceTreso ? ' + avance État' : ''), -d.dette],
-          ])}
-          <tr class="total ${solde < 0 ? 'texte-rouge' : ''}"><td>Solde mensuel</td><td class="mont">${signe(solde)}</td></tr>
+          <tr><td>Ce qui rentre</td><td class="mont texte-vert">+${eur(rec)}</td></tr>
+          <tr><td>Ce qui sort</td><td class="mont texte-rouge">−${eur(dep)}</td></tr>
+          <tr class="total ${solde < 0 ? 'texte-rouge' : ''}"><td>Chaque mois</td><td class="mont">${signe(solde)}</td></tr>
         </table>
-        ${chargesEquip.length ? `<h3>Dont lignes créées par vos constructions</h3>
-          <table class="table-budget">${lignes(chargesEquip)}</table>` : ''}
+        <details class="details-budget">
+          <summary>Voir le détail</summary>
+          <table class="table-budget">
+            <tr class="entete-table"><td>Recettes</td><td></td></tr>
+            <tr><td>Impôts locaux (${S.taux} %${S.exonerationMois ? ', exonération en cours' : ''})</td><td class="mont">${eur(r.fiscalite)}</td></tr>
+            <tr><td>Dotation de l'État</td><td class="mont">${eur(r.dotation)}</td></tr>
+            <tr><td>Services (parking, marché…)</td><td class="mont">${eur(r.services)}</td></tr>
+            <tr class="entete-table"><td>Dépenses</td><td></td></tr>
+            <tr><td>Personnel municipal</td><td class="mont">−${eur(d.personnel)}</td></tr>
+            <tr><td>Énergie</td><td class="mont">−${eur(d.energie)}</td></tr>
+            <tr><td>Entretien</td><td class="mont">−${eur(d.entretien)}</td></tr>
+            <tr><td>Remboursements</td><td class="mont">−${eur(d.dette)}</td></tr>
+            ${chargesEquip.length ? `<tr class="entete-table"><td>Dont tes constructions (à vie)</td><td></td></tr>
+              ${chargesEquip.map(([def, net]) => `<tr><td>${def.icone} ${def.nom}</td><td class="mont">${net > 0 ? '−' : '+'}${eur(Math.abs(net))}</td></tr>`).join('')}` : ''}
+          </table>
+        </details>
+        <p class="note-inline">Dispo pour construire : ${eur(E.capaciteInvestissement())} (15 jours de caisse gardés de côté).</p>
       </section>
       <section class="carte">
-        <h2>Taux communal — le levier principal</h2>
-        <p class="note">Modifiable une fois par mois, appliqué le mois suivant. Jamais rétroactif.</p>
+        <h2>💶 Impôts locaux</h2>
+        <p class="note">Ton levier principal. Une fois par mois, effet le mois d'après.</p>
         <div class="ligne-taux">
           <input type="range" id="slider-taux" min="${CFG.TAUX_MIN}" max="${CFG.TAUX_MAX}" step="1"
             value="${S.tauxProchain ?? S.taux}" ${S.tauxChangeCeMois ? 'disabled' : ''}>
@@ -260,153 +544,200 @@ const UI = (() => {
         </div>
         <div id="apercu-taux" class="apercu"></div>
         <button class="btn" id="btn-taux" ${S.tauxChangeCeMois ? 'disabled' : ''}>
-          ${S.tauxChangeCeMois ? (S.tauxProchain !== null ? `Voté : ${S.tauxProchain} % au mois prochain` : 'Déjà modifié ce mois-ci') : 'Voter ce taux (projection avant validation)'}
+          ${S.tauxChangeCeMois ? (S.tauxProchain !== null ? `Voté : ${S.tauxProchain} % au mois prochain` : 'Déjà modifié ce mois-ci') : 'Voter ce taux'}
         </button>
-        <hr>
-        <h2>Budgets d'entretien mensuels</h2>
-        <p class="note">La voirie est la seule chose qui se dégrade toute seule dans ce jeu — lentement, et c'est évitable.</p>
-        ${sliderBudget('voirie', 'Entretien de la voirie', S.budgetVoirie, Math.round(S.population * COEF.VOIRIE_PLEIN))}
-        ${sliderBudget('proprete', 'Propreté & déchets', S.budgetProprete, Math.round(S.population * COEF.PROPRETE_PLEIN))}
       </section>
-    </div>
-    <section class="carte">
-      <h2>Section investissement</h2>
-      <p>Capacité d'investissement : <b>${eur(E.capaciteInvestissement())}</b>
-        <span class="note-inline">(trésorerie − ${CFG.RESERVE_FONCTIONNEMENT_J} jours de fonctionnement sanctuarisés : on ne finance jamais du fonctionnement avec de l'investissement, ni l'inverse)</span>
-        · Épargne cumulée du mandat : <b>${eur(S.epargneCumulee)}</b></p>
-    </section>`;
-  }
-
-  function sliderBudget(id, nom, valeur, plein) {
-    return `<div class="ligne-budget">
-      <label>${nom} <span class="note-inline">recommandé : ${eur(plein)}</span></label>
-      <div class="ligne-taux">
-        <input type="range" id="slider-${id}" min="0" max="${plein * 2}" step="500" value="${valeur}">
-        <span id="val-${id}" class="taux-val">${eur(valeur)}</span>
-        <button class="btn-mini" id="btn-${id}">Valider</button>
-      </div>
-    </div>`;
-  }
-
-  /* ---- Construire ---- */
-
-  function htmlConstruire(S) {
-    return `
-    <p class="avert">⚠️ <b>Chaque équipement crée une dépense de fonctionnement à vie.</b> La projection à 30 jours s'affiche avant toute validation — vous ne pourrez pas dire que vous ne saviez pas.</p>
-    <div class="grille-cartes">
-      ${EQUIPEMENTS.map(def => {
-        const test = E.peutConstruire(def);
-        const sub = E.subventionAccordee(def.id);
-        const enInstruction = S.subventions.some(s => s.equipId === def.id && s.statut === 'instruction');
-        const charge = def.entretien + def.energie - def.recettes;
-        const dejaN = S.equipements.filter(e => e.type === def.id).length;
-        return `<div class="carte equip ${test.ok ? '' : 'grise'}">
-          <h3>${def.icone} ${def.nom} ${dejaN ? `<span class="badge">×${dejaN}</span>` : ''}</h3>
-          <p class="equip-desc">${def.desc}</p>
-          <div class="equip-chiffres">
-            <span>Coût : <b>${eur(E.coutNet(def))}</b>${sub ? ' <span class="badge vert">subv. −50 %</span>' : ''}</span>
-            <span>Fonctionnement : <b class="${charge > 0 ? 'texte-rouge' : 'texte-vert'}">${charge >= 0 ? '+' : '−'}${eur(Math.abs(charge))}/mois à vie</b></span>
-            ${def.capacite ? `<span>Capacité : +${nb(def.capacite)} hab.</span>` : ''}
-            ${def.effets.attractivite ? `<span>Attractivité +${def.effets.attractivite}</span>` : ''}
-            ${def.effets.popularite ? `<span>Popularité +${def.effets.popularite}</span>` : ''}
-          </div>
-          <div class="equip-actions">
-            <button class="btn btn-construire" data-equip="${def.id}" ${test.ok ? '' : 'disabled'}>Construire</button>
-            ${!sub && !enInstruction ? `<button class="btn-lien btn-dossier" data-equip="${def.id}">📁 Demander une subvention (50 %, ~${CFG.SUBVENTION_DELAI_JOURS} j)</button>` : ''}
-            ${enInstruction ? '<span class="note-inline">dossier en instruction…</span>' : ''}
-          </div>
-          ${!test.ok ? `<p class="note-inline">${test.msg}</p>` : ''}
-        </div>`;
-      }).join('')}
-    </div>`;
-  }
-
-  /* ---- Aides & finances ---- */
-
-  function htmlAides(S) {
-    const c = E.conditionsEmprunt();
-    return `
-    <div class="grille-2">
       <section class="carte">
-        <h2>🏛️ L'État — rapide, gratuit, rationné</h2>
-        <p>Capital préfecture : <b>${Math.round(S.capitalPrefecture)}/100</b> <span class="note-inline">(+${CFG.CAPITAL_PREF_REGEN}/mois, −${CFG.CAPITAL_PREF_MALUS_ALERTE} en période d'alerte budgétaire)</span></p>
-        <p class="note">Le joueur qui a appelé la préfecture trois fois pour des broutilles se retrouve à sec le jour du feu de forêt. Les aides de crise (dotation de solidarité, fonds de catastrophe) se demandent pendant les crises.</p>
+        <h2>🧹 Entretien de la ville</h2>
+        <div class="presets">
+          ${Object.entries(E.NIVEAUX_ENTRETIEN).map(([id, n]) => `
+            <button class="preset btn-entretien ${S.niveauEntretien === id ? 'actif' : ''}" data-niveau="${id}">
+              <span class="preset-nom">${n.nom}</span>
+              <span class="preset-detail">${eur(coutNiveau(S, n.facteur))}/mois</span>
+              <span class="preset-note">${id === 'eco' ? 'la ville se dégrade doucement' : id === 'normal' ? 'ça tient la route' : 'propre et nickel'}</span>
+            </button>`).join('')}
+        </div>
+      </section>
+      <section class="carte">
+        <h2>🏦 Emprunter</h2>
+        ${c.bloque ? '<p class="avert">Emprunt indisponible (dette trop élevée ou plan de redressement).</p>' : `
+        <p class="note">L'argent tout de suite, une mensualité pour 5 ans. Taux : ${(c.taux * 100).toFixed(1)} %.</p>
+        <div class="presets">
+          ${presetsEmprunt.map(([lbl, cap]) => {
+            const possible = cap <= c.capaciteMax;
+            return `<button class="preset btn-emprunt" data-capital="${cap}" ${possible ? '' : 'disabled'}>
+              <span class="preset-nom">${lbl}</span>
+              <span class="preset-detail">${eur(cap)}</span>
+              <span class="preset-note">−${eur(E.mensualite(cap, c.taux, 60))}/mois × 60</span>
+            </button>`;
+          }).join('')}
+        </div>`}
+        ${S.emprunts.length ? `<h3>En cours</h3><table class="table-budget">${S.emprunts.map(e =>
+          `<tr><td>${eur(e.capital)} · reste ${e.moisRestants} mois</td><td class="mont">−${eur(e.mensualite)}/mois</td></tr>`).join('')}</table>` : ''}
+      </section>
+      <section class="carte">
+        <h2>🏛️ Aides de l'État</h2>
+        <div class="composante"><span class="comp-nom">Capital préfecture</span>
+          <div class="barre grande"><div class="barre-rempli pref" style="width:${Math.round(S.capitalPrefecture)}%"></div></div>
+          <span class="comp-val">${Math.round(S.capitalPrefecture)}</span></div>
+        <p class="note">Ça se recharge tout seul (+${CFG.CAPITAL_PREF_REGEN}/mois). Gaspille-le, et la préfecture ne répondra plus le jour du feu de forêt.</p>
         ${AIDES_ETAT.map(a => `
           <div class="ligne-aide">
-            <div><b>${a.nom}</b> <span class="badge">capital ${a.capital}</span><br><span class="note-inline">${a.desc}</span></div>
-            <button class="btn btn-aide" data-aide="${a.id}" ${S.capitalPrefecture < a.capital ? 'disabled' : ''}>Solliciter</button>
+            <div><b>${a.nom}</b> <span class="badge">−${a.capital} capital</span><br><span class="note-inline">${a.desc}</span></div>
+            <button class="btn btn-aide" data-aide="${a.id}" ${S.capitalPrefecture < a.capital ? 'disabled' : ''}>Demander</button>
           </div>`).join('')}
       </section>
       <section class="carte">
-        <h2>🏦 L'emprunt</h2>
-        ${c.bloque ? '<p class="avert">Accès à l\'emprunt coupé (endettement > 100 % ou plan de redressement).</p>' : `
-        <p>Capacité maximale : <b>${eur(c.capaciteMax)}</b> · taux actuel : <b>${(c.taux * 100).toFixed(2)} %</b>
-          <span class="note-inline">(3,5 % + 2 % × taux d'endettement)</span></p>
-        <div class="ligne-taux">
-          <input type="range" id="slider-emprunt" min="100000" max="${Math.max(100000, c.capaciteMax)}" step="50000" value="${Math.min(500000, c.capaciteMax)}">
-          <span id="val-emprunt" class="taux-val">${eur(Math.min(500000, c.capaciteMax))}</span>
-        </div>
-        <div class="ligne-taux">
-          <label>Durée :</label>
-          <select id="duree-emprunt"><option value="24">24 mois</option><option value="60" selected>60 mois</option><option value="120">120 mois</option></select>
-          <span id="mensualite-emprunt" class="note-inline"></span>
-        </div>
-        <button class="btn" id="btn-emprunt">Emprunter (projection avant validation)</button>`}
-        <p class="note">La mensualité s'inscrit <b>définitivement</b> dans les dépenses de fonctionnement, jusqu'à extinction.</p>
-        ${S.emprunts.length ? `<h3>Emprunts en cours</h3><table class="table-budget">${S.emprunts.map(e =>
-          `<tr><td>${eur(e.capital)} · ${e.moisRestants} mois restants</td><td class="mont">−${eur(e.mensualite)}/mois</td></tr>`).join('')}</table>` : ''}
-      </section>
-    </div>
-    <div class="grille-2">
-      <section class="carte">
-        <h2>💼 Le privé — immédiat, peu cher, mais ça se paie plus tard</h2>
+        <h2>💼 Offres privées</h2>
         ${S.offresEnCours.length ? S.offresEnCours.map(oe => {
           const o = OFFRES_PRIVEES.find(x => x.id === oe.id);
           return `<div class="offre">
             <p><b>${o.icone} ${o.nom}</b> — ${o.texte}</p>
-            <p>Gain immédiat : <b>${eur(o.montant)}</b> · Contrepartie : <b>J+${o.delai}</b> (nature non précisée, évidemment)</p>
-            <button class="btn btn-offre-oui" data-offre="${o.id}">Accepter l'argent</button>
+            <p>💰 <b>${eur(E.montantOffre(o))}</b> tout de suite · 🎁 contrepartie surprise dans <b>${o.delai} jours</b></p>
+            <button class="btn btn-offre-oui" data-offre="${o.id}">Prendre l'argent</button>
             <button class="btn-lien btn-offre-non" data-offre="${o.id}">Décliner</button>
           </div>`;
-        }).join('') : '<p class="note">Aucune offre en ce moment. Les mécènes ont un flair certain pour les communes en difficulté — ils reviendront.</p>'}
-        ${S.effetsDifferes.filter(e => e.evenement).length ? `<h3>Créances en attente</h3>
+        }).join('') : '<p class="note">Rien pour l\'instant. Les mécènes ont un flair certain pour les mairies fauchées — ils reviendront.</p>'}
+        ${S.effetsDifferes.filter(e => e.evenement).length ? `<h3>Ce que tu dois encore…</h3>
           <ul class="liste-simple">${S.effetsDifferes.filter(e => e.evenement).map(e =>
-            `<li>⏳ ${esc(e.source || 'Contrepartie')} — échéance J+${e.jour - S.jour} (jour ${e.jour})</li>`).join('')}</ul>` : ''}
-      </section>
-      <section class="carte">
-        <h2>📁 Subventions (département · région · Europe)</h2>
-        <p class="note">Jamais pour une crise, uniquement pour un projet : 50 % du coût, ~${CFG.SUBVENTION_DELAI_JOURS} jours d'instruction, ${Math.round(CFG.SUBVENTION_SUCCES * 100)} % de réussite. Les dossiers se déposent depuis l'onglet Construire. Le joueur prévoyant dépose les siens avant d'en avoir besoin.</p>
-        ${S.subventions.length ? `<ul class="liste-simple">${S.subventions.map(s => {
-          const def = E.defEquip(s.equipId);
-          const lbl = { instruction: `⏳ en instruction (verdict jour ${s.jourVerdict})`, accordee: '✅ accordée — utilisable à la construction', refusee: '❌ refusée', consommee: '💶 versée' }[s.statut];
-          return `<li>${def.icone} ${def.nom} : ${lbl}</li>`;
-        }).join('')}</ul>` : '<p class="note">Aucun dossier déposé.</p>'}
+            `<li>⏳ ${esc(e.source || 'Contrepartie')} — dans ${e.jour - S.jour} jour(s)</li>`).join('')}</ul>` : ''}
       </section>
     </div>`;
   }
 
-  /* ---- Journal ---- */
+  function coutNiveau(S, facteur) {
+    return Math.round(S.population * COEF.VOIRIE_PLEIN * facteur) + Math.round(S.population * 1.0 * facteur);
+  }
+  function arrondi50k(v) { return Math.max(20000, Math.round(v / 10000) * 10000); }
 
-  function htmlJournal(S) {
+  /* ---- 🏅 Note de la ville (via le badge du header) ---- */
+
+  function htmlVueNote(S) {
+    const note = E.noteVille();
+    const solde = E.soldeMensuel();
+    const jours = E.joursDeTresorerie();
+    const dette = E.tauxEndettement() * 100;
+    const compo = [
+      ['💰 Finances', note.composantes.finances, 'jours de caisse et dette'],
+      ['❤️ Popularité', note.composantes.popularite, 'ce que pensent les habitants'],
+      ['✨ Attractivité', note.composantes.attractivite, 'ce qui fait venir'],
+      ['🌳 Cadre de vie', note.composantes.cadre, 'ce qui fait rester'],
+    ];
+    const etoiles = Math.round(note.note / 20);
+    const trait = E.traitMaire();
+    const titre = S.maire.genre === 'femme' ? 'Madame la Maire' : 'Monsieur le Maire';
     return `
-    <div class="grille-2">
-      <section class="carte">
-        <h2>📜 Journal de la commune</h2>
-        <ul class="journal">${S.journal.map(l => `<li><span class="jour-tag">J${l.jour}</span> ${l.txt}</li>`).join('')}</ul>
+    <div class="defilable">
+      <section class="carte carte-maire">
+        <div class="fiche-maire">
+          <span class="maire-avatar">${S.maire.emoji}</span>
+          <div>
+            <p class="maire-nom">${esc(S.maire.prenom)} — ${titre} de ${esc(S.commune)}</p>
+            <p class="maire-trait">${trait.icone} <b>${trait.nom}</b> · ligne politique : ${trait.ligne}</p>
+            <p class="note-inline">Ton cabinet agit chaque mois dans ce sens, sans te demander. C'est ça, une équipe.</p>
+          </div>
+        </div>
       </section>
       <section class="carte">
-        <h2>📊 Journal budgétaire mensuel</h2>
-        ${S.historique.length ? `<div class="table-scroll"><table class="table-budget serree">
-          <tr class="entete-table"><td>Mois</td><td class="mont">Recettes</td><td class="mont">Dépenses</td><td class="mont">Solde</td><td class="mont">Population</td></tr>
-          ${[...S.historique].reverse().map(h => {
-            const rec = h.recFiscalite + h.recDotation + h.recServices + h.recSubventions;
-            const dep = h.depPersonnel + h.depEnergie + h.depEntretien + h.depDette + h.depExceptionnel;
-            return `<tr><td>${h.nomMois} A${h.annee}</td><td class="mont">${eur(rec)}</td><td class="mont">−${eur(dep)}</td>
-              <td class="mont ${h.solde < 0 ? 'texte-rouge' : ''}">${signe(h.solde)}</td>
-              <td class="mont">${nb(h.populationFin)} (${signe(h.soldeMigratoire, nb)})</td></tr>`;
-          }).join('')}
-        </table></div>` : '<p class="note">Première clôture à la fin du mois.</p>'}
+        <h2>⭐ Niveau ${S.niveau} — ${E.titreMaire()}</h2>
+        <div class="composante"><span class="comp-nom">Progression</span>
+          <div class="barre grande"><div class="barre-rempli pref" style="width:${Math.round(S.xp / E.xpPourNiveau(S.niveau) * 100)}%"></div></div>
+          <span class="comp-val">${S.xp}/${E.xpPourNiveau(S.niveau)}</span></div>
+        <p class="note">Réponds au courrier, gère les crises, construis, boucle les mois : tout rapporte de l'XP.</p>
       </section>
+      <section class="carte">
+        <h2>🏅 La note de ta ville : <span class="etoiles">${'★'.repeat(etoiles)}${'☆'.repeat(5 - etoiles)}</span></h2>
+        <div class="composantes">
+          ${compo.map(([n, v, aide]) => `<div class="composante" title="${aide}">
+            <span class="comp-nom">${n}</span>
+            <div class="barre grande"><div class="barre-rempli ${v < 40 ? 'basse' : ''}" style="width:${Math.round(v)}%"></div></div>
+            <span class="comp-val">${Math.round(v)}</span></div>`).join('')}
+        </div>
+      </section>
+      <section class="carte">
+        <h2>Les trois chiffres qui comptent</h2>
+        <div class="ratios">
+          ${ratio('Gagné / mois', signe(solde), solde < 0)}
+          ${ratio('Jours de caisse', S.tresorerie < 0 ? '—' : Math.round(jours) + ' j', jours < 15)}
+          ${ratio('Dette', dette.toFixed(0) + ' %', dette > 100)}
+        </div>
+        <p style="margin-top:.8em"><button class="btn" id="btn-diag2">🔎 Pourquoi les gens partent ?</button></p>
+      </section>
+      <section class="carte">
+        <h2>Trésorerie</h2>
+        ${graphique(S.historique.map(h => h.tresorerie), '#3F97DB', v => eur(v), S.tresorerie)}
+      </section>
+      <section class="carte">
+        <h2>Population</h2>
+        ${graphique(S.historique.map(h => h.populationFin), '#62B857', v => nb(v) + ' hab.', S.population)}
+      </section>
+      <section class="carte">
+        <h2>Cadre de vie — le détail</h2>
+        ${composantesCadre(S)}
+      </section>
+      <section class="carte">
+        <h2>⚙️ Partie</h2>
+        <p class="note">Mandat : mois ${Math.min(S.mois, CFG.MANDAT_MOIS)}/${CFG.MANDAT_MOIS}${S.tranquille ? ' · mode chill 🕊️' : ''}.</p>
+        <button class="btn-lien" id="btn-nouvelle">Abandonner et recommencer</button>
+      </section>
+    </div>`;
+  }
+
+  function ratio(nom, val, alerte) {
+    return `<div class="ratio ${alerte ? 'alerte' : ''}">
+      <span class="ratio-val">${val}</span><span class="ratio-nom">${nom}</span></div>`;
+  }
+
+  function composantesCadre(S) {
+    const comp = [
+      ['💡 Éclairage', S.cadre.eclairage], ['🛣️ Voirie', S.cadre.voirie],
+      ['🧹 Propreté', S.cadre.proprete], ['🏠 Logement', S.cadre.logement],
+      ['🏪 Commerces & services', S.cadre.proximite],
+    ];
+    return `<div class="composantes">${comp.map(([n, v]) => `
+      <div class="composante"><span class="comp-nom">${n}</span>
+        <div class="barre grande"><div class="barre-rempli ${v < 40 ? 'basse' : ''}" style="width:${Math.round(v)}%"></div></div>
+        <span class="comp-val">${Math.round(v)}</span></div>`).join('')}</div>`;
+  }
+
+  function graphique(valeurs, couleur, fmt, valActuelle) {
+    if (valeurs.length < 2) return `<p class="note">Valeur actuelle : <b>${fmt(valActuelle)}</b> — la courbe se dessine à partir du 2ᵉ mois.</p>`;
+    const W = 420, H = 120, P = 6;
+    const min = Math.min(...valeurs, 0), max = Math.max(...valeurs);
+    const y = v => H - P - (max === min ? 0.5 : (v - min) / (max - min)) * (H - 2 * P);
+    const x = i => P + i * (W - 2 * P) / (valeurs.length - 1);
+    const pts = valeurs.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    const zeroY = min < 0 ? y(0) : null;
+    const der = valeurs[valeurs.length - 1];
+    const baseY = (H - P).toFixed(1);
+    return `<svg viewBox="0 0 ${W} ${H}" class="graph" role="img" aria-label="Évolution : dernière valeur ${fmt(der)}">
+      <polygon points="${x(0).toFixed(1)},${baseY} ${pts} ${x(valeurs.length - 1).toFixed(1)},${baseY}" fill="${couleur}" opacity="0.15"/>
+      ${zeroY !== null ? `<line x1="${P}" x2="${W - P}" y1="${zeroY}" y2="${zeroY}" class="graph-zero"/>` : ''}
+      <polyline points="${pts}" fill="none" stroke="${couleur}" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="${x(valeurs.length - 1)}" cy="${y(der)}" r="4" fill="${couleur}"/>
+    </svg>
+    <p class="graph-legende">Fin du mois dernier : <b>${fmt(der)}</b> · ${valeurs.length} mois</p>`;
+  }
+
+  /* ---- 🔔 Panneau de notifications ---- */
+
+  function htmlPanneauNotifs(S) {
+    return `
+    <div class="voile-notifs" id="voile-notifs">
+      <aside class="panneau-notifs">
+        <div class="panneau-tete">
+          <h2>🔔 Notifications</h2>
+          <button class="btn-lien" id="fermer-notifs">Fermer</button>
+        </div>
+        <ul class="liste-notifs">
+          ${S.notifications.length ? S.notifications.map((n, i) => `
+            <li class="notif ${n.type === 'alerte' ? 'alerte' : ''} ${n.lu ? '' : 'non-lue'}">
+              <span class="notif-ic">${n.icone}</span>
+              <span class="notif-texte">${n.texte}<br><span class="jour-tag">J${n.jour}</span></span>
+              ${n.action ? `<button class="btn-mini btn-notif-action" data-action="${n.action}">Voir</button>` : ''}
+            </li>`).join('') : '<li class="notif"><span class="notif-texte">Rien pour l\'instant. Profite du calme, il ne durera pas.</span></li>'}
+        </ul>
+      </aside>
     </div>`;
   }
 
@@ -420,24 +751,47 @@ const UI = (() => {
   }
   function fermerModale() { modalRoot().innerHTML = ''; }
 
-  /* L'écran de projection — la pièce maîtresse (§8) */
+  function toast(txt) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = txt;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add('visible'), 20);
+    setTimeout(() => { t.classList.remove('visible'); setTimeout(() => t.remove(), 400); }, 3600);
+  }
+
+  function modaleIntro() {
+    const S = E.etat;
+    modale(`
+      <div class="adjoint"><span class="adjoint-avatar">${ADJOINT.icone}</span>
+        <div class="adjoint-bulle"><b>${ADJOINT.nom}</b>, ton adjoint — « Bienvenue patron ! Je m'occupe de la paperasse, toi des décisions. Quatre trucs à savoir : »</div></div>
+      <ul class="regles">
+        <li>🏗️ <b>Construis</b> pour attirer des habitants — mais chaque bâtiment coûte <b>tous les mois, pour toujours</b>.</li>
+        <li>💰 <b>Garde de l'avance</b> : sous 15 jours de caisse, alerte. En négatif, 30 jours pour te rattraper.</li>
+        <li>👥 <b>Retiens tes habitants</b> : si 15 % s'en vont, tu perds la ville.</li>
+        <li>🔔 <b>Surveille les notifs</b> : courrier, crises, alertes — tout arrive là-haut, à la cloche.</li>
+      </ul>
+      <div class="modale-boutons"><button class="btn" id="btn-intro-ok">C'est parti !</button></div>`, { bloquant: true });
+    document.getElementById('btn-intro-ok').addEventListener('click', fermerModale);
+  }
+
   function modaleProjection({ titre, lignesFixes = [], proj, effets = [], onConfirme, libelleOk = 'Valider' }) {
     const fJours = v => isFinite(v) ? Math.max(0, Math.round(v)) + ' j' : '—';
     modale(`
       <h2>${titre}</h2>
       <table class="table-projection">
         ${lignesFixes.map(([n, v]) => `<tr><td>${n}</td><td class="mont" colspan="3">${v}</td></tr>`).join('')}
-        <tr class="entete-table"><td>Projection à 30 jours</td><td class="mont">avant</td><td></td><td class="mont">après</td></tr>
-        <tr><td>Solde mensuel</td><td class="mont">${signe(proj.soldeAvant)}</td><td class="fleche">→</td>
+        <tr class="entete-table"><td>Dans 30 jours</td><td class="mont">avant</td><td></td><td class="mont">après</td></tr>
+        <tr><td>Gagné / mois</td><td class="mont">${signe(proj.soldeAvant)}</td><td class="fleche">→</td>
           <td class="mont ${proj.soldeApres < 0 ? 'texte-rouge' : ''}">${signe(proj.soldeApres)}</td></tr>
         <tr><td>Trésorerie</td><td class="mont">${eur(proj.tresoAvant)}</td><td class="fleche">→</td>
           <td class="mont ${proj.tresoApres < 0 ? 'texte-rouge' : ''}">${eur(proj.tresoApres)}</td></tr>
-        <tr><td>Jours de trésorerie</td><td class="mont">${fJours(proj.joursAvant)}</td><td class="fleche">→</td>
+        <tr><td>Jours de caisse</td><td class="mont">${fJours(proj.joursAvant)}</td><td class="fleche">→</td>
           <td class="mont ${proj.joursApres < 15 ? 'texte-rouge' : ''}">${fJours(proj.joursApres)}</td></tr>
       </table>
       ${effets.length ? `<ul class="liste-effets">${effets.map(e => `<li>▸ ${e}</li>`).join('')}</ul>` : ''}
-      ${proj.tresoApres < 0 ? '<p class="avert">⚠️ Cette décision mène la trésorerie en négatif sous 30 jours — plan de redressement en vue. Vous saurez que vous saviez.</p>'
-        : proj.joursApres < 15 ? '<p class="avert">⚠️ Cette décision passe sous le seuil d\'alerte des 15 jours de trésorerie.</p>' : ''}
+      ${proj.tresoApres < 0 ? '<p class="avert">⚠️ Avec ça, la caisse passe en négatif sous 30 jours. Tu ne pourras pas dire que tu ne savais pas.</p>'
+        : proj.joursApres < 15 ? '<p class="avert">⚠️ Ça passe sous le seuil d\'alerte des 15 jours de caisse.</p>' : ''}
       <div class="modale-boutons">
         <button class="btn-lien" id="modale-annuler">Annuler</button>
         <button class="btn" id="modale-ok">${libelleOk}</button>
@@ -446,14 +800,50 @@ const UI = (() => {
     document.getElementById('modale-ok').addEventListener('click', () => { fermerModale(); onConfirme(); E.sauvegarder(); rendre(); });
   }
 
+  function modaleQuestion(S) {
+    const q = QUESTIONS.find(x => x.id === S.questionActive);
+    if (!q) return;
+    modale(`
+      ${bulleAdjoint('courrier')}
+      <p class="crise-texte">${q.icone} ${q.texte}</p>
+      <div class="crise-options">
+        ${q.options.map((o, i) => {
+          const cout = o.effets.tresorerie || 0;
+          return `<button class="option-crise option-question" data-i="${i}">
+            <span class="opt-titre">${o.libelle}</span>
+            ${cout ? `<span class="opt-cout ${cout > 0 ? 'texte-vert' : ''}">${signe(cout)}</span>` : ''}
+          </button>`;
+        }).join('')}
+      </div>
+      <div class="modale-boutons">
+        <button class="btn-lien" id="question-plus-tard">⏳ Plus tard (le temps attendra ta réponse)</button>
+      </div>`, { bloquant: true });
+    modalRoot().querySelectorAll('.option-question').forEach(b => b.addEventListener('click', () => {
+      const i = parseInt(b.dataset.i, 10);
+      const cout = q.options[i].effets.tresorerie || 0;
+      const res = E.resoudreQuestion(i);
+      questionEnAttente = false;
+      FX.son(cout > 0 ? 'argent' : 'clic');
+      if (cout) FX.flotteEuro(signe(cout, eurCourt), cout > 0);
+      fermerModale(); E.sauvegarder(); rendre();
+      if (res.note) toast(`${res.icone} ${res.note}`);
+    }));
+    document.getElementById('question-plus-tard').addEventListener('click', () => {
+      questionEnAttente = true;
+      fermerModale();
+    });
+  }
+
   function modaleCrise(S) {
     const c = S.criseActive;
+    if (!c) return;
     const crise = CRISES.find(x => x.id === c.criseId);
     const joursRestants = CFG.CRISE_DELAI_JOURS - (S.jour - c.jourDebut);
     modale(`
+      ${bulleAdjoint('crise')}
       <h2>${crise.icone} CRISE — ${crise.nom}</h2>
       <p class="crise-texte">${crise.texte}</p>
-      <p><b>Coût de référence actuel : ${eur(c.coutCourant)}</b> — il augmente de ${Math.round(CFG.CRISE_ESCALADE_JOUR * 100)} % par jour d'attente.
+      <p><b>Coût actuel : ${eur(c.coutCourant)}</b> — +${Math.round(CFG.CRISE_ESCALADE_JOUR * 100)} % par jour d'attente.
         Sans décision d'ici ${joursRestants} jour(s), l'option par défaut s'applique.</p>
       <div class="crise-options">
         ${crise.options.map(o => {
@@ -461,13 +851,13 @@ const UI = (() => {
           const bloquee = o.capital && S.capitalPrefecture < o.capital;
           return `<button class="option-crise ${o.defaut ? 'defaut' : ''}" data-cle="${o.cle}" ${bloquee ? 'disabled' : ''}>
             <span class="opt-titre">${o.cle} — ${o.libelle} ${o.defaut ? '<span class="badge">défaut</span>' : ''}</span>
-            <span class="opt-cout">Coût : ${eur(cout)}${o.capital ? ` · Capital préfecture −${o.capital}${bloquee ? ' (insuffisant)' : ''}` : ''}</span>
+            <span class="opt-cout">Coût : ${eur(cout)}${o.capital ? ` · capital préfecture −${o.capital}${bloquee ? ' (pas assez !)' : ''}` : ''}</span>
             <span class="opt-note">${o.note}</span>
           </button>`;
         }).join('')}
       </div>
       <div class="modale-boutons">
-        <button class="btn-lien" id="crise-reporter">⏳ Décider demain (le coût augmentera)</button>
+        <button class="btn-lien" id="crise-reporter">⏳ Décider demain (le coût grimpera)</button>
       </div>`, { bloquant: true });
     modalRoot().querySelectorAll('.option-crise').forEach(b => b.addEventListener('click', () => {
       const res = E.resoudreCrise(b.dataset.cle);
@@ -482,6 +872,7 @@ const UI = (() => {
   function modaleEvenementDiffere(evt) {
     const def = EVENEMENTS_DIFFERES[evt.evenement];
     modale(`
+      ${bulleAdjoint('evenement')}
       <h2>📜 ${def.titre}</h2>
       <p class="crise-texte">${def.texte}</p>
       <div class="crise-options">
@@ -497,20 +888,20 @@ const UI = (() => {
   function modaleDiagnostic(S) {
     const d = E.calculerMigration().diagnostic;
     const causes = [
-      ['Fiscalité (taux > 18 %)', d.fiscalite, 'Redescendre le taux communal.'],
-      ['Cadre de vie dégradé', d.cadreDeVie, 'Budgets voirie/propreté, équipements de proximité.'],
-      ['Saturation des services', d.saturation, 'École, réseau d\'eau, stationnement : la capacité n\'a pas suivi.'],
-      ['Suites d\'événements', d.evenements, 'Le temps fera son œuvre — si rien d\'autre ne casse.'],
+      ['💶 Impôts trop hauts (> 18 %)', d.fiscalite, 'Redescends le taux (Business).'],
+      ['🌳 Cadre de vie dégradé', d.cadreDeVie, 'Passe l\'entretien en « Soigné », construis des services.'],
+      ['🏙️ Ville saturée', d.saturation, 'École, réseau d\'eau, parking : il manque de la place.'],
+      ['⏳ Suites d\'événements', d.evenements, 'Ça passera — si rien d\'autre ne casse.'],
     ].sort((a, b) => b[1] - a[1]);
     const max = Math.max(0.01, ...causes.map(c => c[1]));
     modale(`
       <h2>🔎 Pourquoi les gens partent</h2>
-      <p class="note">Pression de départ totale : ${d.depart.toFixed(2)} %/mois · arrivées : ${d.arrivee.toFixed(2)} %/mois · solde : ${d.soldePct >= 0 ? '+' : ''}${d.soldePct.toFixed(2)} %/mois</p>
+      <p class="note">Départs : ${d.depart.toFixed(2)} %/mois · arrivées : ${d.arrivee.toFixed(2)} %/mois</p>
       <div class="composantes">
         ${causes.map(([n, v, conseil], i) => `<div class="composante">
           <span class="comp-nom">${i === 0 && v > 0 ? '➡️ ' : ''}${n}</span>
           <div class="barre grande"><div class="barre-rempli ${v > 0 ? 'basse' : ''}" style="width:${Math.round(v / max * 100)}%"></div></div>
-          <span class="comp-val">${v.toFixed(2)} %</span>
+          <span class="comp-val">${v.toFixed(1)}</span>
           <span class="comp-conseil">${v > 0 ? conseil : ''}</span>
         </div>`).join('')}
       </div>
@@ -520,10 +911,14 @@ const UI = (() => {
 
   function modaleFin(S) {
     const g = S.gameOver;
+    if (!finJouee) {
+      finJouee = true;
+      if (g.victoire) { FX.son('niveau'); FX.confettis(); } else FX.son('defaite');
+    }
     modale(`
       <h2>${g.victoire ? '🎖️' : '🏳️'} ${g.titre}</h2>
       <p class="crise-texte">${g.texte}</p>
-      ${!g.victoire ? '<p class="note">Perdre = perdre la commune. Jamais le compte, jamais le palmarès. Reprenez une commune — celle-ci vous attend, en pire.</p>' : ''}
+      ${!g.victoire ? '<p class="note">Tu perds la ville, jamais ta progression. Reprends une commune — et cette fois, tu sauras.</p>' : ''}
       <div class="modale-boutons"><button class="btn" id="btn-rejouer">Reprendre une commune</button></div>`, { bloquant: true });
     document.getElementById('btn-rejouer').addEventListener('click', () => {
       E.effacerSauvegarde(); fermerModale(); ecranAccueil();
@@ -535,15 +930,65 @@ const UI = (() => {
   function brancherEvenements(S) {
     const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
 
-    on('btn-jour', () => { E.avancerJour(); E.sauvegarder(); rendre(); });
-    on('btn-semaine', () => { for (let i = 0; i < 7; i++) { if (E.etat.criseActive || E.etat.gameOver || E.evenementDu()) break; E.avancerJour(); } E.sauvegarder(); rendre(); });
-    on('btn-nouvelle', () => { if (confirm('Abandonner cette commune et recommencer ?')) { E.effacerSauvegarde(); ecranAccueil(); } });
+    const sonDuJour = (avaitCrise, avaitQuestion) => {
+      if (!avaitCrise && E.etat.criseActive) { FX.son('crise'); FX.secouer(); }
+      else if (!avaitQuestion && E.etat.questionActive) FX.son('question');
+      else FX.son('jour');
+    };
+    on('btn-jour', () => {
+      if (E.etat.questionActive) questionEnAttente = false; // le temps n'avance pas sans réponse
+      const avaitCrise = !!E.etat.criseActive, avaitQuestion = !!E.etat.questionActive;
+      E.avancerJour();
+      sonDuJour(avaitCrise, avaitQuestion);
+      E.sauvegarder(); rendre();
+    });
+    on('btn-semaine', () => {
+      const avaitCrise = !!E.etat.criseActive, avaitQuestion = !!E.etat.questionActive;
+      for (let i = 0; i < 7; i++) {
+        if (E.etat.criseActive || E.etat.questionActive || E.etat.gameOver || E.evenementDu()) break;
+        E.avancerJour();
+      }
+      sonDuJour(avaitCrise, avaitQuestion);
+      E.sauvegarder(); rendre();
+    });
+    on('btn-son', () => { FX.basculerMuet(); FX.son('clic'); rendre(); });
+    on('btn-nouvelle', () => { if (confirm('Abandonner cette ville et recommencer ?')) { E.effacerSauvegarde(); ecranAccueil(); } });
     on('btn-mission', () => { E.faireMissionRedressement(); E.sauvegarder(); rendre(); });
     on('btn-diag', () => modaleDiagnostic(S));
     on('btn-diag2', () => modaleDiagnostic(S));
     on('btn-crise', () => modaleCrise(S));
+    on('btn-crise-carte', () => modaleCrise(S));
+    on('btn-repondre', () => modaleQuestion(S));
+    on('btn-note', () => { vueActive = vueActive === 'note' ? 'carte' : 'note'; rendre(); });
 
-    /* Taux : aperçu live + projection avant vote */
+    /* notifications */
+    on('btn-notifs', () => {
+      notifsOuvertes = !notifsOuvertes;
+      if (notifsOuvertes) E.marquerNotifsLues();
+      E.sauvegarder(); rendre();
+    });
+    on('fermer-notifs', () => { notifsOuvertes = false; rendre(); });
+    const voileN = document.getElementById('voile-notifs');
+    if (voileN) voileN.addEventListener('click', (e) => { if (e.target.id === 'voile-notifs') { notifsOuvertes = false; rendre(); } });
+    app().querySelectorAll('.btn-notif-action').forEach(b => b.addEventListener('click', () => {
+      notifsOuvertes = false;
+      const action = b.dataset.action;
+      if (action === 'crise') { rendre(); modaleCrise(S); }
+      else if (action === 'question') { rendre(); if (S.questionActive) modaleQuestion(S); else { vueActive = 'courrier'; rendre(); } }
+      else if (action === 'diag') { rendre(); modaleDiagnostic(S); }
+      else if (action === 'business') { vueActive = 'business'; rendre(); }
+      else rendre();
+    }));
+
+    /* zoom de la carte */
+    const carte = document.getElementById('carte');
+    if (carte) {
+      on('zoom-plus', () => CarteCommune.zoomer(carte, S, 1.4));
+      on('zoom-moins', () => CarteCommune.zoomer(carte, S, 1 / 1.4));
+      on('zoom-reset', () => CarteCommune.recentrer(carte, S));
+    }
+
+    /* Impôts : aperçu live + projection avant vote */
     const slider = document.getElementById('slider-taux');
     if (slider) {
       const apercu = () => {
@@ -551,7 +996,7 @@ const UI = (() => {
         document.getElementById('taux-affiche').textContent = t + ' %';
         const p = E.projeterTaux(t);
         document.getElementById('apercu-taux').innerHTML = t === S.taux ? '' :
-          `Recettes fiscales : ${eur(p.fiscAvant)} → <b>${eur(p.fiscApres)}</b>/mois · Popularité ${p.dPop >= 0 ? '+' : ''}${p.dPop.toFixed(1)} · Solde migratoire projeté : ${signe(p.migAvant, nb)} → <b>${signe(p.migApres, nb)}</b> hab./mois`;
+          `Recettes : ${eur(p.fiscAvant)} → <b>${eur(p.fiscApres)}</b>/mois · ❤️ ${p.dPop >= 0 ? '+' : ''}${p.dPop.toFixed(1)} · 👥 ${signe(p.migAvant, nb)} → <b>${signe(p.migApres, nb)}</b>/mois`;
       };
       slider.addEventListener('input', apercu); apercu();
       on('btn-taux', () => {
@@ -559,111 +1004,104 @@ const UI = (() => {
         if (t === S.taux) return;
         const p = E.projeterTaux(t);
         modaleProjection({
-          titre: `Voter un taux communal de ${t} %`,
-          lignesFixes: [['Recettes fiscales mensuelles', `${eur(p.fiscAvant)} → ${eur(p.fiscApres)}`]],
+          titre: `Passer les impôts à ${t} %`,
+          lignesFixes: [['Recettes mensuelles', `${eur(p.fiscAvant)} → ${eur(p.fiscApres)}`]],
           proj: p,
-          effets: [`Popularité ${p.dPop >= 0 ? '+' : ''}${p.dPop.toFixed(1)} (au vote)`,
-                   `Solde migratoire projeté : ${signe(p.migApres, nb)} hab./mois`,
-                   'Application au mois prochain, jamais rétroactive'],
+          effets: [`❤️ Popularité ${p.dPop >= 0 ? '+' : ''}${p.dPop.toFixed(1)} dès le vote`,
+                   `👥 Solde migratoire projeté : ${signe(p.migApres, nb)} hab./mois`,
+                   'Effet le mois prochain, jamais rétroactif'],
           libelleOk: 'Voter ce taux',
           onConfirme: () => { const r = E.changerTaux(t); if (!r.ok && r.msg) alert(r.msg); },
         });
       });
     }
 
-    /* Budgets voirie / propreté */
-    for (const id of ['voirie', 'proprete']) {
-      const sl = document.getElementById(`slider-${id}`);
-      if (!sl) continue;
-      sl.addEventListener('input', () => { document.getElementById(`val-${id}`).textContent = eur(parseInt(sl.value, 10)); });
-      on(`btn-${id}`, () => {
-        const v = parseInt(sl.value, 10);
-        const actuel = id === 'voirie' ? S.budgetVoirie : S.budgetProprete;
-        const p = EngineProj(actuel - v);
-        modaleProjection({
-          titre: `Budget ${id === 'voirie' ? 'entretien voirie' : 'propreté & déchets'} : ${eur(v)}/mois`,
-          proj: p,
-          effets: [id === 'voirie'
-            ? (v >= S.population * COEF.VOIRIE_PLEIN ? 'Voirie entretenue : plus aucune dégradation automatique' : 'Budget partiel : la voirie se dégradera lentement (annoncé, évitable)')
-            : `La propreté convergera vers ${Math.round(Math.min(100, 100 * v / (S.population * COEF.PROPRETE_PLEIN)))}/100`],
-          libelleOk: 'Valider ce budget',
-          onConfirme: () => {
-            if (id === 'voirie') S.budgetVoirie = v; else S.budgetProprete = v;
-          },
-        });
+    /* Entretien : trois niveaux */
+    app().querySelectorAll('.btn-entretien').forEach(b => b.addEventListener('click', () => {
+      const niveau = b.dataset.niveau;
+      if (niveau === S.niveauEntretien) return;
+      const coutActuel = S.budgetVoirie + S.budgetProprete;
+      const coutNouveau = coutNiveau(S, E.NIVEAUX_ENTRETIEN[niveau].facteur);
+      const p = projSimple(coutActuel - coutNouveau);
+      modaleProjection({
+        titre: `Entretien « ${E.NIVEAUX_ENTRETIEN[niveau].nom} » : ${eur(coutNouveau)}/mois`,
+        proj: p,
+        effets: [niveau === 'eco' ? '🛣️ La voirie se dégradera doucement (annoncé, réversible)'
+          : niveau === 'soigne' ? '🌳 Voirie et propreté vont grimper' : '🌳 Voirie et propreté stables'],
+        libelleOk: 'Valider',
+        onConfirme: () => E.reglerEntretien(niveau),
       });
-    }
+    }));
 
-    /* Construction + dossiers */
+    /* Construction */
     app().querySelectorAll('.btn-construire').forEach(b => b.addEventListener('click', () => {
       const p = E.projeterConstruction(b.dataset.equip);
       const charge = p.def.entretien + p.def.energie - p.def.recettes;
       modaleProjection({
         titre: `${p.def.icone} Construire : ${p.def.nom}`,
-        lignesFixes: [['Coût', eur(p.cout)], ['Fonctionnement', `${charge >= 0 ? '+' : '−'} ${eur(Math.abs(charge))}/mois — à vie`]],
+        lignesFixes: [['Coût', eur(p.cout)], ['Ensuite', `${charge >= 0 ? '−' : '+'} ${eur(Math.abs(charge))}/mois — pour toujours`]],
         proj: p,
         effets: [
-          ...(p.def.effets.attractivite ? [`Attractivité +${p.def.effets.attractivite}`] : []),
-          ...(p.def.effets.popularite ? [`Popularité +${p.def.effets.popularite}`] : []),
-          ...(p.def.capacite ? [`Capacité d'accueil +${nb(p.def.capacite)} hab.`] : []),
-          ...(p.def.proximite ? ['Équipements de proximité +6 (cadre de vie)'] : []),
-          ...(p.def.chantier === 'voirie' ? ['État de la voirie remis à 95/100'] : []),
-          ...(p.def.chantier === 'eclairage' ? ['Éclairage public remis à 92/100'] : []),
+          ...(p.def.effets.attractivite ? [`✨ Attractivité +${p.def.effets.attractivite}`] : []),
+          ...(p.def.effets.popularite ? [`❤️ Popularité +${p.def.effets.popularite}`] : []),
+          ...(p.def.capacite ? [`👥 +${nb(p.def.capacite)} habitants de place`] : []),
+          ...(p.def.proximite ? ['🏪 Commerces & services +6'] : []),
+          ...(p.def.chantier === 'voirie' ? ['🛣️ Voirie remise à neuf (95/100)'] : []),
+          ...(p.def.chantier === 'eclairage' ? ['💡 Éclairage remis à neuf (92/100)'] : []),
         ],
         libelleOk: 'Construire',
-        onConfirme: () => { const r = E.construire(b.dataset.equip); if (!r.ok && r.msg) alert(r.msg); },
+        onConfirme: () => {
+          const r = E.construire(b.dataset.equip);
+          if (!r.ok && r.msg) { alert(r.msg); return; }
+          FX.son('construire');
+          FX.confettis(['🏗️', '🎉', '✨', p.def.icone]);
+          FX.flotteEuro('−' + eurCourt(p.cout), false);
+        },
       });
-    }));
-    app().querySelectorAll('.btn-dossier').forEach(b => b.addEventListener('click', () => {
-      E.deposerDossier(b.dataset.equip); E.sauvegarder(); rendre();
     }));
 
     /* Aides État */
     app().querySelectorAll('.btn-aide').forEach(b => b.addEventListener('click', () => {
       const r = E.aideEtat(b.dataset.aide);
       if (!r.ok && r.msg) alert(r.msg);
+      else FX.son('argent');
       E.sauvegarder(); rendre();
     }));
 
     /* Offres privées */
     app().querySelectorAll('.btn-offre-oui').forEach(b => b.addEventListener('click', () => {
-      E.accepterOffre(b.dataset.offre); E.sauvegarder(); rendre();
+      const o = OFFRES_PRIVEES.find(x => x.id === b.dataset.offre);
+      const montant = o ? E.montantOffre(o) : 0;
+      E.accepterOffre(b.dataset.offre);
+      FX.son('argent');
+      if (montant) FX.flotteEuro('+' + eurCourt(montant), true);
+      E.sauvegarder(); rendre();
     }));
     app().querySelectorAll('.btn-offre-non').forEach(b => b.addEventListener('click', () => {
       E.refuserOffre(b.dataset.offre); E.sauvegarder(); rendre();
     }));
 
-    /* Emprunt */
-    const se = document.getElementById('slider-emprunt');
-    if (se) {
-      const maj = () => {
-        const cap = parseInt(se.value, 10);
-        const duree = parseInt(document.getElementById('duree-emprunt').value, 10);
-        document.getElementById('val-emprunt').textContent = eur(cap);
-        const c = E.conditionsEmprunt();
-        document.getElementById('mensualite-emprunt').textContent = `mensualité : ${eur(E.mensualite(cap, c.taux, duree))}`;
-      };
-      se.addEventListener('input', maj);
-      document.getElementById('duree-emprunt').addEventListener('change', maj);
-      maj();
-      on('btn-emprunt', () => {
-        const cap = parseInt(se.value, 10);
-        const duree = parseInt(document.getElementById('duree-emprunt').value, 10);
-        const p = E.projeterEmprunt(cap, duree);
-        modaleProjection({
-          titre: `Emprunter ${eur(cap)} sur ${duree} mois`,
-          lignesFixes: [['Taux', (p.taux * 100).toFixed(2) + ' %'], ['Mensualité', `− ${eur(p.mensualite)}/mois, jusqu'à extinction`]],
-          proj: p,
-          effets: ['La mensualité s\'inscrit définitivement au fonctionnement'],
-          libelleOk: 'Signer l\'emprunt',
-          onConfirme: () => { const r = E.emprunter(cap, duree); if (!r.ok && r.msg) alert(r.msg); },
-        });
+    /* Emprunt : trois tailles */
+    app().querySelectorAll('.btn-emprunt').forEach(b => b.addEventListener('click', () => {
+      const cap = parseInt(b.dataset.capital, 10);
+      const p = E.projeterEmprunt(cap, 60);
+      modaleProjection({
+        titre: `Emprunter ${eur(cap)} sur 5 ans`,
+        lignesFixes: [['Taux', (p.taux * 100).toFixed(1) + ' %'], ['Mensualité', `− ${eur(p.mensualite)}/mois pendant 60 mois`]],
+        proj: p,
+        effets: ['La mensualité reste dans tes dépenses jusqu\'au bout'],
+        libelleOk: 'Signer',
+        onConfirme: () => {
+          const r = E.emprunter(cap, 60);
+          if (!r.ok && r.msg) { alert(r.msg); return; }
+          FX.son('argent');
+          FX.flotteEuro('+' + eurCourt(cap), true);
+        },
       });
-    }
+    }));
   }
 
-  /* Projection simple pour un delta mensuel (budgets d'entretien) */
-  function EngineProj(deltaMensuel) {
+  function projSimple(deltaMensuel) {
     const soldeAvant = E.soldeMensuel();
     const soldeApres = soldeAvant + deltaMensuel;
     const tresoApres = E.etat.tresorerie + soldeApres;
@@ -677,9 +1115,29 @@ const UI = (() => {
 
   function afficherModalesAutomatiques(S) {
     if (S.gameOver) return modaleFin(S);
+    /* scènes en attente (initiatives du cabinet, etc.) */
+    if (S.cinematiques && S.cinematiques.length) {
+      const scenes = S.cinematiques.splice(0);
+      E.sauvegarder();
+      return cinematique(scenes, () => rendre());
+    }
     const evt = E.evenementDu();
     if (evt) return modaleEvenementDiffere(evt);
-    if (S.criseActive && S.jour === S.criseActive.jourDebut) return modaleCrise(S);
+    if (S.criseActive && S.jour === S.criseActive.jourDebut) {
+      /* mise en scène du coup de fil nocturne, une seule fois */
+      if (!S.criseActive.cineVue) {
+        S.criseActive.cineVue = true;
+        E.sauvegarder();
+        const crise = CRISES.find(x => x.id === S.criseActive.criseId);
+        const patron = S.maire && S.maire.genre === 'femme' ? 'patronne' : 'patron';
+        return cinematique([{
+          emoji: crise.icone, titre: '3 h 12 du matin',
+          texte: `Le téléphone sonne. C'est Gaston, la voix blanche : « Désolé de te réveiller, ${patron}… ${crise.nom}. Il faut décider. Vite. »`,
+        }], () => modaleCrise(S));
+      }
+      return modaleCrise(S);
+    }
+    if (S.questionActive && !questionEnAttente) return modaleQuestion(S);
   }
 
   return { rendre, ecranAccueil };

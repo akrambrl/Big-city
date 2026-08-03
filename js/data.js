@@ -26,9 +26,6 @@ const CFG = {
   CRISE_DELAI_JOURS: 2,         // au-delà : option par défaut appliquée
   MISSION_REDRESSEMENT: 8000,   // € par mission quotidienne de redressement
   RESERVE_FONCTIONNEMENT_J: 15, // jours de dépenses sanctuarisés (jamais investis)
-  SUBVENTION_DELAI_JOURS: 20,
-  SUBVENTION_TAUX: 0.5,
-  SUBVENTION_SUCCES: 0.75,
   DEGRADATION_VOIRIE_MAX: 1.5,  // seule dégradation automatique du jeu
 };
 
@@ -46,17 +43,17 @@ const COEF = {
 
 const PROFILS = {
   rurale: {
-    nom: 'Saint-Aubin-le-Bourg', label: 'Bourg rural', icone: '🌾',
+    nom: 'Saint-Aubin-le-Bourg', label: 'Campagne', icone: '🌾',
     population: 2800, attractivite: 48, popularite: 58,
     desc: 'Petit budget, petites crises. La moindre dépense compte, mais tout est plus lent.',
   },
   moyenne: {
-    nom: 'Villeneuve-sur-Sarthe', label: 'Ville moyenne', icone: '🏘️',
+    nom: 'Villeneuve-sur-Sarthe', label: 'Classique', icone: '🏘️',
     population: 12000, attractivite: 52, popularite: 55,
     desc: 'Le profil de référence. Marges correctes, patrimoine déjà lourd à entretenir.',
   },
   touristique: {
-    nom: 'Port-Miran', label: 'Station touristique', icone: '⛱️',
+    nom: 'Port-Miran', label: 'Littoral', icone: '⛱️',
     population: 8500, attractivite: 62, popularite: 52,
     desc: 'Attractive mais exposée : les crises y coûtent cher en image, surtout en saison.',
   },
@@ -317,10 +314,320 @@ const CRISES = [
   },
 ];
 
+/* ------------------------------------------------------------
+   COURRIER DU MAIRE — questions du quotidien à choix multiples.
+   Courtes, drôles, sans piège mortel : chaque réponse est jouable.
+   Les montants sont calibrés pour 12 000 hab. et mis à l'échelle.
+   ------------------------------------------------------------ */
+const QUESTIONS = [
+  { id: 'q_food_truck', icone: '🚚',
+    texte: 'Un food-truck de burgers veut s\'installer sur la place. Le kebab d\'en face crie à la concurrence déloyale.',
+    options: [
+      { libelle: 'L\'autoriser', effets: { tresorerie: 3000, attractivite: 4, popularite: 2 },
+        note: 'Droit de place encaissé. File d\'attente dès le premier soir.' },
+      { libelle: 'Seulement le week-end', effets: { tresorerie: 1500, attractivite: 2 },
+        note: 'Un compromis à la française. Tout le monde râle un peu, personne ne proteste.' },
+      { libelle: 'Refuser', effets: { popularite: -2 },
+        note: 'Le kebab t\'offre un sandwich. La jeunesse t\'en veut.' },
+    ] },
+  { id: 'q_nid_poule', icone: '🕳️',
+    texte: 'Le nid-de-poule de la rue de la Gare a désormais sa page sur les réseaux. 12 000 abonnés.',
+    options: [
+      { libelle: 'Le reboucher en urgence', effets: { tresorerie: -15000, cadre_voirie: 4, popularite: 3 },
+        note: 'La page publie un hommage funèbre. Les suspensions te remercient.' },
+      { libelle: 'Poser un panneau « danger »', effets: { tresorerie: -800, popularite: -1 },
+        note: 'Le panneau devient une star lui aussi.' },
+      { libelle: 'Attendre le budget de l\'an prochain', effets: { popularite: -4, cadre_voirie: -2 },
+        note: 'La page passe à 20 000 abonnés. Il y a des produits dérivés.' },
+    ] },
+  { id: 'q_club_foot', icone: '⚽',
+    texte: 'Le club de foot monte en division ! Il demande des maillots neufs. Et un minibus, tant qu\'à faire.',
+    options: [
+      { libelle: 'Maillots + minibus', effets: { tresorerie: -28000, popularite: 6 },
+        note: 'Le capitaine te dédie la montée. Ton nom est chanté en tribune.' },
+      { libelle: 'Juste les maillots', effets: { tresorerie: -6000, popularite: 2 },
+        note: 'Ils floquent « Merci la mairie » dans le dos. C\'est déjà ça.' },
+      { libelle: 'Une banderole d\'encouragement', effets: { popularite: -3 },
+        note: '« Allez les gars ». L\'intention compte, paraît-il.' },
+    ] },
+  { id: 'q_graffiti', icone: '🎨',
+    texte: 'Une fresque sauvage est apparue sur la salle des fêtes. Moitié street-art, moitié gribouillage.',
+    options: [
+      { libelle: 'Payer l\'artiste pour la finir', effets: { tresorerie: -8000, attractivite: 5, popularite: 2 },
+        note: 'Des gens font des selfies devant. La commune d\'à côté est jalouse.' },
+      { libelle: 'La faire effacer', effets: { tresorerie: -4000, cadre_proprete: 3 },
+        note: 'Mur propre, débat clos. L\'artiste signera ailleurs.' },
+      { libelle: 'Ne rien faire', effets: { cadre_proprete: -3 },
+        note: 'Trois nouveaux tags apparaissent. Moins inspirés.' },
+    ] },
+  { id: 'q_cantine', icone: '🥦',
+    texte: 'La cantine propose de passer au bio local. C\'est 15 % plus cher, mais « c\'est pour les enfants ».',
+    options: [
+      { libelle: 'Passer au bio local', effets: { tresorerie: -20000, popularite: 5, attractivite: 2 },
+        note: 'Les parents applaudissent. Les enfants réclament toujours des frites.' },
+      { libelle: 'Un jour bio par semaine', effets: { tresorerie: -5000, popularite: 2 },
+        note: 'Le jeudi, c\'est quinoa. Le vendredi, la vie reprend.' },
+      { libelle: 'Rester au menu actuel', effets: { popularite: -2 },
+        note: 'Une pétition circule. Signée par des CM2, mais quand même.' },
+    ] },
+  { id: 'q_influenceur', icone: '🤳',
+    texte: 'Un influenceur (2 millions d\'abonnés) veut tourner « La France qu\'on aime » chez toi. Il demande un accueil « à la hauteur ».',
+    options: [
+      { libelle: 'Tapis rouge et buffet', effets: { tresorerie: -12000, attractivite: 8 },
+        note: 'La vidéo fait 3 millions de vues. Les gîtes sont complets pour l\'été.' },
+      { libelle: 'Accueil normal', effets: { attractivite: 3 },
+        note: 'Il tourne quand même. La vidéo est « authentique », dit-il.' },
+      { libelle: 'Refuser le tournage', effets: { attractivite: -2, popularite: 1 },
+        note: 'Les habitants apprécient la tranquillité retrouvée.' },
+    ] },
+  { id: 'q_pigeons', icone: '🐦',
+    texte: 'Les pigeons ont colonisé la place. La statue du fondateur de la ville n\'a plus figure humaine.',
+    options: [
+      { libelle: 'Effaroucheurs + grand nettoyage', effets: { tresorerie: -7000, cadre_proprete: 4 },
+        note: 'La statue retrouve son regard noble. Les pigeons déménagent chez le voisin.' },
+      { libelle: 'Un fauconnier une fois par mois', effets: { tresorerie: -3000, cadre_proprete: 2, attractivite: 1 },
+        note: 'Le faucon a désormais sa page fan. Plus populaire que toi.' },
+      { libelle: '« C\'est la nature »', effets: { cadre_proprete: -3 },
+        note: 'Le fondateur de la ville disparaît sous les fientes. Dignement.' },
+    ] },
+  { id: 'q_banc', icone: '🪑',
+    texte: 'Madame Rosa, 87 ans, demande un banc à l\'arrêt de bus. Elle attend debout depuis 1962.',
+    options: [
+      { libelle: 'Un banc, avec plaque à son nom', effets: { tresorerie: -1500, popularite: 4 },
+        note: '« Banc Rosa ». Elle pleure. Le journal local fait sa une.' },
+      { libelle: 'Un banc standard', effets: { tresorerie: -900, popularite: 2 },
+        note: 'Elle s\'assoit. 63 ans d\'attente, mais elle s\'assoit.' },
+      { libelle: '« On va étudier la demande »', effets: { popularite: -2 },
+        note: 'Elle attendra debout. Comme depuis 1962.' },
+    ] },
+  { id: 'q_marche', icone: '🧺',
+    texte: 'Les commerçants veulent étendre le marché au dimanche. Les riverains tiennent à leur grasse matinée.',
+    options: [
+      { libelle: 'Marché le dimanche', effets: { tresorerie: 4000, attractivite: 3, cadre_proprete: -2 },
+        note: 'Droits de place en hausse. Réveil à 6 h pour tout le quartier.' },
+      { libelle: 'Une fois par mois', effets: { tresorerie: 1500, attractivite: 1 },
+        note: 'Le premier dimanche du mois, ça sent la rôtisserie.' },
+      { libelle: 'Refuser', effets: { popularite: -1 },
+        note: 'Les commerçants soupirent. Les riverains dorment.' },
+    ] },
+  { id: 'q_compost', icone: '🌱',
+    texte: 'Des habitants veulent un compost collectif. D\'autres prédisent « une montagne d\'épluchures en plein centre ».',
+    options: [
+      { libelle: 'Installer trois composteurs', effets: { tresorerie: -3500, cadre_proprete: 3, popularite: 2 },
+        note: 'Six mois plus tard : zéro montagne, un potager partagé.' },
+      { libelle: 'Refuser', effets: { popularite: -1 },
+        note: 'Les épluchures finissent à la poubelle, comme la proposition.' },
+    ] },
+  { id: 'q_sapin', icone: '🎄', saisons: ['hiver'],
+    texte: 'Décembre approche. Sapin géant avec illuminations, ou sobriété assumée ?',
+    options: [
+      { libelle: 'Sapin géant + illuminations', effets: { tresorerie: -18000, popularite: 6, attractivite: 3 },
+        note: 'On vient des communes voisines pour la photo. Ça brille jusqu\'en janvier.' },
+      { libelle: 'Sapin local, guirlandes d\'occasion', effets: { tresorerie: -4000, popularite: 2 },
+        note: 'C\'est mignon. Un peu penché, mais mignon.' },
+      { libelle: 'Pas de sapin cette année', effets: { popularite: -5 },
+        note: 'Le Grinch, c\'est toi.' },
+    ] },
+  { id: 'q_jeux_eau', icone: '☀️', saisons: ['ete'],
+    texte: 'Gros week-end de chaleur annoncé. Les familles demandent l\'ouverture gratuite des jeux d\'eau.',
+    options: [
+      { libelle: 'Gratuit tout le week-end', effets: { tresorerie: -6000, popularite: 5 },
+        note: 'La place se transforme en plage. Tout le monde est trempé et content.' },
+      { libelle: 'Tarif réduit', effets: { tresorerie: -2000, popularite: 2 },
+        note: 'Raisonnable. Comme toujours.' },
+      { libelle: 'Tarif normal', effets: { popularite: -2 },
+        note: 'Les enfants te surnomment « le maire sec ».' },
+    ] },
+  { id: 'q_brocante', icone: '📦',
+    texte: 'La grande brocante annuelle demande deux rues de plus et le prêt de la sono municipale.',
+    options: [
+      { libelle: 'Tout accorder', effets: { tresorerie: -2500, attractivite: 4, popularite: 3, cadre_proprete: -2 },
+        note: '300 exposants, 5 000 visiteurs, 1 tonne de vaisselle dépareillée vendue.' },
+      { libelle: 'Comme l\'an dernier, pas plus', effets: { popularite: -2 },
+        note: 'Les organisateurs maugréent entre deux stands de vinyles.' },
+    ] },
+  { id: 'q_startup', icone: '💻',
+    texte: 'Une start-up « révolutionnaire » veut installer ses bureaux en centre-ville. Elle demande la fibre et un loyer sympa.',
+    options: [
+      { libelle: 'Dérouler la fibre, loyer réduit', effets: { tresorerie: -10000, attractivite: 6 },
+        note: 'Douze salariés déjeunent chez les commerçants tous les midis.' },
+      { libelle: 'Les accueillir sans faveur', effets: { attractivite: 2 },
+        note: 'Ils s\'installent quand même. Leur machine à café coûte plus cher que ta fibre.' },
+      { libelle: 'Méfiance', effets: { attractivite: -1 },
+        note: 'Ils partent dans la commune d\'à côté. Leur appli cartonne. Évidemment.' },
+    ] },
+  { id: 'q_panneau', icone: '🪧',
+    texte: 'Le panneau d\'entrée de ville est tordu depuis « l\'incident du tracteur ». Tout le monde a une théorie.',
+    options: [
+      { libelle: 'Panneau neuf + massif fleuri', effets: { tresorerie: -5000, attractivite: 3, cadre_voirie: 1 },
+        note: 'Première impression impeccable. Le tracteur reste introuvable.' },
+      { libelle: 'Le redresser au cric', effets: { tresorerie: -300 },
+        note: 'Il penche de l\'autre côté maintenant. Ça a du charme.' },
+    ] },
+  { id: 'q_chats', icone: '🐈',
+    texte: 'Une colonie de chats errants a élu domicile derrière la mairie. Les réseaux les adorent. Les riverains moins.',
+    options: [
+      { libelle: 'Stérilisation + abri propre', effets: { tresorerie: -6000, popularite: 3, cadre_proprete: 2 },
+        note: 'L\'association locale te canonise. Les chats restent, mais organisés.' },
+      { libelle: 'Laisser faire', effets: { cadre_proprete: -2, attractivite: 1 },
+        note: 'Ils ont un compte Instagram maintenant. Plus suivi que celui de la mairie.' },
+    ] },
+  { id: 'q_kermesse', icone: '🎪',
+    texte: 'Kermesse de l\'école : on te demande des barnums, un service de sécurité… et de tenir le stand chamboule-tout.',
+    options: [
+      { libelle: 'Tout ça, et je tiens le stand', effets: { tresorerie: -2000, popularite: 5 },
+        note: 'Tu prends trois balles dans l\'épaule. Meilleur score de popularité de l\'année.' },
+      { libelle: 'Juste les barnums', effets: { tresorerie: -800, popularite: 1 },
+        note: 'Service minimum. La directrice le note dans un petit carnet.' },
+    ] },
+  { id: 'q_lotissement', icone: '💡',
+    texte: 'Le lotissement des Acacias réclame un vrai éclairage public, « comme en ville ».',
+    options: [
+      { libelle: 'Installer l\'éclairage complet', effets: { tresorerie: -22000, cadre_eclairage: 5, popularite: 3 },
+        note: 'Les Acacias brillent. Les moustiques aussi sont ravis.' },
+      { libelle: 'Des lampadaires solaires', effets: { tresorerie: -9000, cadre_eclairage: 2 },
+        note: 'Écologique, économique, et un peu faiblard en décembre.' },
+      { libelle: '« La nuit, c\'est fait pour dormir »', effets: { popularite: -3 },
+        note: 'La phrase finit sur les réseaux. Sortie de son contexte, évidemment.' },
+    ] },
+];
+
 /* Modulateurs de profil appliqués aux effets négatifs des crises */
 const MODULATEURS_PROFIL = {
   touristique: { attractivite: 2.0 },  // la saison est compromise
   rurale: { population_pct: 1.5 },     // chaque départ pèse double
+};
+
+/* ------------------------------------------------------------
+   L'AVATAR DU MAIRE — physique, prénom, et profil mental
+   ------------------------------------------------------------ */
+const AVATARS = {
+  homme: ['👨🏻', '👨🏼', '👨🏽', '👨🏾', '👨🏿', '👨‍🦰', '👨‍🦱', '👨‍🦳', '🧔', '👴🏽'],
+  femme: ['👩🏻', '👩🏼', '👩🏽', '👩🏾', '👩🏿', '👩‍🦰', '👩‍🦱', '👩‍🦳', '👱‍♀️', '👵🏽'],
+};
+
+/* Trois questions, quatre sensibilités : le profil dominant gagne */
+const QUESTIONS_PERSO = [
+  { q: 'Ton samedi idéal de maire ?', reponses: [
+    { txt: '☕ Petit-déjeuner avec des investisseurs', trait: 'entrepreneur' },
+    { txt: '🌳 Plantation d\'arbres avec l\'asso locale', trait: 'ecolo' },
+    { txt: '🧀 Le marché : serrer des mains, goûter le fromage', trait: 'populaire' },
+    { txt: '👷 Sur le chantier, casque vissé', trait: 'batisseur' },
+  ] },
+  { q: 'On te donne 100 000 € pour la ville. Réflexe ?', reponses: [
+    { txt: '📈 Je les investis — l\'argent doit rapporter', trait: 'entrepreneur' },
+    { txt: '🚲 Pistes cyclables et fleurs partout', trait: 'ecolo' },
+    { txt: '🎉 Une grande fête pour tout le monde', trait: 'populaire' },
+    { txt: '🧱 On pose la première pierre de quelque chose', trait: 'batisseur' },
+  ] },
+  { q: 'Ta devise de campagne ?', reponses: [
+    { txt: '« Une ville riche est une ville libre »', trait: 'entrepreneur' },
+    { txt: '« La plus belle ville est une ville verte »', trait: 'ecolo' },
+    { txt: '« Les gens d\'abord, le reste suivra »', trait: 'populaire' },
+    { txt: '« Qui ne construit pas recule »', trait: 'batisseur' },
+  ] },
+];
+
+/* Le profil pilote le CABINET : des initiatives automatiques chaque
+   mois, et des chantiers lancés d'office quand la caisse le permet. */
+const TRAITS = {
+  entrepreneur: {
+    nom: 'L\'Entrepreneur', icone: '💰', ligne: 'faire rentrer de l\'argent',
+    desc: 'Pour toi, une ville qui gagne de l\'argent est une ville qui décide de son avenir. Ton cabinet flairera la moindre recette.',
+    initiatives: [
+      { nom: 'Régie publicitaire sur les abribus', effets: { tresorerie: 15000, popularite: -1 }, note: 'Des pubs partout, des sous qui rentrent.' },
+      { nom: 'Renégociation des contrats fournisseurs', effets: { tresorerie: 22000 }, note: 'Le prestataire a pleuré, la caisse a souri.' },
+      { nom: 'Location de la salle des fêtes aux séminaires', effets: { tresorerie: 12000, popularite: -1 }, note: 'Les mariages attendront le dimanche.' },
+      { nom: 'Forum des entreprises locales', effets: { tresorerie: -8000, attractivite: 3 }, note: 'Beaucoup de cartes de visite ont changé de poche.' },
+    ],
+    chantiers: ['parking', 'zone_activite', 'marche'],
+  },
+  ecolo: {
+    nom: 'L\'Écolo', icone: '🌱', ligne: 'verdir la ville',
+    desc: 'Le béton attendra : ton cabinet plantera, piétonnisera et éteindra les lumières inutiles — parfois sans prévenir.',
+    initiatives: [
+      { nom: 'Plantation de 500 arbres', effets: { tresorerie: -10000, cadre_proprete: 3, attractivite: 2 }, note: 'Ça sent la sève et l\'avenir.' },
+      { nom: 'Dimanche sans voiture en centre-ville', effets: { popularite: 2, cadre_proprete: 2 }, note: 'Les vélos jubilent, deux grincheux klaxonnent.' },
+      { nom: 'Prime vélo pour les habitants', effets: { tresorerie: -12000, popularite: 2, attractivite: 1 }, note: 'La ville pédale. Toi aussi, pour l\'exemple.' },
+      { nom: 'Extinction de l\'éclairage après minuit', effets: { tresorerie: 8000, cadre_eclairage: -2 }, note: 'Les étoiles reviennent, les noctambules râlent.' },
+    ],
+    chantiers: ['eclairage_led', 'voirie_refection', 'reseau_eau'],
+  },
+  populaire: {
+    nom: 'Le Populaire', icone: '❤️', ligne: 'chouchouter les habitants',
+    desc: 'Ta politique tient en un mot : les gens. Ton cabinet organisera des fêtes, offrira des cantines — et la caisse suivra comme elle peut.',
+    initiatives: [
+      { nom: 'Fête des voisins géante', effets: { tresorerie: -9000, popularite: 4 }, note: 'Tout le monde connaît le prénom de tout le monde, maintenant.' },
+      { nom: 'Cantine gratuite pendant un mois', effets: { tresorerie: -15000, popularite: 5 }, note: 'Les parents applaudissent des deux mains.' },
+      { nom: 'Tournoi de pétanque intercantonal', effets: { tresorerie: -4000, popularite: 2, attractivite: 1 }, note: 'Une triplette de Marseille a contesté. Classique.' },
+      { nom: 'Permanences du maire au café', effets: { popularite: 3 }, note: 'Tu connais désormais tous les problèmes de plomberie de la ville.' },
+    ],
+    chantiers: ['gymnase', 'creche', 'ecole'],
+  },
+  batisseur: {
+    nom: 'Le Bâtisseur', icone: '🏗️', ligne: 'construire, encore',
+    desc: 'Une grue à l\'horizon vaut tous les sondages. Ton cabinet lancera des chantiers dès que la caisse le permettra.',
+    initiatives: [
+      { nom: 'Constitution d\'une réserve foncière', effets: { tresorerie: -15000, attractivite: 2 }, note: 'Un champ aujourd\'hui, un quartier demain.' },
+      { nom: 'Grand plan de rénovation des façades', effets: { tresorerie: -12000, cadre_logement: 3 }, note: 'La grand-rue a rajeuni de trente ans.' },
+      { nom: 'Salon de l\'immobilier local', effets: { tresorerie: 5000, attractivite: 2 }, note: 'Des maquettes, des promesses, des chèques.' },
+      { nom: 'Étude de sol pour le prochain grand projet', effets: { tresorerie: -6000 }, note: 'Verdict : le sol est un sol. Parfait.' },
+    ],
+    chantiers: ['ecole', 'parking', 'mediatheque', 'gymnase'],
+  },
+};
+
+/* ------------------------------------------------------------
+   OBJECTIFS DE MANDAT — le fil rouge qui encadre la partie
+   ------------------------------------------------------------ */
+const OBJECTIFS = [
+  { id: 'courrier', icone: '📬', texte: 'Réponds à ton premier courrier', xp: 30 },
+  { id: 'chantier', icone: '🏗️', texte: 'Lance ta première construction', xp: 50 },
+  { id: 'mois_positif', icone: '📈', texte: 'Boucle un mois dans le vert', xp: 50 },
+  { id: 'crise', icone: '🚨', texte: 'Gère une crise sans l\'option par défaut', xp: 80, capital: 10 },
+  { id: 'croissance', icone: '👥', texte: 'Gagne 2 % d\'habitants', xp: 80 },
+  { id: 'etoiles', icone: '⭐', texte: 'Atteins 3,5 étoiles', xp: 100 },
+  { id: 'an1', icone: '🎂', texte: 'Termine ta première année', xp: 120, capital: 10 },
+  { id: 'an2', icone: '🏅', texte: 'Termine ta deuxième année', xp: 150 },
+  { id: 'mandat', icone: '🏛️', texte: 'Va au bout du mandat', xp: 0 },
+];
+
+/* ------------------------------------------------------------
+   PROGRESSION — niveaux de maire et leurs titres
+   ------------------------------------------------------------ */
+const TITRES_MAIRE = [
+  'Stagiaire de la mairie',
+  'Adjoint au sous-adjoint',
+  'Maire débutant',
+  'Maire qui gère',
+  'Pro du béton armé',
+  'Star du canton',
+  'Baron local',
+  'Légende départementale',
+  'Ministre pressenti',
+  'Monument historique vivant',
+];
+
+/* Gaston, ton adjoint — il annonce tout, il ne décide de rien */
+const ADJOINT = { nom: 'Gaston', icone: '🧑‍💼' };
+const PHRASES_ADJOINT = {
+  courrier: [
+    'Un pli pour vous, patron !',
+    'Ça vient d\'arriver. Et c\'est signé.',
+    'Les habitants attendent une réponse. De préférence la bonne.',
+    'Encore du courrier. J\'ai pris la liberté de ne pas le perdre.',
+    'On vous demande à l\'accueil. Enfin, par écrit.',
+  ],
+  crise: [
+    'Patron… on a un GROS problème.',
+    'Restez calme. Moi je n\'y arrive pas, mais vous, restez calme.',
+    'J\'ai trois appels en attente et aucun n\'est une bonne nouvelle.',
+    'C\'est le genre de journée qui finit dans le journal.',
+  ],
+  evenement: [
+    'Vous vous souvenez de cette « affaire réglée » ? Elle est revenue.',
+    'Il paraît que rien n\'est jamais gratuit. Il paraît bien.',
+  ],
 };
 
 const SAISONS = ['hiver', 'hiver', 'printemps', 'printemps', 'printemps', 'ete', 'ete', 'ete', 'automne', 'automne', 'automne', 'hiver'];
