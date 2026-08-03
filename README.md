@@ -27,6 +27,12 @@ Aucune dépendance, aucun build : ouvre `index.html`. Sauvegarde automatique dan
 
 ## La boucle de jeu
 
+- **Chaque question est une scène, façon visual novel** : un décor (salle de classe, rue, stade, bureau, saison), le personnage qui te parle en grand, sa plaque de nom, et le texte qui s'écrit lettre à lettre dans la boîte de dialogue.
+- **Un monde nommé, pour que ça fasse réel** : ton lycée (Albert-Camus, Simone-Veil…), ton fast-food (Le Roi du Tacos…), ton resto, ton café, le club de foot de TA ville (US Toulouse…), l'influenceur local, le film à l'affiche qui change au fil des saisons et la tendance TikTok du moment.
+- **Des arcs narratifs à conséquences** : ton pote filme ton geste au foot → le clip tourne → un recruteur te propose un stage… pendant les cours (à toi de choisir). Tes abonnés grimpent → une marque te contacte → une agence t'appelle : **influenceur·se peut devenir ton métier**.
+- **Des choix qui laissent des traces** : le permis débloque l'achat de la voiture du pote, le chiot « de race » acheté sur Snap s'appelle Biscotte et revient dans tes bilans.
+- **La vie, pas que les cours** : vacances en famille, premier départ entre potes (destination à choisir !), rencontres au camping, premier rendez-vous au resto, festival, plans business…
+- **Après le bac, 5 voies** : études longues, BTS/BUT, travailler direct, **année sabbatique** ou **voyage sac à dos** (une année off, puis on re-choisit).
 - **Une question par saison, ~40 questions pour une vie.** Deux types de cartes :
   - **Scènes de vie** (~18) : contrôle surprise, rumeur sur un pote, crush qui t'écrit, plan douteux de Marco, collègue qui s'attribue ton travail… Le prof, ta famille, tes potes ou le taf t'interpellent.
   - **Ta saison** : comment tu passes ces trois mois — réviser, sortir, t'entraîner au foot, répéter ton chant, bosser un petit job… Chaque option affiche ses effets.

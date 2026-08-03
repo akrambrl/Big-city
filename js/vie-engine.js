@@ -51,6 +51,7 @@ const Vie = (() => {
       burnouts: 0,
       ville, profil: ambiance,
       commune: ville.nom,
+      monde: null,               // lycée, fast-food, resto… générés juste après
       voisines: ville.voisines || null,
       population: ville.pop, populationInitiale: ville.pop,
       cadre: { voirie: 70 }, equipements: [], // pour la carte
@@ -58,6 +59,8 @@ const Vie = (() => {
       familleId,
       filiereId,
       orientationId: null,       // choisi après le bac
+      pauseFaite: false,         // une seule année off (sabbatique / voyage) par vie
+      finPause: null,            // dernière saison de l'année off
       metierId: null,
       bacObtenu: null,           // null | true | false
       mois: 1,                   // mois 1 = septembre de la seconde (15 ans)
@@ -68,6 +71,9 @@ const Vie = (() => {
       rechercheEmploi: false,    // vrai quand c'est à TOI de décrocher ton métier
       entretienDispo: 0,         // cooldown après un entretien raté
       argent: famille.argentDepart,
+      abonnes: 150,              // tes abonnés sur les réseaux — ça peut devenir un métier
+      drapeaux: {},              // permis, chien, voiture… les traces de tes choix
+      arcs: { foot: { etape: 0, prochainMois: 0, actif: true }, tiktok: { etape: 0, prochainMois: 0, actif: true } },
       amis: amisIds.map(id => ({ id, relation: 50 })),
       carte: null,               // la question en cours { type: 'scene'|'rythme', id, amiId }
       pileScenes: [],
@@ -85,9 +91,45 @@ const Vie = (() => {
       historique: [],            // { mois, bonheur, argent }
       gameOver: null,
     };
-    log(`🎒 Rentrée de seconde à ${ville.nom}. ${famille.ambiance}`);
+    S.monde = genererMonde();
+    log(`🎒 Rentrée de seconde au ${S.monde.lycee}, à ${ville.nom}. ${famille.ambiance}`);
     nouvelleCarte();
     return S;
+  }
+
+  /* ---------- Le monde nommé : ton lycée, ton fast-food, ton club ---------- */
+
+  function genererMonde() {
+    /* graine dédiée (indépendante de rngN) : le Défi du jour partage le même monde */
+    const g = graineDepuis('monde-' + S.graine + '-' + S.commune);
+    const pioche = (arr, n) => arr[(g + n * 7919) % arr.length];
+    return {
+      lycee: 'lycée ' + pioche(NOMS_LYCEES, 1),
+      fastfood: pioche(FAST_FOODS, 2),
+      resto: pioche(RESTOS, 3),
+      cafe: pioche(CAFES, 4),
+      influenceur: pioche(INFLUENCEURS, 5),
+      club: pioche(PREFIXES_CLUB, 6) + ' ' + S.commune,
+    };
+  }
+
+  /* Le film à l'affiche change toutes les 2 saisons, la tendance TikTok chaque saison */
+  function filmDuMoment() { return FILMS[(S.graine + Math.floor((S.mois - 1) / 2)) % FILMS.length]; }
+  function tendanceDuMoment() { return TENDANCES_TIKTOK[(S.graine + S.mois) % TENDANCES_TIKTOK.length]; }
+
+  function remplacerMonde(txt) {
+    return txt
+      .replaceAll('{ville}', S.commune)
+      .replaceAll('{prenom}', S.perso.prenom)
+      .replaceAll('{lycee}', S.monde.lycee)
+      .replaceAll('{fastfood}', S.monde.fastfood)
+      .replaceAll('{resto}', S.monde.resto)
+      .replaceAll('{cafe}', S.monde.cafe)
+      .replaceAll('{influenceur}', S.monde.influenceur)
+      .replaceAll('{club}', S.monde.club)
+      .replaceAll('{film}', filmDuMoment())
+      .replaceAll('{tiktok}', tendanceDuMoment())
+      .replaceAll('{destination}', DESTINATIONS[(S.graine + Math.floor((S.mois - 1) / 4)) % DESTINATIONS.length]);
   }
 
   /* ---------- Temps & phases ---------- */
@@ -97,22 +139,32 @@ const Vie = (() => {
   function moisCalendaire() { return (VIE_CFG.MOIS_DEPART + (S.mois - 1) * 3) % 12; }
   function saisonVie() { return SAISONS_VIE[moisCalendaire()]; }
 
+  function orientation() { return ORIENTATIONS.find(x => x.id === S.orientationId) || null; }
+
+  function metierReve() {
+    const m = METIERS.find(x => x.id === S.metierId);
+    return !!(m && m.orientation === 'reve');
+  }
+
   function phase() {
-    if (S.metierId && REVES[S.metierId]) return 'travail'; // carrière de rêve : la vie active a déjà commencé
+    if (metierReve()) return 'travail'; // carrière de rêve : la vie active a déjà commencé
     if (S.mois <= VIE_CFG.MOIS_BAC) return 'lycee';
-    if (S.orientationId && S.orientationId !== 'travail' && S.mois <= VIE_CFG.MOIS_DIPLOME) return 'etudes';
+    const o = orientation();
+    if (o && o.pause && S.finPause && S.mois <= S.finPause) return 'pause';
+    if (o && !o.pause && S.orientationId !== 'travail' && S.mois <= VIE_CFG.MOIS_DIPLOME) return 'etudes';
     return 'travail';
   }
 
-  const NOMS_PHASE = { lycee: 'Lycée', etudes: 'Études', travail: 'Vie active' };
+  const NOMS_PHASE = { lycee: 'Lycée', etudes: 'Études', pause: 'Année off', travail: 'Vie active' };
 
   function classeActuelle() {
     if (phase() === 'lycee') {
       const annee = Math.ceil(S.mois / 4);
       return ['Seconde', 'Première', 'Terminale'][Math.min(annee - 1, 2)];
     }
+    if (phase() === 'pause') return orientation().nom;
     if (phase() === 'etudes') {
-      const o = ORIENTATIONS.find(x => x.id === S.orientationId);
+      const o = orientation();
       return o ? o.nom : 'Études';
     }
     const m = METIERS.find(x => x.id === S.metierId);
@@ -136,6 +188,7 @@ const Vie = (() => {
       const fil = FILIERES.find(f => f.id === S.filiereId);
       return famille.argentPoche + (fil.salaireApprenti || 0);
     }
+    if (ph === 'pause') return S.orientationId === 'sabbatique' ? 250 : 0; // petits boulots vs vie sur les économies
     if (ph === 'etudes') return Math.round(famille.argentPoche * 1.5);
     const m = METIERS.find(x => x.id === S.metierId);
     return m ? Math.round(m.salaire * (S.promotions || 0) * 0.3 + m.salaire) - 1100 : 300;
@@ -149,8 +202,26 @@ const Vie = (() => {
     return a ? a.id : null;
   }
 
+  /* l'épisode d'arc narratif disponible, s'il y en a un */
+  function arcDisponible() {
+    const a = S.arcs;
+    if (a.foot.actif && S.mois >= a.foot.prochainMois && !S.metierId) {
+      if (a.foot.etape === 0 && S.talents.foot >= 40) return 'foot_1';
+      if (a.foot.etape === 1) return 'foot_2';
+      if (a.foot.etape === 2) return 'foot_3';
+    }
+    if (a.tiktok.actif && S.mois >= a.tiktok.prochainMois) {
+      if (a.tiktok.etape === 0 && S.abonnes >= 3000) return 'tiktok_1';
+      if (a.tiktok.etape === 1 && S.abonnes >= 12000 && !S.metierId) return 'tiktok_2';
+    }
+    return null;
+  }
+
   function nouvelleCarte() {
     if (S.gameOver || S.choixOrientation || S.essaiPropose) { S.carte = null; return; }
+    // un épisode d'histoire t'attend ? (foot repéré, marques qui te contactent…)
+    const arc = arcDisponible();
+    if (arc) { S.carte = { type: 'arc', id: arc, amiId: amiAuHasard() }; return; }
     // un MOMENT RARE ? (jamais deux fois le même, jamais à la première saison)
     if (S.mois > 2 && rnd() < VIE_CFG.PROBA_RARE) {
       const restants = SCENES_RARES.filter(r => !S.raresVues.includes(r.id));
@@ -182,13 +253,20 @@ const Vie = (() => {
   function carteCourante() {
     if (!S.carte) return null;
     const ami = AMIS.find(a => a.id === S.carte.amiId) || AMIS[0];
-    const remplacer = (txt) => txt.replaceAll('{ami}', ami.nom).replaceAll('{ville}', S.commune);
-    if (S.carte.type === 'scene' || S.carte.type === 'rare') {
-      const sc = (S.carte.type === 'rare' ? SCENES_RARES : SCENES_VIE).find(x => x.id === S.carte.id);
+    const remplacer = (txt) => remplacerMonde(txt.replaceAll('{ami}', ami.nom));
+    if (S.carte.type !== 'rythme') {
+      const source = S.carte.type === 'rare' ? SCENES_RARES.find(x => x.id === S.carte.id)
+        : S.carte.type === 'arc' ? { ...ARCS[S.carte.id], id: S.carte.id }
+        : SCENES_VIE.find(x => x.id === S.carte.id);
       return {
-        type: S.carte.type, icone: sc.icone, de: sc.de, ami, rare: S.carte.type === 'rare',
-        texte: remplacer(sc.texte),
-        options: sc.options.map(o => ({ txt: remplacer(o.txt), note: remplacer(o.note), effets: o.effets })),
+        type: S.carte.type, icone: source.icone, de: source.de, ami,
+        rare: S.carte.type === 'rare', arc: S.carte.type === 'arc',
+        texte: remplacer(source.texte),
+        options: source.options.map(o => ({
+          txt: remplacer(o.txt), note: remplacer(o.note), effets: o.effets,
+          bloquee: (o.si && !S.drapeaux[o.si]) || ((o.effets.argent || 0) < 0 && S.argent + o.effets.argent < 0),
+          bloqueeRaison: o.si && !S.drapeaux[o.si] ? (o.si === 'permis' ? 'Il te faut le permis.' : 'Pas encore possible.') : null,
+        })),
       };
     }
     const r = RYTHMES.find(x => x.id === S.carte.id);
@@ -196,8 +274,8 @@ const Vie = (() => {
       type: 'rythme', icone: r.icone, ami,
       texte: remplacer(r.texte),
       options: r.options.map(o => ({
-        txt: o.ami ? `${o.txt} (avec ${ami.icone} ${ami.nom})` : o.txt,
-        note: o.note, effets: o.effets, ami: o.ami, talent: o.talent,
+        txt: remplacer(o.ami ? `${o.txt} (avec ${ami.icone} ${ami.nom})` : o.txt),
+        note: remplacer(o.note), effets: o.effets, ami: o.ami, talent: o.talent,
         bloquee: (o.ageMin && age() < o.ageMin) || ((o.effets.argent || 0) < 0 && S.argent + o.effets.argent < 0),
       })),
     };
@@ -209,7 +287,31 @@ const Vie = (() => {
     const opt = carte.options[indexOption];
     if (!opt || opt.bloquee) return { ok: false, msg: 'Pas possible pour l\'instant.' };
 
-    if (carte.type === 'rare') {
+    /* les traces persistantes et les bonus d'arc */
+    const optSource = carte.type === 'arc' ? ARCS[S.carte.id].options[indexOption]
+      : carte.type === 'rythme' ? null
+      : (carte.type === 'rare' ? SCENES_RARES : SCENES_VIE).find(x => x.id === S.carte.id).options[indexOption];
+    if (optSource && optSource.drapeau) S.drapeaux[optSource.drapeau] = true;
+    if (optSource && optSource.talentPlus) {
+      for (const [t, v] of Object.entries(optSource.talentPlus)) S.talents[t] = clamp100(S.talents[t] + v);
+    }
+    if (carte.type === 'arc') {
+      appliquerEffets(opt.effets, S.carte.amiId);
+      gagnerXP(30);
+      const arcId = S.carte.id.startsWith('foot') ? 'foot' : 'tiktok';
+      if (optSource.stop) S.arcs[arcId].actif = false;
+      else { S.arcs[arcId].etape++; S.arcs[arcId].prochainMois = S.mois + (optSource.delai || 2); }
+      if (optSource.metier) {
+        S.metierId = optSource.metier;
+        S.rechercheEmploi = false;
+        S.orientationId = S.orientationId || 'travail';
+        gagnerXP(120);
+        const m = METIERS.find(x => x.id === optSource.metier);
+        log(`${m.icone} ${m.nom.toUpperCase()} : signé·e en agence !`);
+        notifier(m.icone, `${m.nom} : c'est ton métier maintenant !`);
+        S.cinematiques.push({ emoji: m.icone, titre: 'Nouvelle vie', texte: 'Contrats, tournages, campagnes : tes réseaux sont devenus ton bureau. {ville} n\'en revient pas.' });
+      }
+    } else if (carte.type === 'rare') {
       appliquerEffets(opt.effets, S.carte.amiId);
       gagnerXP(35);
       notifier('🌟', 'Tu as vécu un MOMENT RARE. Ça se raconte, ça !');
@@ -242,6 +344,7 @@ const Vie = (() => {
   function appliquerEffets(eff, amiScene) {
     for (const [k, v] of Object.entries(eff || {})) {
       if (k === 'argent') S.argent = Math.max(0, S.argent + v);
+      else if (k === 'abonnes') S.abonnes = Math.max(0, S.abonnes + v);
       else if (k === 'relation' && amiScene) {
         const a = S.amis.find(x => x.id === amiScene);
         if (a) a.relation = clamp100(a.relation + v);
@@ -256,8 +359,20 @@ const Vie = (() => {
     if (ph === 'lycee') {
       const fil = FILIERES.find(f => f.id === S.filiereId);
       S.stats.savoir = clamp100(S.stats.savoir + fil.savoirMois * fatigue);
+    } else if (ph === 'pause') {
+      const o = orientation();
+      S.stats.savoir = clamp100(S.stats.savoir + o.savoirMois);
+      if (S.orientationId === 'voyage') {
+        S.stats.social = clamp100(S.stats.social + 3);
+        S.stats.moral = clamp100(S.stats.moral + 3);
+        S.stats.forme = clamp100(S.stats.forme + 1);
+        S.argent = Math.max(0, S.argent - 60); // la route, ça se paye
+      } else {
+        S.stats.energie = clamp100(S.stats.energie + 5);
+        S.stats.moral = clamp100(S.stats.moral + 2);
+      }
     } else if (ph === 'etudes') {
-      const o = ORIENTATIONS.find(x => x.id === S.orientationId);
+      const o = orientation();
       S.stats.savoir = clamp100(S.stats.savoir + o.savoirMois * fatigue);
       S.argent = Math.max(0, S.argent - o.cout);
     } else {
@@ -291,6 +406,19 @@ const Vie = (() => {
 
     /* fin d'année scolaire (toutes les 4 saisons) : la mise en scène du bilan */
     if (S.mois > 1 && (S.mois - 1) % 4 === 0 && S.mois <= VIE_CFG.MOIS_FIN) genererBilanAnnee();
+
+    /* fin de l'année off : et maintenant, on fait quoi ? */
+    if (S.finPause && S.mois > S.finPause && !S.gameOver) {
+      const etaitVoyage = S.orientationId === 'voyage';
+      S.finPause = null;
+      S.orientationId = null;
+      S.choixOrientation = true;
+      S.carte = null;
+      S.cinematiques.push(etaitVoyage
+        ? { emoji: '🛬', titre: 'Retour au pays', texte: 'Un an, quatorze pays, un carnet plein et des chaussures mortes. {ville} n\'a pas bougé — toi, si. Maintenant : on fait quoi ?' }
+        : { emoji: '⏰', titre: 'Fin de l\'année off', texte: 'L\'année sabbatique se termine. Reposé·e, des idées plus claires — et la vraie question revient : on fait quoi, maintenant ?' });
+      notifier('🧭', 'Ton année off se termine : choisis ta suite !');
+    }
 
     /* rendez-vous fixes */
     if (S.mois === VIE_CFG.MOIS_BAC + 1) passerBac();
@@ -335,8 +463,10 @@ const Vie = (() => {
     else classe = 'Vie active';
 
     /* le gros titre de presse : le trait dominant de ton année */
+    const deltaAbonnes = S.abonnes - (S.refAnnee && S.refAnnee.abonnes !== undefined ? S.refAnnee.abonnes : S.abonnes);
     let trait;
-    if (S.talents.foot >= 40 && S.talents.foot >= S.talents.musique) trait = 'foot';
+    if (deltaAbonnes >= 4000 || S.metierId === 'influenceur') trait = 'reseaux';
+    else if (S.talents.foot >= 40 && S.talents.foot >= S.talents.musique) trait = 'foot';
     else if (S.talents.musique >= 40) trait = 'musique';
     else if (deltaArgent >= 800) trait = 'argent';
     else {
@@ -345,7 +475,7 @@ const Vie = (() => {
       else trait = s.savoir === max ? 'savoir' : s.social === max ? 'social' : s.forme === max ? 'forme' : 'moral';
     }
     const modeles = TITRES_ANNEE[trait];
-    const remplacer = (t) => t.replaceAll('{prenom}', S.perso.prenom).replaceAll('{ville}', S.commune);
+    const remplacer = remplacerMonde;
     const titrePresse = remplacer(modeles[Math.floor(rnd() * modeles.length)]);
 
     /* les lignes du bilan */
@@ -357,6 +487,8 @@ const Vie = (() => {
     const obj = objectifCourant();
     lignes.push(obj ? `🎯 Objectif en cours : ${obj.icone} ${obj.texte}` : '🎯 Tous tes objectifs de vie sont cochés !');
     lignes.push(`🫂 Ton pilier de l'année : ${amiDef.icone} ${amiDef.nom} (${Math.round(meilleurAmi.relation)}/100)`);
+    if (S.abonnes >= 1000) lignes.push(`📱 ${S.abonnes.toLocaleString('fr-FR')} abonnés te suivent${deltaAbonnes > 0 ? ` (+${deltaAbonnes.toLocaleString('fr-FR')} cette année)` : ''}.`);
+    if (S.drapeaux.chien) lignes.push('🐶 Biscotte approuve cette année. (Il a mangé une chaussure.)');
     if (s.energie < 30) lignes.push('⚠️ Tu tires sur la corde — dors, sérieusement.');
     else if (s.moral < 35) lignes.push('⚠️ Le moral a pris cher cette année. Prends soin de toi.');
     if (S.argent < 40) lignes.push('⚠️ Les fins de mois piquent. Un petit boulot ?');
@@ -373,7 +505,7 @@ const Vie = (() => {
       lignes,
       potin: remplacer(POTINS_VILLE[Math.floor(rnd() * POTINS_VILLE.length)]),
     };
-    S.refAnnee = { argent: S.argent };
+    S.refAnnee = { argent: S.argent, abonnes: S.abonnes };
   }
 
   /* ---------- Examens & carrière ---------- */
@@ -385,7 +517,7 @@ const Vie = (() => {
     if (reussi) {
       S.cinematiques.push({
         emoji: '🎓', titre: 'Résultats du bac',
-        texte: `La liste est affichée sur la grille du lycée. Ton nom y est : ADMIS${S.perso.genre === 'femme' ? 'E' : ''}${mention} ! Les cris, les câlins, les photos. Maintenant… il faut choisir la suite.`,
+        texte: `La liste est affichée sur la grille du ${S.monde.lycee}. Ton nom y est : ADMIS${S.perso.genre === 'femme' ? 'E' : ''}${mention} ! Les cris, les câlins, les photos. Maintenant… il faut choisir la suite.`,
       });
       log(`🎓 BAC OBTENU${mention} ! (savoir : ${Math.round(S.stats.savoir)})`);
       S.stats.moral = clamp100(S.stats.moral + 15);
@@ -397,7 +529,7 @@ const Vie = (() => {
       log('😶 Bac raté. La vie continue, autrement.');
       S.stats.moral = clamp100(S.stats.moral - 10);
     }
-    if (S.metierId && REVES[S.metierId]) {
+    if (metierReve()) {
       // déjà signé·e pro : le club/label a aménagé tes cours, pas d'orientation à choisir
       log('🎓 Le bac en parallèle de ta carrière — chapeau.');
     } else {
@@ -408,22 +540,35 @@ const Vie = (() => {
 
   function orientationsPossibles() {
     return ORIENTATIONS.filter(o => {
-      if (o.id !== 'travail' && S.bacObtenu === false) return false;
+      if (o.pause && S.pauseFaite) return false;          // une seule année off par vie
+      if (o.argentMin && S.argent < o.argentMin) return false;
+      if (!o.pause && o.id !== 'travail' && S.bacObtenu === false) return false;
       return S.stats.savoir >= o.minSavoir - 10; // un peu de souplesse
     });
   }
 
   function choisirOrientation(id) {
     if (!S.choixOrientation) return { ok: false };
+    const o = ORIENTATIONS.find(x => x.id === id);
     S.orientationId = id;
     S.choixOrientation = false;
-    nouvelleCarte();
-    if (id === 'travail') demarrerRecherche();
+    if (o && o.pause) {
+      S.pauseFaite = true;
+      S.finPause = S.mois + 3; // l'année off : 4 saisons
+      if (id === 'voyage') {
+        S.argent = Math.max(0, S.argent - (o.argentMin || 0));
+        log('✈️ Billet aller, sac de 12 kilos. Le monde t\'attend.');
+        S.cinematiques.push({ emoji: '✈️', titre: 'Départ', texte: 'Aéroport, 6 h du matin. Ta famille fait semblant de ne pas pleurer. Premier tampon sur le passeport — un an de routes, d\'auberges et de rencontres commence.' });
+      } else {
+        log('🧳 Année sabbatique : un an à toi.');
+        S.cinematiques.push({ emoji: '🧳', titre: 'L\'année à toi', texte: 'Pas de réveil, pas de programme. Des petits boulots, des projets qui traînaient, du temps pour réfléchir à la suite. Un luxe rare : le temps.' });
+      }
+    } else if (id === 'travail') demarrerRecherche();
     else {
-      const o = ORIENTATIONS.find(x => x.id === id);
       log(`${o.icone} C'est parti pour : ${o.nom}.`);
       S.cinematiques.push({ emoji: o.icone, titre: o.nom, texte: `Nouveau campus, nouvelles têtes, nouveaux horaires approximatifs. ${o.desc}` });
     }
+    nouvelleCarte();
     verifierObjectifs();
     return { ok: true };
   }
@@ -564,6 +709,7 @@ const Vie = (() => {
     let id = 'electron';
     if (S.metierId === 'foot') id = 'ballon_or';
     else if (S.metierId === 'musique') id = 'tete_affiche';
+    else if (S.metierId === 'influenceur' || S.abonnes >= 50000) id = 'star_reseaux';
     else if (s.savoir >= 85) id = 'cerveau';
     else if (S.argent >= 5000) id = 'main_doree';
     else if (amisMoy >= 82) id = 'coeur_quartier';
@@ -632,6 +778,11 @@ const Vie = (() => {
       if (S.defi === undefined) S.defi = null;
       if (S.refAnnee === undefined) S.refAnnee = { argent: S.argent };
       if (S.bilanAnnee === undefined) S.bilanAnnee = null;
+      if (!S.monde) S.monde = genererMonde();
+      if (S.pauseFaite === undefined) { S.pauseFaite = false; S.finPause = null; }
+      if (S.abonnes === undefined) S.abonnes = 150;
+      if (S.drapeaux === undefined) S.drapeaux = {};
+      if (S.arcs === undefined) S.arcs = { foot: { etape: 0, prochainMois: 0, actif: true }, tiktok: { etape: 0, prochainMois: 0, actif: true } };
       return S;
     } catch (e) { return null; }
   }
@@ -646,6 +797,6 @@ const Vie = (() => {
     age, phase, NOMS_PHASE, classeActuelle, moisCalendaire, saisonVie,
     bonheur, revenuMensuel, objectifCourant, xpPourNiveau,
     notifsNonLues, marquerNotifsLues,
-    defiDuJour, titreDeVie,
+    defiDuJour, titreDeVie, remplacerMonde,
   };
 })();

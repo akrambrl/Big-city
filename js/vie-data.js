@@ -95,16 +95,22 @@ const ORIENTATIONS = [
   { id: 'travail', nom: 'Travailler direct', icone: '💼', minSavoir: 0,
     desc: 'Fini l\'école : un salaire tout de suite, une carrière à construire à la force du poignet.',
     savoirMois: 0.5 },
+  { id: 'sabbatique', nom: 'Année sabbatique', icone: '🧳', minSavoir: 0, pause: true,
+    desc: 'Un an pour souffler : petits boulots, projets perso, les idées qui se remettent en place. Tu choisiras après.',
+    savoirMois: 0.4 },
+  { id: 'voyage', nom: 'Voyage sac à dos', icone: '✈️', minSavoir: 0, pause: true, argentMin: 400,
+    desc: 'Un an sur les routes du monde (400 € de départ). Ça coûte, ça fatigue, ça change une vie.',
+    savoirMois: 0.8 },
 ];
 
 /* Métier attribué au moment d'entrer dans la vie active */
 /* Les carrières de rêve : on s'entraîne, on se fait repérer, on tente sa chance */
 const REVES = {
   foot: { nom: 'Footballeur·se pro', icone: '⚽', stat: 'forme', seuilReperage: 62,
-    reperage: 'Un recruteur du centre de formation t\'observe depuis trois entraînements. Il s\'approche : « Tu as quelque chose. Un essai, ça te dit ? »',
-    essai: 'L\'essai au centre de formation : deux heures sous les yeux des coachs, jambes en feu, cœur à 200.',
-    reussite: 'Le coach te serre la main : « Bienvenue au club. » CONTRAT PRO. Tes potes hurlent dans les gradins.',
-    echec: 'Pas cette fois. « Reviens plus fort », dit le coach. Et tu reviendras.' },
+    reperage: 'Un recruteur du {club} t\'observe depuis trois entraînements. Il s\'approche : « Tu as quelque chose. Un essai au centre de formation, ça te dit ? »',
+    essai: 'L\'essai au centre de formation du {club} : deux heures sous les yeux des coachs, jambes en feu, cœur à 200.',
+    reussite: 'Le coach te serre la main : « Bienvenue au {club}. » CONTRAT PRO. Tes potes hurlent dans les gradins.',
+    echec: 'Pas cette fois. « Reviens plus fort », dit le coach du {club}. Et tu reviendras.' },
   musique: { nom: 'Chanteur·se', icone: '🎤', stat: 'social', seuilReperage: 62,
     reperage: 'Après ta répète, une programmatrice de festival t\'attend : « J\'ai entendu ta voix. Viens auditionner. »',
     essai: 'L\'audition : une salle vide, trois personnes derrière une table, et ta voix. Juste ta voix.',
@@ -133,6 +139,7 @@ const QUESTIONS_ENTRETIEN = [
 const METIERS = [
   { id: 'foot', nom: 'Footballeur·se pro', icone: '⚽', orientation: 'reve', minSavoir: 0, salaire: 4800 },
   { id: 'musique', nom: 'Chanteur·se', icone: '🎤', orientation: 'reve', minSavoir: 0, salaire: 3400 },
+  { id: 'influenceur', nom: 'Influenceur·se', icone: '💫', orientation: 'reve', minSavoir: 0, salaire: 2600 },
   { id: 'ingenieur', nom: 'Ingénieur·e', icone: '🛠️', orientation: 'longues', minSavoir: 75, salaire: 2600 },
   { id: 'prof', nom: 'Prof', icone: '📚', orientation: 'longues', minSavoir: 60, salaire: 2000 },
   { id: 'comm', nom: 'Chargé·e de comm', icone: '📣', orientation: 'longues', minSavoir: 0, salaire: 1900 },
@@ -225,14 +232,14 @@ const LIEUX = [
    ------------------------------------------------------------ */
 const SCENES_VIE = [
   { id: 's_controle', icone: '📝', phases: ['lycee', 'etudes'], de: 'prof',
-    texte: 'Contrôle surprise demain. Ce soir, {ami} propose une soirée jeux « historique »…',
+    texte: 'Contrôle surprise demain au {lycee}. Ce soir, {ami} propose une soirée jeux « historique »…',
     options: [
       { txt: '📚 Réviser, tant pis pour la soirée', effets: { savoir: 6, moral: -4 }, note: 'Tu as fini par t\'endormir sur tes fiches. Mais tu étais prêt·e.' },
       { txt: '🎮 La soirée. On vit qu\'une fois', effets: { moral: 10, relation: 10, savoir: -4 }, note: 'Soirée légendaire. Le contrôle, beaucoup moins.' },
       { txt: '🤝 Négocier : révisions CHEZ {ami}', effets: { savoir: 3, relation: 6, moral: 4 }, note: 'Deux heures de fiches, trois heures de jeux. Honorable.' },
     ] },
   { id: 's_rumeur', icone: '🗣️', de: 'ami',
-    texte: 'Une rumeur débile circule sur {ami}. Tout le monde en parle au bahut.',
+    texte: 'Une rumeur débile circule sur {ami}. Tout le monde en parle, du {lycee} au {cafe}.',
     options: [
       { txt: '🛡️ La démonter publiquement', effets: { relation: 15, social: 5, moral: 3 }, note: '{ami} ne l\'oubliera jamais.' },
       { txt: '🤫 Rester en dehors de ça', effets: { relation: -8 }, note: '{ami} a remarqué ton silence. Aïe.' },
@@ -266,7 +273,7 @@ const SCENES_VIE = [
     texte: 'Tu organises une soirée. À 21 h, il y a trois personnes, dont toi.',
     options: [
       { txt: '📢 Spammer tout le monde', effets: { social: 10, moral: 6 }, note: 'À 23 h, la maison était pleine. Tu es passé·e à autre chose.' },
-      { txt: '🍕 Pizza à trois, mode cocooning', effets: { relation: 10, moral: 8 }, note: 'Meilleure soirée du mois, finalement.' },
+      { txt: '🍔 Commander au {fastfood}, mode cocooning', effets: { relation: 10, moral: 8 }, note: 'Meilleure soirée du mois, finalement.' },
     ] },
   { id: 's_conseil_classe', icone: '📋', phases: ['lycee'], de: 'prof',
     texte: 'Le prof principal te propose d\'être délégué·e de classe.',
@@ -308,7 +315,7 @@ const SCENES_VIE = [
   { id: 's_permis', icone: '🚗', ageMin: 18,
     texte: 'Il serait temps de passer le permis. C\'est cher, mais c\'est la liberté.',
     options: [
-      { txt: '🚗 Foncer (adieu les économies)', effets: { argent: -300, moral: 10, social: 4 }, note: 'Obtenu du premier coup ! Enfin, du deuxième.' },
+      { txt: '🚗 Foncer (adieu les économies)', effets: { argent: -300, moral: 10, social: 4 }, drapeau: 'permis', note: 'Obtenu du premier coup ! Enfin, du deuxième. La liberté a quatre roues.' },
       { txt: '🚲 Le vélo, c\'est la vie', effets: { forme: 8, argent: 20 }, note: 'Écolo, économe, et des mollets en béton.' },
     ] },
   { id: 's_vieux_ami', icone: '👋',
@@ -318,17 +325,92 @@ const SCENES_VIE = [
       { txt: '😊 « Oui carrément ! » (jamais)', effets: {}, note: 'Le « bientôt » universel. Rendez-vous dans quatre ans.' },
     ] },
   { id: 's_reseaux', icone: '📸',
-    texte: 'Ta story a fait un mini-buzz local. 4 000 vues. Des inconnus te reconnaissent au café.',
+    texte: 'Ta story au {fastfood} a fait un mini-buzz local. 4 000 vues. Des inconnus te reconnaissent au {cafe}.',
     options: [
-      { txt: '📈 Surfer dessus, poster plus', effets: { social: 12, energie: -6, moral: 4 }, note: 'Tu plafonnes à 800 abonnés. Célébrité cantonale.' },
+      { txt: '📈 Surfer dessus, poster plus', effets: { social: 12, energie: -6, moral: 4, abonnes: 1200 }, note: 'Les abonnés grimpent. Célébrité plus si cantonale.' },
       { txt: '🕶️ Savourer et passer à autre chose', effets: { moral: 6 }, note: 'La gloire est passée. Le café est toujours bon.' },
     ] },
   { id: 's_budget', icone: '🧾', phases: ['etudes', 'travail'],
     texte: 'Fin de mois difficile : il te reste 12 € et trois invitations à sortir.',
     options: [
       { txt: '🍝 Proposer une soirée pâtes à la maison', effets: { relation: 10, moral: 8, argent: -8 }, note: 'Carbonara approximative, ambiance cinq étoiles.' },
-      { txt: '💳 Sortir quand même (le découvert attendra)', effets: { social: 8, argent: -40, moral: 4 }, note: 'La banque t\'a envoyé un SMS passif-agressif.' },
+      { txt: '💳 Le {resto} quand même (le découvert attendra)', effets: { social: 8, argent: -40, moral: 4 }, note: 'La banque t\'a envoyé un SMS passif-agressif.' },
       { txt: '🚪 Hiberner jusqu\'à la paie', effets: { argent: 10, social: -5 }, note: 'Économe mais un peu triste.' },
+    ] },
+  { id: 's_chien', icone: '🐶',
+    texte: '{ami} t\'envoie une annonce : un gars vend des chiots « de race » sur Snap, 150 €. Les photos sont ADORABLES. C\'est louche. Mais ADORABLES.',
+    options: [
+      { txt: '🥹 Craquer. Il s\'appellera Biscotte', effets: { argent: -150, moral: 14, forme: 4 }, drapeau: 'chien',
+        note: 'Biscotte détruit une chaussure par semaine et t\'accueille comme un héros chaque soir. Aucun regret.' },
+      { txt: '🚩 « C\'est un plan louche, signale-le »', effets: { savoir: 3, moral: 2 },
+        note: 'C\'était effectivement louche. Tu as sûrement évité une arnaque… mais tu penses encore aux photos.' },
+      { txt: '📸 Montrer aux parents « pour voir »', effets: { moral: 4 },
+        note: 'Ta mère a dit non. Ton père a demandé le prix « juste par curiosité ».' },
+    ] },
+  { id: 's_voiture', icone: '🚙', ageMin: 18,
+    texte: '{ami} vend sa vieille Clio, 600 € « première main, ou presque ». Elle démarre une fois sur deux, mais elle a du charme.',
+    options: [
+      { txt: '🔑 L\'acheter pour rouler', effets: { argent: -600, moral: 12, social: 8 }, si: 'permis', drapeau: 'voiture',
+        note: 'Elle s\'appelle Josiane, elle cale aux feux, et c\'est la voiture la plus aimée de {ville}.' },
+      { txt: '🔧 La retaper avec des tutos et la revendre', effets: { argent: 220, savoir: 3, energie: -8 },
+        note: 'Trois week-ends de mécanique YouTube, revendue 900 €. Un vrai petit business.' },
+      { txt: '🙃 Passer ton tour, sagement', effets: { moral: 2 },
+        note: 'Deux semaines plus tard, la Clio fumait sur le bord de la départementale. Bien vu.' },
+    ] },
+  { id: 's_vacances_famille', icone: '🚐',
+    texte: 'Tes parents annoncent LES vacances en famille : trois semaines de camping du côté de {destination}. Ambiance jeux de société et barbecue.',
+    options: [
+      { txt: '😎 Y aller à fond, mode famille', effets: { moral: 12, energie: 14 }, note: 'Tu as gagné 11 parties de cartes et un bronzage de routier. Zéro regret.' },
+      { txt: '🤝 Négocier : {ami} vient avec vous', effets: { relation: 12, moral: 10, energie: 8 }, note: 'Vos fous rires ont réveillé le camping deux fois. Meilleur été.' },
+      { txt: '😤 Bouder dans la caravane', effets: { energie: 12, moral: -4, savoir: 3 }, note: 'Tu as lu trois livres par vengeance. Ta mère te croit malade.' },
+    ] },
+  { id: 's_depart_potes', icone: '🚗', ageMin: 17,
+    texte: 'PREMIER départ entre potes ! Le groupe hésite : {destination} en covoiturage, ou le camping pas cher au bord du lac ?',
+    options: [
+      { txt: '✈️ {destination}, on vise grand', effets: { moral: 15, social: 10, argent: -120, abonnes: 600 }, note: 'Vos stories ont rendu jaloux tout le lycée. Des souvenirs pour dix ans.' },
+      { txt: '⛺ Le lac : pas cher, mythique', effets: { moral: 12, relation: 12, argent: -40 }, note: 'Feu de camp, guitare approximative, étoiles filantes. Parfait.' },
+      { txt: '💼 Rester bosser cet été', effets: { argent: 180, moral: -6, relation: -6 }, note: 'Le compte en banque va bien. Le groupe WhatsApp, moins.' },
+    ] },
+  { id: 's_rencontre_vacances', icone: '🌅', ageMin: 16,
+    texte: 'Au camping, quelqu\'un te tape dans l\'œil depuis trois jours. Dernier soir, feu de camp, la place à côté est libre.',
+    options: [
+      { txt: '💘 T\'asseoir et te lancer', effets: { moral: 14, social: 8 }, note: 'Vous avez parlé jusqu\'à 4 h. Vous vous suivez partout maintenant.' },
+      { txt: '🎸 Impressionner de loin (mode guitare)', effets: { moral: 4, social: 3 }, note: 'Trois accords. La personne a souri… puis est partie dormir.' },
+      { txt: '🙈 Rester avec les potes, trop la pression', effets: { relation: 6, moral: -3 }, note: 'Tu y penses encore. Le fameux « et si ».' },
+    ] },
+  { id: 's_premier_rdv', icone: '🍝', ageMin: 16,
+    texte: 'Premier vrai rendez-vous — au {resto}, carrément. Stress maximal : tenue, sujets de conversation, qui paye ?',
+    options: [
+      { txt: '😌 Être toi-même, tout simplement', effets: { moral: 14, social: 6, argent: -25 }, note: 'Deux heures passées en dix minutes. Il y aura un deuxième rendez-vous.' },
+      { txt: '🎭 Jouer un personnage « cool »', effets: { moral: -4, argent: -25 }, note: 'Tu as cité un film que tu n\'as pas vu. Ça s\'est vu.' },
+      { txt: '📱 Demander conseil à {ami} en direct des toilettes', effets: { relation: 8, moral: 8, argent: -25 }, note: 'Coaching par SMS toutes les 10 minutes. Étrangement, ça a marché.' },
+    ] },
+  { id: 's_festival', icone: '🎪', ageMin: 16,
+    texte: '{ami} a deux places pour le festival près de {ville}. Problème : c\'est le week-end… des révisions prévues.',
+    options: [
+      { txt: '🎶 Le festival, évidemment', effets: { moral: 15, social: 8, relation: 10, argent: -35, energie: -10, abonnes: 300 }, note: 'Tu as chanté jusqu\'à l\'extinction de voix. Aucun regret. Peut-être un petit.' },
+      { txt: '📚 Les révisions (le cœur lourd)', effets: { savoir: 7, moral: -5, relation: -4 }, note: '{ami} t\'a envoyé 47 vidéos du concert. Courage.' },
+      { txt: '🌗 Y aller juste le samedi soir', effets: { moral: 8, social: 4, savoir: 3, argent: -20 }, note: 'Le compromis du siècle. Fatigué mais fier.' },
+    ] },
+  { id: 's_cine', icone: '🎬',
+    texte: '« {film} » sort cette semaine. {ami} a déjà pris deux places pour la séance de 20 h.',
+    options: [
+      { txt: '🍿 Foncer (popcorn obligatoire)', effets: { moral: 12, argent: -14, relation: 8 }, note: 'Le film était moyen. La soirée, excellente.' },
+      { txt: '⏳ « On attend qu\'il soit en streaming »', effets: { argent: 5, relation: -4 }, note: '{ami} y est allé·e sans toi. Le débrief spoile tout.' },
+    ] },
+  { id: 's_tendance', icone: '🤳', phases: ['lycee', 'etudes'],
+    texte: 'La tendance « {tiktok} » cartonne. {ami} veut ABSOLUMENT la refaire avec toi devant le {lycee}.',
+    options: [
+      { txt: '🎬 La refaire à fond, sans se cacher', effets: { social: 10, moral: 6, relation: 8, abonnes: 900 }, note: 'Les vues s\'affolent, 3 profs mi-amusés mi-consternés. Aucun regret.' },
+      { txt: '📱 Filmer {ami}, rester derrière la caméra', effets: { relation: 4, moral: 3 }, note: 'Ton cadrage est propre. Ta dignité aussi.' },
+      { txt: '🙅 « Jamais de la vie »', effets: { relation: -5, energie: 4 }, note: 'Tu as regardé la vidéo 14 fois quand même.' },
+    ] },
+  { id: 's_fastfood', icone: '🍔',
+    texte: 'Vendredi soir au {fastfood} : toute la bande est là et quelqu\'un lance « allez, menu XXL pour tout le monde ».',
+    options: [
+      { txt: '👑 Banquet XXL, tournée générale', effets: { moral: 10, social: 8, argent: -22, forme: -3 }, note: 'Le gérant vous a donné des frites « cadeau de la maison ».' },
+      { txt: '🍟 Menu simple, ambiance maximale', effets: { moral: 6, social: 4, argent: -9 }, note: 'Deux heures de rires pour le prix d\'un menu.' },
+      { txt: '💨 Passer en coup de vent', effets: { energie: 6, social: -3 }, note: 'Tu as raté LA blague de l\'année. On te la re-racontera mal.' },
     ] },
   { id: 's_burn_devoirs', icone: '🥱', phases: ['lycee', 'etudes'],
     texte: 'Trois devoirs, deux exposés, une semaine. Mission impossible ?',
@@ -377,7 +459,7 @@ const RYTHMES = [
     ] },
   { id: 'r_argent', icone: '💶', texte: 'Fin de mois compliquées : il te faudrait un peu d\'argent…',
     options: [
-      { txt: '🧾 Petit boulot tous les samedis', effets: { argent: 260, energie: -16, savoir: -2 }, ageMin: 16, note: '« Bonjour, vous avez la carte de fidélité ? » × 400.' },
+      { txt: '🧾 Petit boulot au {fastfood} le samedi', effets: { argent: 260, energie: -16, savoir: -2 }, ageMin: 16, note: '« Bonjour, vous avez la carte de fidélité ? » × 400.' },
       { txt: '🍔 Quelques baby-sittings / livraisons', effets: { argent: 120, energie: -8 }, note: 'Ça dépanne, et ça fait des anecdotes.' },
       { txt: '🙏 Serrer le budget, zéro extra', effets: { moral: -4, argent: 30 }, note: 'Les pâtes, c\'est la vie.' },
       { txt: '🛹 Un plan débrouille avec un pote', effets: { argent: 90, moral: 4 }, ami: true, note: 'Pas très officiel, mais efficace.' },
@@ -467,6 +549,55 @@ const DEPTS_FR = {
 };
 
 /* ------------------------------------------------------------
+   LE MONDE NOMMÉ — pour que ça fasse RÉEL : ton lycée, ton
+   fast-food, le film à l'affiche, la tendance TikTok du moment.
+   Tiré à la création (graine déterministe : le Défi du jour
+   donne le même monde à tout le monde).
+   ------------------------------------------------------------ */
+const NOMS_LYCEES = [
+  'Victor-Hugo', 'Jean-Moulin', 'Marie-Curie', 'Simone-Veil', 'Rosa-Parks',
+  'Albert-Camus', 'Jean-Jaurès', 'Saint-Exupéry', 'George-Sand', 'Louise-Michel',
+  'Clemenceau', 'Marcel-Pagnol', 'Olympe-de-Gouges', 'Nelson-Mandela', 'Jules-Ferry', 'Aimé-Césaire',
+];
+const FAST_FOODS = [
+  'Snack 2000', 'Le Roi du Tacos', 'Chicken Corner', 'Chez Momo', 'Speed Burger',
+  'Kebab du Stade', 'La Frite Dorée', 'Big Snack', "O'Délices", 'Le 20h-Minuit',
+];
+const RESTOS = [
+  'La Bonne Fourchette', 'Chez Nadia', 'Le Vieux Four', 'La Piccola Italia',
+  'Le Bistrot des Halles', "L'Assiette Gourmande", 'Le Jardin de Saïgon', 'La Crêperie du Port',
+];
+const CAFES = [
+  'Café de la Place', 'Le Longchamp', "L'Escale", 'Le Balto',
+  'Café des Sports', 'Le Zinc', 'La Terrasse', 'Le Petit Noir',
+];
+const PREFIXES_CLUB = ['FC', 'AS', 'US', 'Olympique', 'Étoile Sportive', 'Racing Club'];
+const INFLUENCEURS = [
+  '@JujuFitness', '@LeoVlogs_off', '@MamieDanse', '@TheoGaming', '@LinaMakeUp',
+  '@KevinDuCoin', '@SarahFoodTour', '@MaxRider_officiel',
+];
+/* Les films à l'affiche — ça tourne toutes les deux saisons */
+const FILMS = [
+  'Vitesse Maximale 4', 'Les Ombres de Minuit', 'Un Été à Biarritz', 'Braquage Royal',
+  'Mission Andromède', 'Cœurs en Fuite', 'Le Pacte des Ombres', 'Super Nova',
+  'Les Rois du Bitume', 'Alerte Niveau 5', "L'Île aux Secrets", 'Minuit à Montmartre',
+  'Opération Cyclone', 'Zombies au Lycée', 'La Dernière Frontière', 'Le Gang des Casquettes',
+];
+/* Les destinations de voyage — ça change chaque année */
+const DESTINATIONS = [
+  'Barcelone', 'la Costa Brava', 'Lisbonne', 'Amsterdam', 'la Croatie',
+  'les Landes', "l'Ardèche", 'la Bretagne Sud', 'Prague', 'les Cinque Terre',
+];
+
+/* Les tendances TikTok — ça tourne chaque saison */
+const TENDANCES_TIKTOK = [
+  'le challenge de la baguette', 'la danse du robot cassé', 'le #PasseLeSel',
+  'le filtre 80 ans', 'le POV « t\'es en retard »', 'le challenge silence au self',
+  'la transition serviette', 'le #RangeTaChambre express', 'les pâtes au chocolat (non)',
+  'le lip-sync ralenti', 'les 5 sauts impossibles', 'le micro-trottoir du self',
+];
+
+/* ------------------------------------------------------------
    BILAN D'ANNÉE — la mise en scène de fin de saison :
    gros titre de presse + tuiles de stats + potins de la ville
    ------------------------------------------------------------ */
@@ -502,6 +633,11 @@ const TITRES_ANNEE = {
     '« {prenom}, le/la businessman·woman de {ville} »',
     '« À ce rythme, {prenom} rachète la mairie de {ville} »',
   ],
+  reseaux: [
+    '« {prenom}, le compte qui affole les compteurs de {ville} »',
+    '« Tout {ville} suit {prenom}. Même la boulangerie. »',
+    '« {influenceur} jaloux·se ? Le compte de {prenom} explose »',
+  ],
   discret: [
     '« {prenom} ? Connais pas. » — tout {ville}',
     '« L\'année la plus calme de {prenom}, de mémoire de {ville} »',
@@ -509,13 +645,15 @@ const TITRES_ANNEE = {
 };
 
 const POTINS_VILLE = [
-  '📰 Le kebab de {ville} lance une carte de fidélité. La file dépasse la mairie.',
+  '📰 Le {fastfood} lance une carte de fidélité. La file dépasse la mairie.',
   '📰 Le rond-point de {ville} a été refait. Personne ne sait pourquoi.',
   '📰 Un chat coincé dans un arbre à {ville} : les pompiers applaudis.',
-  '📰 La boulangerie de {ville} élue « meilleure baguette du canton ». Émeute polie.',
-  '📰 Le club de pétanque de {ville} recrute. Ambiance électrique.',
+  '📰 {influenceur} a filmé le marché de {ville}. 214 vues.',
+  '📰 Le {resto} décroche une fourchette au guide régional. Complet jusqu\'en juin.',
+  '📰 « {film} » affiche complet au ciné de {ville} depuis trois soirs.',
+  '📰 Crise au {lycee} : le distributeur de snacks est en panne depuis lundi.',
+  '📰 Le {club} enchaîne un troisième match nul. Le forum des supporters s\'enflamme.',
   '📰 Wi-Fi gratuit sur la place de {ville} : la jeunesse en liesse.',
-  '📰 Un influenceur a filmé le marché de {ville}. 214 vues.',
   '📰 La fête de {ville} reportée pour cause de pluie. Comme l\'an dernier.',
 ];
 
@@ -526,6 +664,7 @@ const POTINS_VILLE = [
 const TITRES_VIE = [
   { id: 'ballon_or', icone: '⚽', nom: 'La Légende du Stade', desc: 'Footballeur·se pro — {ville} a un maillot à ton nom.' },
   { id: 'tete_affiche', icone: '🎤', nom: 'La Tête d\'Affiche', desc: 'Signé·e en musique — {ville} chante tes refrains.' },
+  { id: 'star_reseaux', icone: '💫', nom: 'La Star des Réseaux', desc: 'Des millions de vues parties de {ville}. Les marques font la queue.' },
   { id: 'cerveau', icone: '🧠', nom: 'Le Cerveau', desc: 'Un savoir hors norme. {ville} n\'avait jamais vu ça.' },
   { id: 'main_doree', icone: '🤑', nom: 'La Main Dorée', desc: 'Un compte en banque qui brille plus que la mairie de {ville}.' },
   { id: 'coeur_quartier', icone: '🫶', nom: 'Le Cœur du Quartier', desc: 'Des amitiés en béton armé. Tout {ville} te connaît.' },
@@ -542,9 +681,9 @@ const TITRES_VIE = [
    ------------------------------------------------------------ */
 const SCENES_RARES = [
   { id: 'v_tiktok', icone: '🤳',
-    texte: 'Tu filmes un truc débile au marché de {ville}. Avant de poster, ton pouce hésite…',
+    texte: 'Tu tentes « {tiktok} » au marché de {ville}. Avant de poster, ton pouce hésite…',
     options: [
-      { txt: '🚀 POSTER. Advienne que pourra', effets: { social: 18, moral: 12 }, note: '2,3 MILLIONS de vues. Le boulanger de {ville} te demande un selfie.' },
+      { txt: '🚀 POSTER. Advienne que pourra', effets: { social: 18, moral: 12, abonnes: 9000 }, note: '2,3 MILLIONS de vues, repartagé par {influenceur}. Le boulanger de {ville} te demande un selfie.' },
       { txt: '🗑️ Supprimer, trop risqué', effets: { moral: 3 }, note: 'Le monde ne saura jamais. Toi si.' },
     ] },
   { id: 'v_gratte', icone: '🎫',
@@ -566,3 +705,54 @@ const SCENES_RARES = [
       { txt: '🏃 Fuir en marchant vite', effets: { energie: 4 }, note: 'On te voit fuir à l\'image. C\'est devenu un même local.' },
     ] },
 ];
+
+
+/* ------------------------------------------------------------
+   ARCS NARRATIFS — des histoires en plusieurs épisodes, qui se
+   déclenchent selon TA vie (talent foot, abonnés TikTok…) et
+   dont chaque choix a de vraies conséquences.
+   ------------------------------------------------------------ */
+const ARCS = {
+  foot_1: { icone: '📹',
+    texte: '{ami} t\'a filmé à l\'entraînement sans te le dire : « Frérot, ce geste est INSANE, je le poste ? » La vidéo est déjà montée.',
+    options: [
+      { txt: '🚀 « Poste-le ! »', effets: { social: 6, moral: 6, abonnes: 2500 }, suite: true, delai: 2,
+        note: 'La vidéo tourne fort. Des inconnus commentent « c\'est qui ce crack ?? »' },
+      { txt: '🙅 « Supprime, je veux pas le regretter »', effets: { relation: -4, moral: 2 }, stop: true,
+        note: '{ami} a soupiré très fort. La vidéo dort dans un téléphone.' },
+    ] },
+  foot_2: { icone: '🧢',
+    texte: 'Un recruteur du {club} a vu le clip. Il te propose un STAGE d\'une semaine au centre de formation… en pleine période de cours. Le {lycee} ne validera jamais.',
+    options: [
+      { txt: '⚽ Y aller — on verra pour les cours', effets: { forme: 6, savoir: -6, moral: 8 }, talentPlus: { foot: 14 }, suite: true, delai: 2,
+        note: 'Une semaine de rêve, un carnet de correspondance en feu. Le coach t\'a noté « à suivre de près ».' },
+      { txt: '🤝 Négocier un aménagement avec le {lycee}', effets: { savoir: -1, moral: 4 }, talentPlus: { foot: 7 }, suite: true, delai: 3,
+        note: 'Trois jours au lieu de sept, devoirs dans le bus. Le recruteur a apprécié le sérieux.' },
+      { txt: '📚 Refuser : les cours d\'abord', effets: { savoir: 4, moral: -7 }, stop: true,
+        note: 'Choix raisonnable. Mais tu regarderas ce clip longtemps.' },
+    ] },
+  foot_3: { icone: '📰',
+    texte: 'Le journal local titre : « {prenom}, la pépite du {club} ? » Ton téléphone chauffe, tout {ville} en parle. Le recruteur te rappelle : « Continue comme ça et l\'essai pro arrive vite. »',
+    options: [
+      { txt: '🔥 Redoubler d\'efforts à l\'entraînement', effets: { forme: 8, energie: -8 }, talentPlus: { foot: 8 }, stop: true,
+        note: 'Plus que jamais, le rêve est à portée de crampons.' },
+      { txt: '😌 Garder la tête froide, rester régulier', effets: { moral: 6 }, talentPlus: { foot: 5 }, stop: true,
+        note: 'Les modestes vont loin. Le talent continue de monter, tranquillement.' },
+    ] },
+  tiktok_1: { icone: '💌',
+    texte: 'DM d\'une marque de boissons de {ville} : « On adore ton contenu ! Une story avec notre nouveau parfum = 80 €. » Ta première proposition de marque.',
+    options: [
+      { txt: '🤑 Accepter — premier partenariat !', effets: { argent: 80, abonnes: 800, moral: 4 }, suite: true, delai: 2,
+        note: 'Story postée, chèque encaissé. Des marques plus grosses regardent…' },
+      { txt: '😇 Refuser : ton contenu reste 100 % toi', effets: { abonnes: 1500, moral: 6 }, suite: true, delai: 2,
+        note: '« Respect, pas de pub chez toi » — tes abonnés adorent. Et ça se voit.' },
+    ] },
+  tiktok_2: { icone: '📞',
+    texte: 'Une agence parisienne t\'appelle : « Ton audience explose. On te signe : contrats de marques, tournées, vraie carrière d\'influenceur·se. » C\'est un MÉTIER qu\'on te propose.',
+    options: [
+      { txt: '💫 Signer — les réseaux, c\'est ta vie', effets: { moral: 12, abonnes: 5000 }, metier: 'influenceur', stop: true,
+        note: 'Contrat signé ! Ton premier partenariat national tombe la semaine suivante.' },
+      { txt: '🎓 Refuser : tu as d\'autres plans', effets: { moral: 4, savoir: 3 }, stop: true,
+        note: 'L\'agence a insisté deux fois. Toi, tu sais où tu vas.' },
+    ] },
+};

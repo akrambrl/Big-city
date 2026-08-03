@@ -222,9 +222,10 @@ const UI = (() => {
       E.sauvegarder();
       const famille = FAMILLES.find(f => f.id === familleId);
       const copains = amisIds.map(id => AMIS.find(a => a.id === id));
+      const monde = E.etat.monde;
       cinematique([
-        { emoji: '📦', titre: 'La nouvelle vie', texte: `${ville.nom}. ${famille.ambiance} C'est ici que tout va se jouer : le lycée, les potes, les premières payes, les grandes décisions.` },
-        { emoji: '🎒', titre: 'Jour de rentrée', texte: `Devant la grille du lycée, sac trop lourd, boule au ventre. ${copains[0].icone} ${copains[0].nom} et ${copains[1].icone} ${copains[1].nom} te font signe : « ${perso.prenom} ! Par ici ! » Ça va aller.` },
+        { emoji: '📦', titre: 'La nouvelle vie', texte: `${ville.nom}. ${famille.ambiance} C'est ici que tout va se jouer : le ${monde.lycee}, les soirées au ${monde.fastfood}, les premières payes, les grandes décisions.` },
+        { emoji: '🎒', titre: 'Jour de rentrée', texte: `Devant la grille du ${monde.lycee}, sac trop lourd, boule au ventre. ${copains[0].icone} ${copains[0].nom} et ${copains[1].icone} ${copains[1].nom} te font signe : « ${perso.prenom} ! Par ici ! » Ça va aller.` },
         { emoji: '❓', titre: 'Une vie en 40 questions', texte: 'À chaque saison, une question. Tes réponses font tout : le bac, les amitiés, l\'argent, les rêves. Il n\'y a pas de bonne réponse — il y a TA réponse.' },
       ], () => { FX.son('niveau'); FX.confettis(['🎒', '🎉', '✨']); rendre(); });
     }));
@@ -277,6 +278,7 @@ const UI = (() => {
     </div>`;
 
     brancherEvenements(S);
+    if (!consequence) demarrerMachineEcrire();
     /* la conséquence se lit d'abord — les cinématiques et modales attendent le « Continuer » */
     if (!consequence) {
       const carte = E.carteCourante();
@@ -299,7 +301,7 @@ const UI = (() => {
 
   function chipsEffets(effets) {
     return Object.entries(effets || {}).map(([k, v]) => {
-      const ic = { energie: '⚡', moral: '😊', savoir: '🧠', social: '🫂', forme: '💪', argent: '💰', relation: '🫶' }[k];
+      const ic = { energie: '⚡', moral: '😊', savoir: '🧠', social: '🫂', forme: '💪', argent: '💰', relation: '🫶', abonnes: '👥' }[k];
       return ic ? `<span class="chip-effet ${v > 0 ? 'plus' : 'moins'}">${ic} ${v > 0 ? '+' : ''}${k === 'argent' ? v + ' €' : v}</span>` : '';
     }).filter(Boolean).join('');
   }
@@ -308,14 +310,22 @@ const UI = (() => {
 
   function htmlConsequence(S) {
     const c = consequence;
+    const sc = c.scene || { emoji: c.icone, nom: 'La vie', decor: 'decor-rue', etiquette: '✍️ Conséquence' };
     return `
-    <div class="carte-jeu consequence ${c.rare ? 'rare' : ''}">
-      <p class="conseq-etiquette">${c.rare ? '🌟 MOMENT RARE' : '✍️ Conséquence'}</p>
-      <div class="conseq-icone">${c.icone}</div>
-      <p class="conseq-choix">Tu as choisi : <b>${c.choix}</b></p>
-      <p class="conseq-texte">${c.note}</p>
-      <div class="conseq-effets">${chipsEffets(c.effets) || '<span class="chip-effet">Rien ne change… en apparence.</span>'}</div>
-      <button class="btn btn-grand" id="btn-conseq-suite">Continuer ▸</button>
+    <div class="scene-visuelle ${sc.decor} ${c.rare ? 'carte-rare-scene' : ''}">
+      <span class="scene-etiquette">${c.rare ? '🌟 MOMENT RARE' : '✍️ Conséquence'}</span>
+      <div class="scene-perso">${sc.emoji}</div>
+      <div class="scene-dialogue">
+        <span class="scene-nom">${sc.nom}</span>
+        <p class="conseq-choix">Tu as choisi : <b>${c.choix}</b></p>
+        <p class="scene-texte conseq-texte fini">${c.note}</p>
+      </div>
+    </div>
+    <div class="scene-options pret">
+      <div class="conseq-effets" style="justify-content:center;display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
+        ${chipsEffets(c.effets) || '<span class="chip-effet">Rien ne change… en apparence.</span>'}
+      </div>
+      <button class="btn btn-grand btn-large" id="btn-conseq-suite">Continuer ▸</button>
     </div>`;
   }
 
@@ -326,31 +336,78 @@ const UI = (() => {
     if (!carte) {
       return `<div class="carte-jeu"><p class="note" style="text-align:center">✨ Un grand moment se prépare…</p></div>`;
     }
-    const tetes = { prof: ['👩‍🏫', 'Le prof'], famille: ['👨‍👩‍👧', 'Ta famille'], boulot: ['🧑‍💼', 'Le taf'] };
-    const [emoji, nom] = carte.rare
-      ? ['🌟', 'MOMENT RARE']
-      : carte.type === 'scene'
-        ? (carte.de && tetes[carte.de] ? tetes[carte.de] : [carte.ami.icone, carte.ami.nom])
-        : ['📆', 'Ta saison'];
+    const sc = miseEnScene(S, carte);
     return `
-    <div class="carte-jeu ${carte.rare ? 'rare' : ''}">
-      <div class="adjoint"><span class="adjoint-avatar">${emoji}</span>
-        <div class="adjoint-bulle"><b>${nom}</b></div></div>
-      <p class="crise-texte">${carte.icone} ${carte.texte}</p>
-      <div class="crise-options">
-        ${carte.options.map((o, i) => {
-          const chips = Object.entries(o.effets || {}).map(([k, v]) => {
-            const ic = { energie: '⚡', moral: '😊', savoir: '🧠', social: '🫂', forme: '💪', argent: '💰', relation: '🫶' }[k];
-            return ic ? `${ic}${v > 0 ? '+' : ''}${k === 'argent' ? v + '€' : v}` : '';
-          }).filter(Boolean).join(' · ');
-          const extra = o.talent ? ` · ${REVES[o.talent].icone} talent +7` : '';
-          return `<button class="option-crise opt-carte" data-i="${i}" ${o.bloquee ? 'disabled' : ''}>
-            <span class="opt-titre">${o.txt}</span>
-            ${chips || extra ? `<span class="opt-note">${chips}${extra}</span>` : ''}
-          </button>`;
-        }).join('')}
+    <div class="scene-visuelle ${sc.decor} ${carte.rare ? 'carte-rare-scene' : ''} ${carte.arc ? 'carte-histoire-scene' : ''}">
+      <span class="scene-etiquette">${sc.etiquette}</span>
+      <div class="scene-perso">${sc.emoji}</div>
+      <div class="scene-dialogue tape">
+        <span class="scene-nom">${sc.nom}</span>
+        <p class="scene-texte" id="scene-texte" data-texte="${esc(carte.texte)}">${esc(carte.texte)}</p>
+        <span class="fleche-suite">▼</span>
       </div>
+    </div>
+    <div class="crise-options scene-options" id="zone-options">
+      ${carte.options.map((o, i) => {
+        const chips = Object.entries(o.effets || {}).map(([k, v]) => {
+          const ic = { energie: '⚡', moral: '😊', savoir: '🧠', social: '🫂', forme: '💪', argent: '💰', relation: '🫶', abonnes: '👥' }[k];
+          return ic ? `${ic}${v > 0 ? '+' : ''}${k === 'argent' ? v + '€' : v}` : '';
+        }).filter(Boolean).join(' · ');
+        let extra = o.talent ? ` · ${REVES[o.talent].icone} talent +7` : '';
+        if (o.bloquee && o.bloqueeRaison) extra += ` · 🔒 ${o.bloqueeRaison}`;
+        return `<button class="option-crise opt-carte" data-i="${i}" ${o.bloquee ? 'disabled' : ''}>
+          <span class="opt-titre">${o.txt}</span>
+          ${chips || extra ? `<span class="opt-note">${chips}${extra}</span>` : ''}
+        </button>`;
+      }).join('')}
     </div>`;
+  }
+
+  /* Qui parle, où, sur quel décor — la mise en scène de la carte */
+  function miseEnScene(S, carte) {
+    const saison = E.saisonVie();
+    if (carte.rare) return { emoji: carte.icone, nom: 'Moment rare', decor: 'decor-rare', etiquette: '🌟 MOMENT RARE' };
+    if (carte.arc) {
+      const foot = String(S.carte.id).startsWith('foot');
+      return {
+        emoji: carte.de && carte.de === 'prof' ? '👩‍🏫' : foot ? '🧢' : '💫',
+        nom: foot ? 'Le recruteur' : 'Les réseaux',
+        decor: foot ? 'decor-stade' : 'decor-rue',
+        etiquette: '🎬 TON HISTOIRE · épisode',
+      };
+    }
+    if (carte.type === 'scene') {
+      const tetes = { prof: ['👩‍🏫', 'Le prof', 'decor-classe'], famille: ['👨‍👩‍👧', 'Ta famille', 'decor-maison'], boulot: ['🧑‍💼', 'Le taf', 'decor-bureau'] };
+      const t = carte.de && tetes[carte.de];
+      if (t) return { emoji: t[0], nom: t[1], decor: t[2], etiquette: `${carte.icone} ${E.age()} ans` };
+      return { emoji: carte.ami.icone, nom: carte.ami.nom, decor: 'decor-rue', etiquette: `${carte.icone} ${E.age()} ans` };
+    }
+    /* rythme : c'est TOI dans le décor de la saison */
+    return { emoji: S.perso.emoji, nom: S.perso.prenom, decor: 'decor-' + saison, etiquette: `📆 Ta saison · ${E.age()} ans` };
+  }
+
+  /* Le texte s'écrit lettre à lettre — toucher le dialogue l'affiche d'un coup */
+  function demarrerMachineEcrire() {
+    const el = document.getElementById('scene-texte');
+    if (!el) return;
+    const zone = document.getElementById('zone-options');
+    const dlg = el.closest('.scene-dialogue');
+    const txt = el.dataset.texte;
+    const finir = () => {
+      el.textContent = txt;
+      el.classList.add('fini');
+      if (dlg) dlg.classList.remove('tape');
+      if (zone) zone.classList.add('pret');
+    };
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return finir();
+    let i = 0;
+    el.textContent = '';
+    const minuteur = setInterval(() => {
+      i += 2;
+      el.textContent = txt.slice(0, i);
+      if (i >= txt.length) { clearInterval(minuteur); finir(); }
+    }, 22);
+    if (dlg) dlg.addEventListener('click', () => { clearInterval(minuteur); finir(); }, { once: true });
   }
 
   /* ---- 🎒 Le panneau « Moi » ---- */
@@ -366,7 +423,9 @@ const UI = (() => {
         <div class="panneau-tete"><h2>🎒 ${esc(S.perso.prenom)}, ${E.age()} ans</h2>
           <button class="btn-lien" id="fermer-moi">Fermer</button></div>
         <div class="liste-notifs" style="display:block;padding:12px 14px">
-          <p class="note">${famille.icone} ${famille.nom} · ${fil.icone} ${fil.nom} · ${E.NOMS_PHASE[E.phase()]} (${E.classeActuelle()})<br>
+          <p class="note">${famille.icone} ${famille.nom} · ${fil.icone} ${fil.nom} · ${E.NOMS_PHASE[E.phase()]} (${E.classeActuelle()})${E.phase() === 'lycee' ? ` · 🏫 ${S.monde.lycee}` : ''}<br>
+          📍 QG de la bande : ${S.monde.fastfood} · ⚽ ${S.monde.club}<br>
+          👥 ${S.abonnes.toLocaleString('fr-FR')} abonnés${S.drapeaux.permis ? ' · 🚗 permis' : ''}${S.drapeaux.voiture ? ' · 🚙 Josiane' : ''}${S.drapeaux.chien ? ' · 🐶 Biscotte' : ''}<br>
           💰 ${eur(S.argent)} · revenu ${eur(E.revenuMensuel())}/saison · ⭐ niveau ${S.niveau}</p>
           <div class="composantes">
             ${stats.map(([n, v]) => `<div class="composante"><span class="comp-nom">${n}</span>
@@ -469,9 +528,16 @@ const UI = (() => {
       <div class="crise-options">
         ${ORIENTATIONS.map(o => {
           const ok = possibles.some(p => p.id === o.id);
+          let pourquoi = '';
+          if (!ok) {
+            if (o.pause && S.pauseFaite) pourquoi = ' · (déjà fait — on ne vit qu\'une année off)';
+            else if (o.argentMin && S.argent < o.argentMin) pourquoi = ` · (il te faut ${o.argentMin} € de côté)`;
+            else if (o.id !== 'travail' && S.bacObtenu === false) pourquoi = ' · (il faut le bac)';
+            else pourquoi = ' · (il te manque du savoir)';
+          }
           return `<button class="option-crise opt-orientation" data-id="${o.id}" ${ok ? '' : 'disabled'}>
             <span class="opt-titre">${o.icone} ${o.nom}</span>
-            <span class="opt-note">${o.desc}${ok ? '' : ' · (pas accessible cette fois)'}</span>
+            <span class="opt-note">${o.desc}${pourquoi}</span>
           </button>`;
         }).join('')}
       </div>`, { bloquant: true });
@@ -487,7 +553,7 @@ const UI = (() => {
     const stat = S.essaiPropose === 'foot' ? '💪 forme' : '🫂 social';
     modale(`
       <h2>${reve.icone} Une chance à saisir</h2>
-      <p class="crise-texte">${reve.essai}</p>
+      <p class="crise-texte">${E.remplacerMonde(reve.essai)}</p>
       <p class="note">Tes atouts : talent ${Math.round(S.talents[S.essaiPropose])}/100 + la moitié de ta ${stat}.
       Il faut un total de 100 pour signer.</p>
       <div class="crise-options">
@@ -702,10 +768,12 @@ const UI = (() => {
 
     /* répondre à la question du moment → on lit la CONSÉQUENCE avant la suite */
     app().querySelectorAll('.opt-carte').forEach(b => b.addEventListener('click', () => {
+      const carteAvant = E.carteCourante();
+      const sceneAvant = carteAvant ? miseEnScene(S, carteAvant) : null;
       const res = E.repondreCarte(parseInt(b.dataset.i, 10));
       if (!res.ok) { if (res.msg) toast('❌ ' + res.msg); return; }
       FX.son(res.rare ? 'niveau' : 'clic');
-      consequence = { icone: res.icone, note: res.note, effets: res.effets, choix: res.choix, rare: res.rare };
+      consequence = { icone: res.icone, note: res.note, effets: res.effets, choix: res.choix, rare: res.rare, scene: sceneAvant };
       E.sauvegarder(); rendre();
     }));
     on('btn-conseq-suite', () => {
@@ -743,7 +811,7 @@ const UI = (() => {
     if (S.gameOver) return modaleFin(S);
     if (S.bilanAnnee) return modaleBilanAnnee(S);
     if (S.cinematiques && S.cinematiques.length) {
-      const scenes = S.cinematiques.splice(0);
+      const scenes = S.cinematiques.splice(0).map(p => ({ ...p, texte: E.remplacerMonde(p.texte) }));
       E.sauvegarder();
       return cinematique(scenes, () => rendre());
     }
