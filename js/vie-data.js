@@ -13,7 +13,7 @@ const VIE_CFG = {
   MOIS_BAC: 12,          // juin de l'année de terminale (12ᵉ saison)
   MOIS_DIPLOME: 24,      // juin, trois ans après le bac
   MOIS_FIN: 41,          // 25 ans : l'heure du bilan
-  PROBA_SCENE: 0.55,     // chance de scène de vie chaque saison
+  PROBA_SCENE: 0.66,     // chance de scène de vie chaque saison
   PROBA_RARE: 0.07,      // chance d'un MOMENT RARE (une seule fois chacun)
   DECAY: { energie: 8, moral: 6, social: 4, forme: 3, relation: 3 },
 };
@@ -443,7 +443,7 @@ const OBJECTIFS_VIE = [
 const SAISONS_VIE = ['hiver', 'hiver', 'printemps', 'printemps', 'printemps', 'ete', 'ete', 'ete', 'automne', 'automne', 'automne', 'hiver'];
 
 const RYTHMES = [
-  { id: 'r_tri', icone: '🗓️', texte: 'Nouvelle saison à {ville}. Elle ressemble à quoi, ta vie, ces temps-ci ?',
+  { id: 'r_tri', icone: '🗓️', phases: ['lycee', 'etudes'], texte: 'Nouvelle saison à {ville}. Elle ressemble à quoi, ta vie, ces temps-ci ?',
     options: [
       { txt: '📚 Tête dans les cours, sérieux total', effets: { savoir: 7, energie: -8 }, note: 'Tes fiches font des jaloux.' },
       { txt: '🎉 Les potes d\'abord, on verra le reste', effets: { social: 8, moral: 8, savoir: -2 }, ami: true, note: 'Des souvenirs plein le téléphone.' },
@@ -478,7 +478,7 @@ const RYTHMES = [
       { txt: '🎧 Rester répéter ta musique', effets: { energie: -4, moral: 4 }, talent: 'musique', note: 'Pendant qu\'ils dansent, toi tu progresses.' },
       { txt: '🚪 Zapper : pas l\'ambiance', effets: { energie: 12, social: -5 }, note: 'Aucun regret. Enfin, presque.' },
     ] },
-  { id: 'r_examens', icone: '📝', texte: 'Grosse période d\'évaluations en vue. Ta stratégie ?',
+  { id: 'r_examens', icone: '📝', phases: ['lycee', 'etudes'], texte: 'Grosse période d\'évaluations en vue. Ta stratégie ?',
     options: [
       { txt: '🗂️ Réviser en groupe, planning béton', effets: { savoir: 8, social: 4, energie: -10 }, ami: true, note: 'On a ri, on a bossé. Combo rare.' },
       { txt: '🤓 Réviser seul·e, porte fermée', effets: { savoir: 10, energie: -12, social: -3 }, note: 'Silence, café, résultats.' },
@@ -497,6 +497,60 @@ const RYTHMES = [
       { txt: '🍲 Grandes tablées chez les potes', effets: { social: 8, moral: 10, argent: -15 }, ami: true, note: 'Raclette-thérapie. Scientifiquement prouvé.' },
       { txt: '📚 En profiter pour prendre de l\'avance', effets: { savoir: 7, energie: -6 }, note: 'Pendant que la ville hiberne, toi tu avances.' },
       { txt: '🛌 Hiberner franchement', effets: { energie: 24, social: -4 }, note: 'Réveil prévu au printemps.' },
+    ] },
+  { id: 'r_projet', icone: '🛠️', texte: 'Une saison, un projet perso. Tu te lances dans quoi ?',
+    options: [
+      { txt: '🎥 Monter ta chaîne vidéo', effets: { abonnes: 500, moral: 6, energie: -6 }, note: 'Trois vidéos, un générique fait maison. Ça prend forme.' },
+      { txt: '🎸 Apprendre la guitare pour tes sons', effets: { moral: 6, energie: -4 }, talent: 'musique', note: 'Tes doigts détestent. Ta voix adore.' },
+      { txt: '💻 Coder un petit jeu', effets: { savoir: 7, energie: -8 }, note: 'Il y a un bug adorable : le héros vole. Tu le gardes.' },
+      { txt: '🧘 Aucun projet. Souffler EST le projet', effets: { energie: 20, moral: 5 }, note: 'Parfois, ne rien faire est très productif.' },
+    ] },
+  { id: 'r_gaming', icone: '🎮', texte: 'La nouvelle saison de ton jeu préféré vient de sortir. Toute la bande est dessus.',
+    options: [
+      { txt: '🏆 Tryhard le mode classé', effets: { moral: 8, energie: -8, savoir: -2 }, ami: true, note: 'Rang atteint. Cernes assorties.' },
+      { txt: '📡 Streamer tes parties', effets: { abonnes: 450, social: 4, energie: -8 }, note: 'Douze viewers fidèles, dont ta grand-mère. Un empire commence.' },
+      { txt: '😌 Y jouer tranquille le soir', effets: { moral: 7, energie: 4 }, note: 'Le dosage parfait. Aucun classement, aucun stress.' },
+      { txt: '🚫 Pas cette saison — d\'autres priorités', effets: { savoir: 5, moral: -2 }, note: 'Ta discipline force le respect. Ton groupe de potes, moins.' },
+    ] },
+  { id: 'r_cuisine', icone: '🍳', texte: 'Verdict du miroir et du compte en banque : les pâtes-fromage tous les soirs, ça ne va plus.',
+    options: [
+      { txt: '👨‍🍳 Apprendre à VRAIMENT cuisiner', effets: { forme: 6, moral: 6, argent: -15 }, note: 'Ton curry impressionne tout le monde. Toi le premier.' },
+      { txt: '🍔 Assumer le {fastfood} en boucle', effets: { moral: 6, forme: -5, argent: -30 }, note: 'Le gérant connaît ta commande par cœur. C\'est un signe.' },
+      { txt: '🍲 Squatter la popote chez {ami}', effets: { relation: 10, moral: 5, argent: 10 }, ami: true, note: 'Tu fais la vaisselle en échange. Deal du siècle.' },
+    ] },
+  { id: 'r_benevolat', icone: '🤝', texte: 'La maison de quartier de {ville} cherche des bénévoles cette saison.',
+    options: [
+      { txt: '⚽ Coacher les petits au foot', effets: { social: 6, moral: 8, energie: -6 }, talent: 'foot', note: 'Ils t\'appellent « coach ». Tu progresses autant qu\'eux.' },
+      { txt: '📖 Aide aux devoirs le mercredi', effets: { savoir: 5, social: 5, moral: 6 }, note: 'Expliquer, c\'est apprendre deux fois.' },
+      { txt: '🥖 Les maraudes du samedi soir', effets: { moral: 10, social: 6, energie: -6 }, note: 'Des rencontres qui remettent les idées en place.' },
+      { txt: '🙃 Pas cette saison', effets: { energie: 8 }, note: 'Une autre fois, promis. (Tu l\'as noté quelque part.)' },
+    ] },
+  { id: 'r_chambre', icone: '🛏️', texte: 'Ta chambre ressemble à une zone sinistrée. Même toi tu ne retrouves plus rien.',
+    options: [
+      { txt: '🧹 Grand rangement, méthode radicale', effets: { moral: 10, energie: -8 }, note: 'Tu as retrouvé 23 €, un chargeur et ta motivation.' },
+      { txt: '🪴 Tout refaire : déco, posters, plantes', effets: { moral: 12, argent: -40 }, note: 'On dirait un studio de photo. Tu invites des gens JUSTE pour montrer.' },
+      { txt: '🚪 Fermer la porte. Problème réglé', effets: { energie: 10, moral: -2 }, note: 'Technique validée par des générations entières.' },
+    ] },
+  { id: 'r_defi_perso', icone: '🎯', texte: 'Un défi personnel pour ce trimestre, ça te tente ?',
+    options: [
+      { txt: '🏃 Courir un 10 km d\'ici trois mois', effets: { forme: 14, moral: 6, energie: -8 }, note: '58 minutes, genoux en vrac, fierté intacte.' },
+      { txt: '📚 Lire trois vrais livres', effets: { savoir: 6, moral: 5 }, note: 'Le troisième t\'a retourné le cerveau. Tu en parles à tout le monde.' },
+      { txt: '🍫 90 jours sans sucre', effets: { forme: 8, moral: -5 }, note: 'Jour 47 : tu as rêvé d\'un pain au chocolat. Tenu quand même.' },
+      { txt: '😅 Le défi de ne pas prendre de défi', effets: { moral: 7, energie: 6 }, note: 'Réussi haut la main.' },
+    ] },
+  { id: 'r_campus', icone: '🎓', phases: ['etudes'], texte: 'La vie étudiante, c\'est l\'autonomie totale. Ce semestre, tu le joues comment ?',
+    options: [
+      { txt: '🥇 Premier rang, notes béton', effets: { savoir: 9, energie: -10, social: -2 }, note: 'Les profs connaissent ton prénom. Les autres étudiants aussi (pour tes fiches).' },
+      { txt: '🎪 Les assos étudiantes à fond', effets: { social: 10, moral: 8, savoir: -2 }, ami: true, note: 'Tu organises la soirée d\'intégration. Légendaire, forcément.' },
+      { txt: '💼 Un job entre les cours', effets: { argent: 220, energie: -14 }, note: 'Fatigué mais indépendant. Tes parents sont bluffés.' },
+      { txt: '🛌 Amphi le matin ? On verra…', effets: { moral: 8, savoir: -4, energie: 10 }, note: 'Les cours en ligne existent, techniquement.' },
+    ] },
+  { id: 'r_taf', icone: '💼', phases: ['travail'], texte: 'Une nouvelle saison au taf. Tu la joues comment ?',
+    options: [
+      { txt: '🚀 Viser la promo : dossiers en plus', effets: { argent: 150, savoir: 4, energie: -12 }, note: 'Ton chef a dit « très bon trimestre ». Presque une augmentation.' },
+      { txt: '🍻 Réseauter : afterworks & cie', effets: { social: 9, moral: 5, argent: -25 }, note: 'Tu connais maintenant TOUT l\'open space. Et leurs chiens.' },
+      { txt: '📐 Le taf, juste le taf, bien fait', effets: { moral: 7, energie: 4 }, note: 'L\'équilibre parfait. Personne ne t\'embête.' },
+      { txt: '📚 Une formation en ligne le soir', effets: { savoir: 7, energie: -8 }, note: 'Certificat obtenu. LinkedIn prévenu.' },
     ] },
 ];
 
@@ -572,6 +626,7 @@ const CAFES = [
   'Café des Sports', 'Le Zinc', 'La Terrasse', 'Le Petit Noir',
 ];
 const PREFIXES_CLUB = ['FC', 'AS', 'US', 'Olympique', 'Étoile Sportive', 'Racing Club'];
+const MARQUES = ['Volt Énergie', 'Bloom Drink', 'Fizzly', 'Nuage Soda', 'Torrent', 'Kiwaï'];
 const INFLUENCEURS = [
   '@JujuFitness', '@LeoVlogs_off', '@MamieDanse', '@TheoGaming', '@LinaMakeUp',
   '@KevinDuCoin', '@SarahFoodTour', '@MaxRider_officiel',
@@ -740,7 +795,7 @@ const ARCS = {
         note: 'Les modestes vont loin. Le talent continue de monter, tranquillement.' },
     ] },
   tiktok_1: { icone: '💌',
-    texte: 'DM d\'une marque de boissons de {ville} : « On adore ton contenu ! Une story avec notre nouveau parfum = 80 €. » Ta première proposition de marque.',
+    texte: 'DM de {marque}, la marque de boissons qui monte : « On adore ton contenu ! Une story avec notre nouveau parfum = 80 €. » Ta première proposition de marque.',
     options: [
       { txt: '🤑 Accepter — premier partenariat !', effets: { argent: 80, abonnes: 800, moral: 4 }, suite: true, delai: 2,
         note: 'Story postée, chèque encaissé. Des marques plus grosses regardent…' },

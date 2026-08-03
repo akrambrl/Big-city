@@ -108,6 +108,8 @@ const UI = (() => {
     <div class="accueil">
       <p class="surtitre">${defiEnCours ? '🔥 Défi du jour · ' : ''}${esc(ville.nom)} · Étape 1 / 4</p>
       <h1>Qui es-<span class="filet">tu</span> ?</h1>
+      <div class="banniere-ville">${skylineVille(ville, 9)}
+        <span class="banniere-ville-nom">🏙️ ${esc(ville.nom)} · ${nb(ville.pop)} hab.${ville.littoral ? ' · bord de mer' : ''}</span></div>
       <section class="carte carte-creation">
         <h2>Tu es…</h2>
         <div class="presets choix-genres">
@@ -385,9 +387,38 @@ const UI = (() => {
     'decor-automne': ['☁️', '🍁', '🌳', '🍂'],
   };
 
+  /* La skyline de TA ville : générée depuis son nom, sa taille, son littoral */
+  function graine32(txt) {
+    let h = 2166136261;
+    for (const c of String(txt)) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+
+  function skylineVille(ville, n = 7) {
+    const g = graine32(ville.nom);
+    const pop = ville.pop || 0;
+    const pool = pop >= 100000 ? ['🏢', '🏬', '🏛️', '🏨', '🏦', '🏢']
+      : pop >= 20000 ? ['🏢', '🏬', '🏫', '🏦', '🏠', '🏢']
+      : pop >= 2000 ? ['🏠', '🏢', '🏪', '⛪', '🏡', '🌳']
+      : ['🏠', '🏡', '⛪', '🌳', '🏠', '🌳'];
+    let batiments = '';
+    for (let i = 0; i < n; i++) {
+      const e = pool[(g + i * 31) % pool.length];
+      const taille = 1.05 + ((g >> (i % 8)) & 3) * 0.24 + (pop >= 100000 ? .45 : pop >= 20000 ? .2 : 0);
+      batiments += `<span style="font-size:${taille.toFixed(2)}rem">${e}</span>`;
+    }
+    if (ville.littoral) batiments = '<span style="font-size:1.25rem">⛵</span><span style="font-size:1.05rem">🌊</span>' + batiments + '<span style="font-size:1.1rem">🌊</span>';
+    return `<div class="skyline" aria-hidden="true">${batiments}</div>`;
+  }
+
+  const DECORS_EXTERIEURS = ['decor-rue', 'decor-stade', 'decor-hiver', 'decor-printemps', 'decor-ete', 'decor-automne'];
+
   function htmlDecor(sc) {
+    const S = E.etat;
     const props = PROPS_DECOR[sc.decor] || [];
-    return `<div class="scene-props" aria-hidden="true">${props.map((p, i) => `<span class="prop prop-${i}">${p}</span>`).join('')}</div>`;
+    const dehors = S && DECORS_EXTERIEURS.includes(sc.decor);
+    return `<div class="scene-props" aria-hidden="true">${props.map((p, i) => `<span class="prop prop-${i}">${p}</span>`).join('')}</div>
+      ${dehors ? skylineVille({ nom: S.commune, pop: S.population, littoral: S.ville && S.ville.littoral }) : ''}`;
   }
 
   /* Qui parle, où, sur quel décor — la mise en scène de la carte */

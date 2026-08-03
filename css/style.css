@@ -1092,3 +1092,29 @@ hr { border: none; border-top: 3px solid var(--bord); border-radius: 2px; margin
   .scene-visuelle, .scene-perso, .scene-toi, .fleche-suite { animation: none; }
   .scene-options { transition: none; }
 }
+
+/* ============ LA SKYLINE DE TA VILLE — générée depuis son nom ============ */
+.skyline {
+  position: absolute; left: 0; right: 0; bottom: 40%;
+  display: flex; align-items: flex-end; justify-content: center; gap: 3px;
+  line-height: 1; pointer-events: none; opacity: .92; filter: saturate(.85);
+}
+.decor-hiver .skyline { bottom: 45%; }
+.decor-printemps .skyline, .decor-automne .skyline { bottom: 48%; }
+.decor-ete .skyline { bottom: 52%; }
+.decor-stade .skyline { bottom: 48%; opacity: .55; }
+
+/* bannière ville à la création */
+.banniere-ville {
+  position: relative; max-width: 460px; margin: 0 auto 1em; height: 86px;
+  border-radius: 16px; overflow: hidden;
+  border: 3px solid var(--bord-fort);
+  background: linear-gradient(#8FCBEF 0 62%, #9AA7B4 62% 66%, #C2CCD6 66%);
+  box-shadow: 0 4px 0 rgba(138, 93, 51, .2);
+}
+.banniere-ville .skyline { bottom: 30%; }
+.banniere-ville-nom {
+  position: absolute; left: 10px; top: 8px;
+  font-size: .82rem; font-weight: 800; color: #fff;
+  background: rgba(40, 55, 75, .75); border-radius: 999px; padding: 3px 12px;
+}

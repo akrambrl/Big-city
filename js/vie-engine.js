@@ -110,6 +110,7 @@ const Vie = (() => {
       cafe: pioche(CAFES, 4),
       influenceur: pioche(INFLUENCEURS, 5),
       club: pioche(PREFIXES_CLUB, 6) + ' ' + S.commune,
+      marque: pioche(MARQUES, 7),
     };
   }
 
@@ -127,6 +128,7 @@ const Vie = (() => {
       .replaceAll('{cafe}', S.monde.cafe)
       .replaceAll('{influenceur}', S.monde.influenceur)
       .replaceAll('{club}', S.monde.club)
+      .replaceAll('{marque}', S.monde.marque || MARQUES[0])
       .replaceAll('{film}', filmDuMoment())
       .replaceAll('{tiktok}', tendanceDuMoment())
       .replaceAll('{destination}', DESTINATIONS[(S.graine + Math.floor((S.mois - 1) / 4)) % DESTINATIONS.length]);
@@ -245,8 +247,16 @@ const Vie = (() => {
         return;
       }
     }
-    if (!S.pileRythmes.length) S.pileRythmes = RYTHMES.map(r => r.id).sort(() => rnd() - 0.5);
-    S.carte = { type: 'rythme', id: S.pileRythmes.pop(), amiId: amiAuHasard() };
+    const ph = phase();
+    for (let essais = 0; essais < RYTHMES.length + 1; essais++) {
+      if (!S.pileRythmes.length) S.pileRythmes = RYTHMES.map(r => r.id).sort(() => rnd() - 0.5);
+      const id = S.pileRythmes.pop();
+      const r = RYTHMES.find(x => x.id === id);
+      if (r.phases && !r.phases.includes(ph)) continue;
+      S.carte = { type: 'rythme', id, amiId: amiAuHasard() };
+      return;
+    }
+    S.carte = { type: 'rythme', id: RYTHMES[0].id, amiId: amiAuHasard() };
   }
 
   /* La carte courante, prête à afficher ({ami} remplacé, options filtrées) */
@@ -779,6 +789,7 @@ const Vie = (() => {
       if (S.refAnnee === undefined) S.refAnnee = { argent: S.argent };
       if (S.bilanAnnee === undefined) S.bilanAnnee = null;
       if (!S.monde) S.monde = genererMonde();
+      if (S.monde && !S.monde.marque) S.monde.marque = genererMonde().marque;
       if (S.pauseFaite === undefined) { S.pauseFaite = false; S.finPause = null; }
       if (S.abonnes === undefined) S.abonnes = 150;
       if (S.drapeaux === undefined) S.drapeaux = {};
