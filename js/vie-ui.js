@@ -314,7 +314,11 @@ const UI = (() => {
     return `
     <div class="scene-visuelle ${sc.decor} ${c.rare ? 'carte-rare-scene' : ''}">
       <span class="scene-etiquette">${c.rare ? '🌟 MOMENT RARE' : '✍️ Conséquence'}</span>
-      <div class="scene-perso">${sc.emoji}</div>
+      ${htmlDecor(sc)}
+      <div class="scene-acteurs">
+        <div class="scene-perso">${sc.emoji}<span class="ombre-perso"></span></div>
+        ${sc.toi ? `<div class="scene-toi">${S.perso.emoji}<span class="ombre-perso"></span></div>` : ''}
+      </div>
       <div class="scene-dialogue">
         <span class="scene-nom">${sc.nom}</span>
         <p class="conseq-choix">Tu as choisi : <b>${c.choix}</b></p>
@@ -340,7 +344,11 @@ const UI = (() => {
     return `
     <div class="scene-visuelle ${sc.decor} ${carte.rare ? 'carte-rare-scene' : ''} ${carte.arc ? 'carte-histoire-scene' : ''}">
       <span class="scene-etiquette">${sc.etiquette}</span>
-      <div class="scene-perso">${sc.emoji}</div>
+      ${htmlDecor(sc)}
+      <div class="scene-acteurs">
+        <div class="scene-perso">${sc.emoji}<span class="ombre-perso"></span></div>
+        ${sc.toi ? `<div class="scene-toi">${S.perso.emoji}<span class="ombre-perso"></span></div>` : ''}
+      </div>
       <div class="scene-dialogue tape">
         <span class="scene-nom">${sc.nom}</span>
         <p class="scene-texte" id="scene-texte" data-texte="${esc(carte.texte)}">${esc(carte.texte)}</p>
@@ -363,27 +371,47 @@ const UI = (() => {
     </div>`;
   }
 
+  /* Les objets qui meublent chaque décor */
+  const PROPS_DECOR = {
+    'decor-classe': ['🕰️', '🗺️', '📚', '🪴'],
+    'decor-maison': ['🖼️', '🪟', '🛋️', '🐈'],
+    'decor-rue': ['🏪', '☁️', '🚲', '🚏'],
+    'decor-bureau': ['🕰️', '🪟', '🖥️', '☕'],
+    'decor-stade': ['☁️', '🚩', '🥅', '⚽'],
+    'decor-rare': ['✨', '⭐', '🎊', '✨'],
+    'decor-hiver': ['☁️', '❄️', '🌲', '⛄'],
+    'decor-printemps': ['☀️', '☁️', '🌳', '🌷'],
+    'decor-ete': ['☀️', '🕊️', '🌻', '🍉'],
+    'decor-automne': ['☁️', '🍁', '🌳', '🍂'],
+  };
+
+  function htmlDecor(sc) {
+    const props = PROPS_DECOR[sc.decor] || [];
+    return `<div class="scene-props" aria-hidden="true">${props.map((p, i) => `<span class="prop prop-${i}">${p}</span>`).join('')}</div>`;
+  }
+
   /* Qui parle, où, sur quel décor — la mise en scène de la carte */
   function miseEnScene(S, carte) {
     const saison = E.saisonVie();
-    if (carte.rare) return { emoji: carte.icone, nom: 'Moment rare', decor: 'decor-rare', etiquette: '🌟 MOMENT RARE' };
+    if (carte.rare) return { emoji: carte.icone, nom: 'Moment rare', decor: 'decor-rare', etiquette: '🌟 MOMENT RARE', toi: true };
     if (carte.arc) {
       const foot = String(S.carte.id).startsWith('foot');
       return {
-        emoji: carte.de && carte.de === 'prof' ? '👩‍🏫' : foot ? '🧢' : '💫',
+        emoji: foot ? '🧢' : '💫',
         nom: foot ? 'Le recruteur' : 'Les réseaux',
         decor: foot ? 'decor-stade' : 'decor-rue',
         etiquette: '🎬 TON HISTOIRE · épisode',
+        toi: true,
       };
     }
     if (carte.type === 'scene') {
       const tetes = { prof: ['👩‍🏫', 'Le prof', 'decor-classe'], famille: ['👨‍👩‍👧', 'Ta famille', 'decor-maison'], boulot: ['🧑‍💼', 'Le taf', 'decor-bureau'] };
       const t = carte.de && tetes[carte.de];
-      if (t) return { emoji: t[0], nom: t[1], decor: t[2], etiquette: `${carte.icone} ${E.age()} ans` };
-      return { emoji: carte.ami.icone, nom: carte.ami.nom, decor: 'decor-rue', etiquette: `${carte.icone} ${E.age()} ans` };
+      if (t) return { emoji: t[0], nom: t[1], decor: t[2], etiquette: `${carte.icone} ${E.age()} ans`, toi: true };
+      return { emoji: carte.ami.icone, nom: carte.ami.nom, decor: 'decor-rue', etiquette: `${carte.icone} ${E.age()} ans`, toi: true };
     }
     /* rythme : c'est TOI dans le décor de la saison */
-    return { emoji: S.perso.emoji, nom: S.perso.prenom, decor: 'decor-' + saison, etiquette: `📆 Ta saison · ${E.age()} ans` };
+    return { emoji: S.perso.emoji, nom: S.perso.prenom, decor: 'decor-' + saison, etiquette: `📆 Ta saison · ${E.age()} ans`, toi: false };
   }
 
   /* Le texte s'écrit lettre à lettre — toucher le dialogue l'affiche d'un coup */

@@ -1012,14 +1012,44 @@ hr { border: none; border-top: 3px solid var(--bord); border-radius: 2px; margin
     radial-gradient(circle 2px at 72% 14%, #fff 96%, transparent),
     radial-gradient(circle 2.5px at 88% 30%, #fff 96%, transparent);
 }
-.scene-perso {
-  align-self: center; font-size: 6.2rem; line-height: 1; margin-bottom: .1em;
+/* — les objets qui meublent le décor — */
+.scene-props { position: absolute; inset: 0; pointer-events: none; }
+.scene-props .prop { position: absolute; line-height: 1; filter: saturate(.9); text-shadow: 0 3px 6px rgba(30, 40, 60, .18); }
+.prop-0 { top: 9%; left: 8%; font-size: 1.9rem; opacity: .95; }
+.prop-1 { top: 14%; right: 10%; font-size: 1.6rem; opacity: .9; }
+.prop-2 { bottom: 44%; left: 7%; font-size: 2.4rem; }
+.prop-3 { bottom: 42%; right: 8%; font-size: 2.1rem; }
+
+/* — les personnages, face à face — */
+.scene-acteurs {
+  position: relative; display: flex; justify-content: center; align-items: flex-end;
+  gap: 12%; padding: 0 8%; margin-bottom: .2em;
+}
+.scene-perso, .scene-toi {
+  position: relative; line-height: 1; text-align: center;
   filter: drop-shadow(0 10px 14px rgba(30, 40, 60, .35));
+}
+.scene-perso {
+  font-size: 5.6rem;
   animation: perso-entre .5s cubic-bezier(.34, 1.56, .64, 1);
 }
+.scene-toi {
+  font-size: 4.2rem; transform: scaleX(-1);
+  animation: toi-entre .5s cubic-bezier(.34, 1.56, .64, 1);
+}
+.ombre-perso {
+  position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%);
+  width: 74%; height: 14px; border-radius: 50%;
+  background: rgba(30, 40, 60, .22); filter: blur(2px);
+}
+.scene-toi .ombre-perso { transform: translateX(-50%) scaleX(-1); }
 @keyframes perso-entre {
   from { transform: translateX(-46px) scale(.7); opacity: 0; }
   to { transform: none; opacity: 1; }
+}
+@keyframes toi-entre {
+  from { transform: scaleX(-1) translateX(-46px) scale(.7); opacity: 0; }
+  to { transform: scaleX(-1); opacity: 1; }
 }
 .scene-etiquette {
   position: absolute; top: 12px; left: 12px;
@@ -1059,6 +1089,6 @@ hr { border: none; border-top: 3px solid var(--bord); border-radius: 2px; margin
 }
 .scene-options.pret { opacity: 1; transform: none; pointer-events: auto; }
 @media (prefers-reduced-motion: reduce) {
-  .scene-visuelle, .scene-perso, .fleche-suite { animation: none; }
+  .scene-visuelle, .scene-perso, .scene-toi, .fleche-suite { animation: none; }
   .scene-options { transition: none; }
 }
