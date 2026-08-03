@@ -1,14 +1,15 @@
 /* ============================================================
-   BIG CITY LIFE — Interface
-   Carte vivante où l'on se déplace de lieu en lieu, chaque
-   activité fait avancer le temps d'un mois. Sims × Pokémon.
+   BIG CITY LIFE — Interface « tout en questions »
+   Façon Destiny Eleven : une carte-question par saison, tes
+   réponses écrivent ta vie. Pas de carte, pas de menus — le jeu
+   EST la question.
    ============================================================ */
 
 const UI = (() => {
   const app = () => document.getElementById('app');
   const modalRoot = () => document.getElementById('modal-root');
   const E = Vie;
-  let vueActive = 'ville';
+  let moiOuvert = false;
   let notifsOuvertes = false;
   let persoSuivi = null;
   let finJouee = false;
@@ -17,25 +18,16 @@ const UI = (() => {
   const nb = (v) => Math.round(v).toLocaleString('fr-FR');
   const eur = (v) => nb(v) + ' €';
 
-  /* état pour la carte : décalage pour que les saisons collent (départ en septembre) */
-  const etatCarte = () => ({ ...E.etat, mois: E.etat.mois + 5 });
-
   /* ================= CRÉATION : ville → perso → famille → amis → filière ================= */
-
-  function ambianceDeLaVille(v) {
-    if (v.littoral) return 'touristique';
-    if (v.pop < 3500) return 'rurale';
-    return 'moyenne';
-  }
 
   function ecranAccueil() {
     let villeChoisie = null;
     app().innerHTML = `
     <div class="accueil">
-      <p class="surtitre">Big City Life · Ta vie commence ici</p>
+      <p class="surtitre">Big City Life · Une vie en 40 questions</p>
       <h1>Où veux-tu <span class="filet">grandir</span> ?</h1>
       <p class="sous-titre">Choisis ta ville parmi les ${COMMUNES_FR.nombre.toLocaleString('fr-FR')} communes de France.
-      Tu y feras ton lycée, tes amis, tes premières payes et tes plus gros fous rires.</p>
+      Puis réponds : chaque question écrit une saison de ta vie, de 15 à 25 ans.</p>
       <div class="recherche-bloc">
         <input type="search" id="recherche-ville" placeholder="🔎 Cherche ta ville… (Lille, Aurillac, Bandol…)"
           autocomplete="off" spellcheck="false">
@@ -44,7 +36,6 @@ const UI = (() => {
       </div>
       <div id="etape-ville" class="etape-ambiance" hidden>
         <p class="ville-choisie" id="ville-choisie-txt"></p>
-        <div class="profils" id="apercu-ville"></div>
         <p style="margin-top:1em"><button class="btn btn-grand" id="btn-continuer">Grandir ici ▸</button></p>
       </div>
       <p class="note" style="margin-top:2em"><a class="btn-lien" href="maire.html">🏛️ L'autre jeu : deviens maire</a></p>
@@ -70,16 +61,6 @@ const UI = (() => {
       document.getElementById('etape-ville').hidden = false;
       document.getElementById('ville-choisie-txt').innerHTML =
         `🏙️ <b>${esc(v.nom)}</b> (${esc(v.dept)}) — ${nb(v.pop)} habitants, dont bientôt toi.`;
-      const ambiance = ambianceDeLaVille(v);
-      document.getElementById('apercu-ville').innerHTML = `
-        <div class="carte-profil ambiance choisie apercu-seul">
-          <canvas class="mini-carte" id="mini-carte-ville"></canvas>
-          <span class="profil-label">ta ville (carte stylisée)</span>
-        </div>`;
-      CarteCommune.dessiner(document.getElementById('mini-carte-ville'), {
-        commune: v.nom, profil: ambiance, mois: 1, equipements: [],
-        population: v.pop, populationInitiale: v.pop, cadre: { voirie: 70 },
-      });
     }
     document.getElementById('btn-continuer').addEventListener('click', () => {
       if (!villeChoisie) return;
@@ -92,7 +73,7 @@ const UI = (() => {
     let genre = null, emoji = null;
     app().innerHTML = `
     <div class="accueil">
-      <p class="surtitre">${esc(ville.nom)} · Nouvelle vie</p>
+      <p class="surtitre">${esc(ville.nom)} · Étape 1 / 4</p>
       <h1>Qui es-<span class="filet">tu</span> ?</h1>
       <section class="carte carte-creation">
         <h2>Tu es…</h2>
@@ -142,7 +123,7 @@ const UI = (() => {
           <button class="carte equip choix-famille" data-id="${f.id}">
             <h3>${f.icone} ${f.nom}</h3>
             <p class="equip-desc">${f.desc}</p>
-            <div class="equip-chiffres"><span>💰 ${f.argentPoche} €/mois d'argent de poche</span></div>
+            <div class="equip-chiffres"><span>💰 ${f.argentPoche} €/saison d'argent de poche</span></div>
           </button>`).join('')}
       </div>
     </div>`;
@@ -158,7 +139,7 @@ const UI = (() => {
     <div class="accueil">
       <p class="surtitre">Étape 3 / 4</p>
       <h1>Tes <span class="filet">amis</span></h1>
-      <p class="sous-titre">Choisis-en deux. Les meilleurs, ça se compte sur une main de toute façon.</p>
+      <p class="sous-titre">Choisis-en deux. Ils reviendront dans tes questions, tes galères et tes meilleures soirées.</p>
       <div class="grille-cartes" style="max-width:720px;margin:0 auto;text-align:left">
         ${AMIS.map(a => `
           <button class="carte equip choix-ami" data-id="${a.id}">
@@ -189,7 +170,7 @@ const UI = (() => {
     <div class="accueil">
       <p class="surtitre">Étape 4 / 4</p>
       <h1>Ta <span class="filet">filière</span></h1>
-      <p class="sous-titre">Le lycée commence. Générale, techno ou pro — aucune n'est un piège, toutes mènent quelque part.</p>
+      <p class="sous-titre">Le lycée commence. Aucune n'est un piège, toutes mènent quelque part.</p>
       <div class="grille-cartes" style="max-width:720px;margin:0 auto;text-align:left">
         ${FILIERES.map(f => `
           <button class="carte equip choix-filiere" data-id="${f.id}">
@@ -199,40 +180,42 @@ const UI = (() => {
       </div>
     </div>`;
     app().querySelectorAll('.choix-filiere').forEach(b => b.addEventListener('click', () => {
-      const ambiance = ambianceDeLaVille(ville);
       E.nouvellePartie({
-        ville: { nom: ville.nom, dept: ville.dept, pop: ville.pop, littoral: !!ville.littoral,
-          voisines: COMMUNES_FR.voisines(ville.dept, ville.nom, 7) },
-        ambiance, perso, familleId, amisIds, filiereId: b.dataset.id,
+        ville: { nom: ville.nom, dept: ville.dept, pop: ville.pop, littoral: !!ville.littoral },
+        ambiance: 'moyenne', perso, familleId, amisIds, filiereId: b.dataset.id,
       });
       E.sauvegarder();
-      vueActive = 'ville';
       const famille = FAMILLES.find(f => f.id === familleId);
       const copains = amisIds.map(id => AMIS.find(a => a.id === id));
       cinematique([
         { emoji: '📦', titre: 'La nouvelle vie', texte: `${ville.nom}. ${famille.ambiance} C'est ici que tout va se jouer : le lycée, les potes, les premières payes, les grandes décisions.` },
         { emoji: '🎒', titre: 'Jour de rentrée', texte: `Devant la grille du lycée, sac trop lourd, boule au ventre. ${copains[0].icone} ${copains[0].nom} et ${copains[1].icone} ${copains[1].nom} te font signe : « ${perso.prenom} ! Par ici ! » Ça va aller.` },
-        { emoji: '🗺️', titre: 'Ta ville t\'attend', texte: 'Le café, le stade, le parc, le ciné… Chaque sortie fait avancer le temps d\'une saison. À toi de doser : les potes, les cours, le sommeil — et le bac dans trois ans.' },
+        { emoji: '❓', titre: 'Une vie en 40 questions', texte: 'À chaque saison, une question. Tes réponses font tout : le bac, les amitiés, l\'argent, les rêves. Il n\'y a pas de bonne réponse — il y a TA réponse.' },
       ], () => { FX.son('niveau'); FX.confettis(['🎒', '🎉', '✨']); rendre(); });
     }));
   }
 
-  /* ================= RENDU PRINCIPAL ================= */
+  /* ================= RENDU PRINCIPAL : LA QUESTION ================= */
 
   function rendre() {
     const S = E.etat;
     if (!S) return ecranAccueil();
+    /* filet de sécurité : jamais d'écran vide */
+    if (!S.carte && !S.gameOver && !S.choixOrientation && !S.essaiPropose && !S.cinematiques.length) {
+      E.nouvelleCarte();
+    }
     const b = E.bonheur();
     const sur5 = (b.note / 20).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     const clNote = b.note >= 60 ? 'bonne' : b.note >= 40 ? 'moyenne' : 'mauvaise';
     const nonLues = E.notifsNonLues();
     if (persoSuivi !== S.perso.prenom + S.commune) { persoSuivi = S.perso.prenom + S.commune; finJouee = false; }
     const obj = E.objectifCourant();
+    const progression = Math.min(100, Math.round(S.mois / VIE_CFG.MOIS_FIN * 100));
 
     app().innerHTML = `
     <div class="coque">
       <header class="barre-haut">
-        <button id="btn-note" class="badge-note ${clNote}" title="Ton bonheur — touche pour le détail">
+        <button id="btn-note" class="badge-note ${clNote}" title="Ton bonheur — touche pour ton profil">
           <span class="note-etoile">⭐</span><span class="note-val">${sur5}</span><span class="note-max">/5</span>
         </button>
         <div class="titre-app">
@@ -249,29 +232,15 @@ const UI = (() => {
         ${chipStat('⚡', S.stats.energie)}${chipStat('😊', S.stats.moral)}${chipStat('🧠', S.stats.savoir)}
         ${chipStat('🫂', S.stats.social)}${chipStat('💪', S.stats.forme)}
       </div>
+      <div class="barre-vie"><div class="barre-vie-rempli" style="width:${progression}%"></div>
+        <span class="barre-vie-txt">saison ${Math.min(S.mois, VIE_CFG.MOIS_FIN)}/${VIE_CFG.MOIS_FIN}</span></div>
       ${obj ? `<div class="barre-objectif">🎯 <b>Objectif :</b> ${obj.icone} ${obj.texte}
         <span class="obj-recompense">+${obj.xp} XP</span></div>` : ''}
-      <main class="vue vue-${vueActive === 'ville' ? 'carte' : 'autre'}">${htmlVue(S)}</main>
-      ${vueActive === 'ville' ? `<div class="pilule-temps">
-        <button id="btn-passer-mois" class="btn-temps" title="Une saison sans rien de spécial">😴 Passer la saison</button>
-      </div>` : ''}
-      <nav class="barre-bas">
-        ${[['ville', '🗺️', 'Ville'], ['moi', '🎒', 'Moi'], ['amis', '🫂', 'Amis'], ['journal', '📔', 'Journal']]
-          .map(([id, ic, lbl]) => `<button class="nav-btn ${vueActive === id ? 'actif' : ''}" data-vue="${id}">
-            <span class="nav-ic">${ic}${id === 'ville' && S.sceneActive ? '<span class="pastille">!</span>' : ''}</span>
-            <span class="nav-lbl">${lbl}</span></button>`).join('')}
-      </nav>
+      <main class="vue ecran-question">${htmlCarte(S)}</main>
+      ${moiOuvert ? htmlPanneauMoi(S) : ''}
       ${notifsOuvertes ? htmlPanneauNotifs(S) : ''}
     </div>`;
 
-    app().querySelectorAll('.nav-btn').forEach(x => x.addEventListener('click', () => {
-      vueActive = x.dataset.vue; notifsOuvertes = false; rendre();
-    }));
-    const carte = document.getElementById('carte');
-    if (carte) {
-      CarteCommune.attacher(carte, etatCarte(), placerMarqueurs);
-      CarteCommune.dessiner(carte, etatCarte());
-    }
     brancherEvenements(S);
     afficherModalesAutomatiques(S);
   }
@@ -282,167 +251,83 @@ const UI = (() => {
       <span class="chip-stat-barre"><span style="width:${Math.round(v)}%"></span></span></span>`;
   }
 
-  let minuteurRedim = null;
-  window.addEventListener('resize', () => {
-    clearTimeout(minuteurRedim);
-    minuteurRedim = setTimeout(() => {
-      const carte = document.getElementById('carte');
-      if (carte && E.etat) CarteCommune.dessiner(carte, etatCarte());
-    }, 150);
-  });
+  /* ---- La carte-question, plein écran ---- */
 
-  /* ---- positionnement des lieux et de ton avatar sur la carte ---- */
-
-  function placerMarqueurs() {
-    const S = E.etat;
-    if (!S) return;
-    for (const lieu of LIEUX) {
-      const el = document.getElementById(`lieu-${lieu.id}`);
-      if (!el) continue;
-      const p = CarteCommune.versEcranPct(lieu.pos);
-      el.style.left = p.x.toFixed(1) + '%';
-      el.style.top = p.y.toFixed(1) + '%';
-      el.style.display = p.visible ? '' : 'none';
+  function htmlCarte(S) {
+    const carte = E.carteCourante();
+    if (!carte) {
+      return `<div class="carte-jeu"><p class="note" style="text-align:center">✨ Un grand moment se prépare…</p></div>`;
     }
-    const moi = document.getElementById('marqueur-moi');
-    if (moi) {
-      const lieu = LIEUX.find(l => l.id === S.position) || LIEUX[0];
-      const p = CarteCommune.versEcranPct({ x: lieu.pos.x + 0.018, y: lieu.pos.y + 0.02 });
-      moi.style.left = p.x.toFixed(1) + '%';
-      moi.style.top = p.y.toFixed(1) + '%';
-      moi.style.display = p.visible ? '' : 'none';
-    }
-  }
-
-  /* ================= VUES ================= */
-
-  function htmlVue(S) {
-    switch (vueActive) {
-      case 'ville': return htmlVueVille(S);
-      case 'moi': return htmlVueMoi(S);
-      case 'amis': return htmlVueAmis(S);
-      case 'journal': return htmlVueJournal(S);
-    }
-  }
-
-  function htmlVueVille(S) {
-    const saison = E.saisonVie();
-    const EMOJI_SAISON = { hiver: '❄️', printemps: '🌱', ete: '☀️', automne: '🍂' };
-    const lieuxDispo = LIEUX.filter(l => l.id !== 'eau' || S.profil !== 'rurale' || true);
+    const tetes = { prof: ['👩‍🏫', 'Le prof'], famille: ['👨‍👩‍👧', 'Ta famille'], boulot: ['🧑‍💼', 'Le taf'] };
+    const [emoji, nom] = carte.type === 'scene'
+      ? (carte.de && tetes[carte.de] ? tetes[carte.de] : [carte.ami.icone, carte.ami.nom])
+      : ['📆', 'Ta saison'];
     return `
-    <div class="carte-monde pleine">
-      <canvas id="carte" role="img" aria-label="Ta ville : ${esc(S.commune)}"></canvas>
-      <span class="chip-carte">${EMOJI_SAISON[saison]} ${NOMS_MOIS_VIE[E.moisCalendaire()]} · ${E.age()} ans</span>
-      <div class="zoom-controles">
-        <button id="zoom-plus" class="btn-zoom">+</button>
-        <button id="zoom-moins" class="btn-zoom">−</button>
-        <button id="zoom-reset" class="btn-zoom">⌖</button>
+    <div class="carte-jeu">
+      <div class="adjoint"><span class="adjoint-avatar">${emoji}</span>
+        <div class="adjoint-bulle"><b>${nom}</b></div></div>
+      <p class="crise-texte">${carte.icone} ${carte.texte}</p>
+      <div class="crise-options">
+        ${carte.options.map((o, i) => {
+          const chips = Object.entries(o.effets || {}).map(([k, v]) => {
+            const ic = { energie: '⚡', moral: '😊', savoir: '🧠', social: '🫂', forme: '💪', argent: '💰', relation: '🫶' }[k];
+            return ic ? `${ic}${v > 0 ? '+' : ''}${k === 'argent' ? v + '€' : v}` : '';
+          }).filter(Boolean).join(' · ');
+          const extra = o.talent ? ` · ${REVES[o.talent].icone} talent +7` : '';
+          return `<button class="option-crise opt-carte" data-i="${i}" ${o.bloquee ? 'disabled' : ''}>
+            <span class="opt-titre">${o.txt}</span>
+            ${chips || extra ? `<span class="opt-note">${chips}${extra}</span>` : ''}
+          </button>`;
+        }).join('')}
       </div>
-      <span class="chip-aide">📍 touche un lieu pour y aller — chaque sortie = une saison</span>
-      ${lieuxDispo.map(l => `<button class="marqueur-lieu" id="lieu-${l.id}" data-lieu="${l.id}"
-        title="${l.nom}" style="left:${l.pos.x * 100}%;top:${l.pos.y * 100}%">${l.icone}</button>`).join('')}
-      <span class="marqueur-moi" id="marqueur-moi">${S.perso.emoji}</span>
     </div>`;
   }
 
-  function htmlVueMoi(S) {
-    const b = E.bonheur();
+  /* ---- 🎒 Le panneau « Moi » ---- */
+
+  function htmlPanneauMoi(S) {
     const famille = FAMILLES.find(f => f.id === S.familleId);
     const fil = FILIERES.find(f => f.id === S.filiereId);
     const stats = [['⚡ Énergie', S.stats.energie], ['😊 Moral', S.stats.moral], ['🧠 Savoir', S.stats.savoir],
       ['🫂 Social', S.stats.social], ['💪 Forme', S.stats.forme]];
     return `
-    <div class="defilable">
-      <section class="carte carte-maire">
-        <div class="fiche-maire">
-          <span class="maire-avatar">${S.perso.emoji}</span>
-          <div>
-            <p class="maire-nom">${esc(S.perso.prenom)}, ${E.age()} ans — ${esc(S.commune)}</p>
-            <p class="maire-trait">${famille.icone} ${famille.nom} · ${fil.icone} filière ${fil.nom}</p>
-            <p class="note-inline">${E.NOMS_PHASE[E.phase()]} : ${E.classeActuelle()} · revenu ${eur(E.revenuMensuel())}/mois</p>
+    <div class="voile-notifs" id="voile-moi">
+      <aside class="panneau-notifs">
+        <div class="panneau-tete"><h2>🎒 ${esc(S.perso.prenom)}, ${E.age()} ans</h2>
+          <button class="btn-lien" id="fermer-moi">Fermer</button></div>
+        <div class="liste-notifs" style="display:block;padding:12px 14px">
+          <p class="note">${famille.icone} ${famille.nom} · ${fil.icone} ${fil.nom} · ${E.NOMS_PHASE[E.phase()]} (${E.classeActuelle()})<br>
+          💰 ${eur(S.argent)} · revenu ${eur(E.revenuMensuel())}/saison · ⭐ niveau ${S.niveau}</p>
+          <div class="composantes">
+            ${stats.map(([n, v]) => `<div class="composante"><span class="comp-nom">${n}</span>
+              <div class="barre grande"><div class="barre-rempli ${v < 30 ? 'basse' : ''}" style="width:${Math.round(v)}%"></div></div>
+              <span class="comp-val">${Math.round(v)}</span></div>`).join('')}
+            ${S.talents.foot > 5 ? `<div class="composante"><span class="comp-nom">⚽ Talent foot</span>
+              <div class="barre grande"><div class="barre-rempli pref" style="width:${Math.round(S.talents.foot)}%"></div></div>
+              <span class="comp-val">${Math.round(S.talents.foot)}</span></div>` : ''}
+            ${S.talents.musique > 5 ? `<div class="composante"><span class="comp-nom">🎤 Talent chant</span>
+              <div class="barre grande"><div class="barre-rempli pref" style="width:${Math.round(S.talents.musique)}%"></div></div>
+              <span class="comp-val">${Math.round(S.talents.musique)}</span></div>` : ''}
           </div>
-        </div>
-      </section>
-      <section class="carte">
-        <h2>⭐ Niveau ${S.niveau} · XP ${S.xp}/${E.xpPourNiveau(S.niveau)}</h2>
-        <div class="composantes">
-          ${stats.map(([n, v]) => `<div class="composante"><span class="comp-nom">${n}</span>
-            <div class="barre grande"><div class="barre-rempli ${v < 30 ? 'basse' : ''}" style="width:${Math.round(v)}%"></div></div>
-            <span class="comp-val">${Math.round(v)}</span></div>`).join('')}
-        </div>
-      </section>
-      ${S.rechercheEmploi && !S.metierId ? `<section class="carte courrier-actif">
-        <h2>💼 En recherche d'emploi</h2>
-        <p class="note">Intérim en attendant (300 €/mois). Choisis un métier et va convaincre en entretien !</p>
-        <button class="btn" id="btn-emplois">Voir les métiers & postuler</button>
-      </section>` : ''}
-      ${(S.talents.foot > 5 || S.talents.musique > 5) ? `<section class="carte">
-        <h2>🌟 Tes talents cachés</h2>
-        <div class="composantes">
-          ${S.talents.foot > 5 ? `<div class="composante"><span class="comp-nom">⚽ Foot</span>
-            <div class="barre grande"><div class="barre-rempli pref" style="width:${Math.round(S.talents.foot)}%"></div></div>
-            <span class="comp-val">${Math.round(S.talents.foot)}</span></div>` : ''}
-          ${S.talents.musique > 5 ? `<div class="composante"><span class="comp-nom">🎤 Chant</span>
-            <div class="barre grande"><div class="barre-rempli pref" style="width:${Math.round(S.talents.musique)}%"></div></div>
-            <span class="comp-val">${Math.round(S.talents.musique)}</span></div>` : ''}
-        </div>
-        <p class="note-inline">Entraîne-toi (stade, salle de concert) : à haut niveau, on viendra te chercher…</p>
-      </section>` : ''}
-      <section class="carte">
-        <h2>🎯 Tes objectifs de vie</h2>
-        <ul class="liste-simple">
-          ${OBJECTIFS_VIE.map((o, i) => `<li>${i < S.objectifIndex ? '✅' : i === S.objectifIndex ? '👉' : '🔒'} ${o.icone} ${o.texte}</li>`).join('')}
-        </ul>
-      </section>
-      <section class="carte">
-        <h2>📈 Ton bonheur au fil du temps</h2>
-        ${graphique(S.historique.map(h => h.bonheur), '#62B857', v => Math.round(v) + '/100')}
-      </section>
-      <section class="carte">
-        <h2>⚙️ Partie</h2>
-        <p class="note">Tu vis à ${esc(S.commune)} jusqu'à tes 25 ans — une quarantaine de saisons. Bilan final au bout !</p>
-        <button class="btn-lien" id="btn-nouvelle">Recommencer une vie</button>
-        · <a class="btn-lien" href="maire.html">🏛️ Jouer au maire</a>
-      </section>
-    </div>`;
-  }
-
-  function htmlVueAmis(S) {
-    return `
-    <div class="defilable">
-      ${S.amis.map(a => {
-        const def = AMIS.find(x => x.id === a.id);
-        return `<section class="carte">
-          <div class="fiche-maire">
-            <span class="maire-avatar">${def.icone}</span>
-            <div style="flex:1">
-              <p class="maire-nom">${def.nom} <span class="badge">${def.titre}</span></p>
-              <div class="composante"><span class="comp-nom">Amitié</span>
+          <h3>🫂 Tes amis</h3>
+          <div class="composantes">
+            ${S.amis.map(a => { const d = AMIS.find(x => x.id === a.id);
+              return `<div class="composante"><span class="comp-nom">${d.icone} ${d.nom}</span>
                 <div class="barre grande"><div class="barre-rempli ${a.relation < 30 ? 'basse' : ''}" style="width:${Math.round(a.relation)}%"></div></div>
-                <span class="comp-val">${Math.round(a.relation)}</span></div>
-            </div>
+                <span class="comp-val">${Math.round(a.relation)}</span></div>`; }).join('')}
           </div>
-          <div class="presets" style="margin-top:.7em">
-            <button class="preset plan-ami" data-ami="${a.id}" data-lieu="cafe" data-act="papoter">
-              <span class="preset-nom">☕ Café</span><span class="preset-note">−8 €</span></button>
-            <button class="preset plan-ami" data-ami="${a.id}" data-lieu="cine" data-act="seance">
-              <span class="preset-nom">🎬 Ciné</span><span class="preset-note">−12 €</span></button>
-            <button class="preset plan-ami" data-ami="${a.id}" data-lieu="stade" data-act="match">
-              <span class="preset-nom">⚽ Match</span><span class="preset-note">gratuit</span></button>
-          </div>
-          <p class="note-inline">Chaque plan fait avancer le temps d'une saison.</p>
-        </section>`;
-      }).join('')}
-    </div>`;
-  }
-
-  function htmlVueJournal(S) {
-    return `
-    <div class="defilable">
-      <section class="carte">
-        <h2>📔 Ton journal</h2>
-        <ul class="journal">${S.journal.map(l => `<li><span class="jour-tag">${VIE_CFG.AGE_DEPART + Math.floor(((l.mois - 1) * 3 + 8) / 12)} ans</span> ${l.txt}</li>`).join('')}</ul>
-      </section>
+          <h3>🎯 Objectifs de vie</h3>
+          <ul class="liste-simple">
+            ${OBJECTIFS_VIE.map(o => `<li>${S.objectifsFaits[o.id] ? '✅' : (E.objectifCourant() && E.objectifCourant().id === o.id ? '👉' : '⬜')} ${o.icone} ${o.texte}</li>`).join('')}
+          </ul>
+          ${S.rechercheEmploi && !S.metierId ? `<p style="margin-top:.8em"><button class="btn" id="btn-emplois">💼 Voir les métiers & postuler</button></p>` : ''}
+          <h3>📔 Derniers moments</h3>
+          <ul class="journal" style="max-height:180px">${S.journal.slice(0, 12).map(l =>
+            `<li><span class="jour-tag">${VIE_CFG.AGE_DEPART + Math.floor(((l.mois - 1) * 3 + 8) / 12)} ans</span> ${l.txt}</li>`).join('')}</ul>
+          <p style="margin-top:1em"><button class="btn-lien" id="btn-nouvelle">Recommencer une vie</button>
+          · <a class="btn-lien" href="maire.html">🏛️ Jouer au maire</a></p>
+        </div>
+      </aside>
     </div>`;
   }
 
@@ -462,21 +347,6 @@ const UI = (() => {
     </div>`;
   }
 
-  function graphique(valeurs, couleur, fmt) {
-    if (valeurs.length < 2) return '<p class="note">La courbe se dessine à partir du 2ᵉ mois.</p>';
-    const W = 420, H = 120, P = 6;
-    const min = Math.min(...valeurs, 0), max = Math.max(...valeurs, 1);
-    const y = v => H - P - (max === min ? 0.5 : (v - min) / (max - min)) * (H - 2 * P);
-    const x = i => P + i * (W - 2 * P) / (valeurs.length - 1);
-    const pts = valeurs.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-    const der = valeurs[valeurs.length - 1];
-    return `<svg viewBox="0 0 ${W} ${H}" class="graph" role="img">
-      <polygon points="${x(0).toFixed(1)},${H - P} ${pts} ${x(valeurs.length - 1).toFixed(1)},${H - P}" fill="${couleur}" opacity="0.15"/>
-      <polyline points="${pts}" fill="none" stroke="${couleur}" stroke-width="2.5" stroke-linejoin="round"/>
-      <circle cx="${x(valeurs.length - 1)}" cy="${y(der)}" r="4" fill="${couleur}"/>
-    </svg><p class="graph-legende">Aujourd'hui : <b>${fmt(der)}</b></p>`;
-  }
-
   /* ================= MODALES & CINÉMATIQUES ================= */
 
   function modale(html, options = {}) {
@@ -492,7 +362,7 @@ const UI = (() => {
     t.className = 'toast'; t.textContent = txt;
     document.body.appendChild(t);
     setTimeout(() => t.classList.add('visible'), 20);
-    setTimeout(() => { t.classList.remove('visible'); setTimeout(() => t.remove(), 400); }, 3400);
+    setTimeout(() => { t.classList.remove('visible'); setTimeout(() => t.remove(), 400); }, 3200);
   }
 
   function cinematique(panneaux, onFin) {
@@ -521,75 +391,6 @@ const UI = (() => {
     montrer();
   }
 
-  /* Le menu d'un lieu : choisir l'activité et la compagnie */
-  function modaleLieu(S, lieuId) {
-    const lieu = LIEUX.find(l => l.id === lieuId);
-    let amiChoisi = null;
-    const nomLieu = lieuId === 'eau' ? (S.profil === 'touristique' ? 'Plage' : 'Bord de rivière')
-      : lieuId === 'ecole' ? (E.phase() === 'lycee' ? 'Lycée' : E.phase() === 'etudes' ? 'Campus' : 'Boulot') : lieu.nom;
-    modale(`
-      <h2>${lieu.icone} ${nomLieu}</h2>
-      <p class="note">Avec qui ?</p>
-      <div class="presets" id="choix-compagnie">
-        <button class="preset actif" data-ami=""><span class="preset-nom">😎 Seul·e</span></button>
-        ${S.amis.map(a => { const d = AMIS.find(x => x.id === a.id);
-          return `<button class="preset" data-ami="${a.id}"><span class="preset-nom">${d.icone} ${d.nom}</span>
-            <span class="preset-note">amitié ${Math.round(a.relation)}</span></button>`; }).join('')}
-      </div>
-      <p class="note" style="margin-top:.8em">Quoi faire ? <span class="note-inline">(chaque activité = une saison de 3 mois)</span></p>
-      <div class="crise-options">
-        ${lieu.activites.map((a, i) => {
-          const bloquee = (a.ageMin && E.age() < a.ageMin) || ((a.effets.argent || 0) < 0 && S.argent + a.effets.argent < 0);
-          let chips = Object.entries(a.effets).map(([k, v]) => {
-            const ic = { energie: '⚡', moral: '😊', savoir: '🧠', social: '🫂', forme: '💪', argent: '💰' }[k];
-            return `${ic}${v > 0 ? '+' : ''}${k === 'argent' ? v + '€' : v}`;
-          }).join(' · ');
-          if (a.talent) chips += ` · ${REVES[a.talent].icone} talent +${a.talentGain}`;
-          return `<button class="option-crise act-lieu" data-i="${i}" ${bloquee ? 'disabled' : ''}>
-            <span class="opt-titre">${a.nom}</span>
-            <span class="opt-note">${chips}${a.ageMin && E.age() < a.ageMin ? ` · dès ${a.ageMin} ans` : ''}</span>
-          </button>`;
-        }).join('')}
-      </div>`);
-    modalRoot().querySelectorAll('#choix-compagnie .preset').forEach(b => b.addEventListener('click', () => {
-      amiChoisi = b.dataset.ami || null;
-      modalRoot().querySelectorAll('#choix-compagnie .preset').forEach(x => x.classList.toggle('actif', x === b));
-    }));
-    modalRoot().querySelectorAll('.act-lieu').forEach(b => b.addEventListener('click', () => {
-      const act = lieu.activites[parseInt(b.dataset.i, 10)];
-      const res = E.jouerMois(lieuId, act.id, amiChoisi);
-      fermerModale();
-      if (!res.ok) { if (res.msg) toast('❌ ' + res.msg); return; }
-      FX.son((act.effets.argent || 0) > 0 ? 'argent' : 'clic');
-      if (act.effets.argent) FX.flotteEuro(`${act.effets.argent > 0 ? '+' : ''}${act.effets.argent} €`, act.effets.argent > 0);
-      E.sauvegarder(); rendre();
-      toast(`${lieu.icone} ${res.note}`);
-    }));
-  }
-
-  /* Scène de vie (QCM avec un interlocuteur) */
-  function modaleScene(S) {
-    const sc = E.sceneCourante();
-    if (!sc) return;
-    const tetes = { prof: ['👩‍🏫', 'Le prof'], famille: ['👨‍👩‍👧', 'Ta famille'], boulot: ['🧑‍💼', 'Le taf'] };
-    const [emoji, nom] = sc.de && tetes[sc.de] ? tetes[sc.de] : [sc.ami.icone, sc.ami.nom];
-    modale(`
-      <div class="adjoint"><span class="adjoint-avatar">${emoji}</span>
-        <div class="adjoint-bulle"><b>${nom}</b> — il se passe un truc.</div></div>
-      <p class="crise-texte">${sc.icone} ${sc.texte}</p>
-      <div class="crise-options">
-        ${sc.options.map((o, i) => `<button class="option-crise opt-scene" data-i="${i}">
-          <span class="opt-titre">${o.txt}</span></button>`).join('')}
-      </div>`, { bloquant: true });
-    modalRoot().querySelectorAll('.opt-scene').forEach(b => b.addEventListener('click', () => {
-      const res = E.resoudreScene(parseInt(b.dataset.i, 10));
-      FX.son('clic');
-      fermerModale(); E.sauvegarder(); rendre();
-      if (res.note) toast(`${res.icone} ${res.note}`);
-    }));
-  }
-
-  /* Choix d'orientation après le bac */
   function modaleOrientation(S) {
     const possibles = E.orientationsPossibles();
     modale(`
@@ -611,7 +412,6 @@ const UI = (() => {
     }));
   }
 
-  /* Le recruteur attend ta réponse */
   function modaleEssai(S) {
     const reve = REVES[S.essaiPropose];
     const stat = S.essaiPropose === 'foot' ? '💪 forme' : '🫂 social';
@@ -622,7 +422,7 @@ const UI = (() => {
       Il faut un total de 100 pour signer.</p>
       <div class="crise-options">
         <button class="option-crise" id="essai-oui"><span class="opt-titre">🔥 Tenter ta chance</span>
-          <span class="opt-note">Quitte ou double. Un mois de préparation intense.</span></button>
+          <span class="opt-note">Quitte ou double.</span></button>
         <button class="option-crise" id="essai-non"><span class="opt-titre">⏳ Pas encore prêt·e</span>
           <span class="opt-note">Le recruteur reviendra… si ton talent continue de monter.</span></button>
       </div>`, { bloquant: true });
@@ -638,13 +438,12 @@ const UI = (() => {
     });
   }
 
-  /* Le choix du métier, puis l'entretien */
   function modaleEmplois(S) {
     const metiers = E.metiersDisponibles();
     const cooldown = S.mois < S.entretienDispo;
     modale(`
       <h2>💼 Choisis ton métier</h2>
-      <p class="note">${cooldown ? 'Dernier entretien encore frais — patiente un peu, puis retente.' :
+      <p class="note">${cooldown ? 'Dernier entretien encore frais — la saison prochaine, promis.' :
         'Postule, passe l\'entretien, décroche le poste. Ton 🫂 social et ton 🧠 savoir comptent autant que tes réponses.'}</p>
       <div class="crise-options">
         ${metiers.map(m => `<button class="option-crise choix-metier" data-id="${m.id}" ${m.accessible && !cooldown ? '' : 'disabled'}>
@@ -670,7 +469,7 @@ const UI = (() => {
           <div class="adjoint-bulle"><b>Entretien ${m.icone} ${m.nom}</b> — question ${i + 1}/${QUESTIONS_ENTRETIEN.length}</div></div>
         <p class="crise-texte">${q.q}</p>
         <div class="crise-options">
-          ${options.map((o, j) => `<button class="option-crise rep-entretien" data-bon="${o.bon ? 1 : 0}">
+          ${options.map((o) => `<button class="option-crise rep-entretien" data-bon="${o.bon ? 1 : 0}">
             <span class="opt-titre">${o.txt}</span></button>`).join('')}
         </div>`, { bloquant: true });
       modalRoot().querySelectorAll('.rep-entretien').forEach(b => b.addEventListener('click', () => {
@@ -681,7 +480,7 @@ const UI = (() => {
           const res = E.passerEntretien(metierId, bonnes);
           fermerModale();
           if (res.ok && res.reussi) { FX.son('niveau'); FX.confettis([m.icone, '💼', '🎉']); }
-          else if (res.ok) { FX.son('crise'); toast(`😕 Recalé·e (score ${res.score}/100). Muscle ton social et retente la saison prochaine.`); }
+          else if (res.ok) { FX.son('crise'); toast(`😕 Recalé·e (score ${res.score}/100). Muscle ton social et retente.`); }
           else if (res.msg) toast('❌ ' + res.msg);
           E.sauvegarder(); rendre();
         }
@@ -708,43 +507,30 @@ const UI = (() => {
     const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
 
     on('btn-nouvelle', () => { if (confirm('Recommencer une nouvelle vie ?')) { E.effacerSauvegarde(); ecranAccueil(); } });
-    on('btn-note', () => { vueActive = 'moi'; rendre(); });
+    on('btn-note', () => { moiOuvert = !moiOuvert; notifsOuvertes = false; rendre(); });
+    on('fermer-moi', () => { moiOuvert = false; rendre(); });
     on('btn-son', () => { FX.basculerMuet(); FX.son('clic'); rendre(); });
     on('btn-notifs', () => {
-      notifsOuvertes = !notifsOuvertes;
+      notifsOuvertes = !notifsOuvertes; moiOuvert = false;
       if (notifsOuvertes) E.marquerNotifsLues();
       E.sauvegarder(); rendre();
     });
     on('fermer-notifs', () => { notifsOuvertes = false; rendre(); });
-    const voileN = document.getElementById('voile-notifs');
-    if (voileN) voileN.addEventListener('click', (e) => { if (e.target.id === 'voile-notifs') { notifsOuvertes = false; rendre(); } });
-
-    on('btn-emplois', () => modaleEmplois(S));
-    on('btn-passer-mois', () => {
-      const res = E.nePasSortir();
-      if (res.ok) { FX.son('jour'); E.sauvegarder(); rendre(); }
-    });
-
-    /* la carte : zoom + lieux */
-    const carte = document.getElementById('carte');
-    if (carte) {
-      on('zoom-plus', () => CarteCommune.zoomer(carte, etatCarte(), 1.4));
-      on('zoom-moins', () => CarteCommune.zoomer(carte, etatCarte(), 1 / 1.4));
-      on('zoom-reset', () => CarteCommune.recentrer(carte, etatCarte()));
-      app().querySelectorAll('.marqueur-lieu').forEach(b => b.addEventListener('click', () => {
-        FX.son('clic');
-        modaleLieu(S, b.dataset.lieu);
-      }));
-      placerMarqueurs();
+    on('btn-emplois', () => { moiOuvert = false; rendre(); modaleEmplois(S); });
+    for (const idVoile of ['voile-notifs', 'voile-moi']) {
+      const v = document.getElementById(idVoile);
+      if (v) v.addEventListener('click', (e) => {
+        if (e.target.id === idVoile) { notifsOuvertes = false; moiOuvert = false; rendre(); }
+      });
     }
 
-    /* plans express depuis la vue amis */
-    app().querySelectorAll('.plan-ami').forEach(b => b.addEventListener('click', () => {
-      const res = E.jouerMois(b.dataset.lieu, b.dataset.act, b.dataset.ami);
+    /* répondre à la question du moment */
+    app().querySelectorAll('.opt-carte').forEach(b => b.addEventListener('click', () => {
+      const res = E.repondreCarte(parseInt(b.dataset.i, 10));
       if (!res.ok) { if (res.msg) toast('❌ ' + res.msg); return; }
       FX.son('clic');
       E.sauvegarder(); rendre();
-      toast(`${res.icone} ${res.note}`);
+      if (res.note) toast(`${res.icone} ${res.note}`);
     }));
   }
 
@@ -757,7 +543,6 @@ const UI = (() => {
     }
     if (S.choixOrientation) return modaleOrientation(S);
     if (S.essaiPropose) return modaleEssai(S);
-    if (S.sceneActive) return modaleScene(S);
     if (S.rechercheEmploi && !S.metierId && !S.jobBoardVu) {
       S.jobBoardVu = true; E.sauvegarder();
       return modaleEmplois(S);

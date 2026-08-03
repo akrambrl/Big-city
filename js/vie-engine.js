@@ -36,11 +36,12 @@ const Vie = (() => {
       entretienDispo: 0,         // cooldown après un entretien raté
       argent: famille.argentDepart,
       amis: amisIds.map(id => ({ id, relation: 50 })),
-      position: 'maison',        // lieu courant sur la carte
+      carte: null,               // la question en cours { type: 'scene'|'rythme', id, amiId }
       pileScenes: [],
-      sceneActive: null,
+      pileRythmes: [],
+      sceneActive: null,         // (compat interne : les scènes passent par `carte`)
       choixOrientation: false,   // vrai quand il faut choisir post-bac
-      objectifIndex: 0,
+      objectifsFaits: {},        // id -> true (chaque objectif se valide indépendamment)
       xp: 0, niveau: 1,
       notifications: [],
       journal: [],
@@ -49,6 +50,7 @@ const Vie = (() => {
       gameOver: null,
     };
     log(`🎒 Rentrée de seconde à ${ville.nom}. ${famille.ambiance}`);
+    nouvelleCarte();
     return S;
   }
 
@@ -57,7 +59,7 @@ const Vie = (() => {
   /* S.mois compte des TOURS ; un tour = une saison de trois mois */
   function age() { return VIE_CFG.AGE_DEPART + Math.floor(((S.mois - 1) * 3 + 8) / 12); }
   function moisCalendaire() { return (VIE_CFG.MOIS_DEPART + (S.mois - 1) * 3) % 12; }
-  function saisonVie() { return SAISONS[moisCalendaire()]; }
+  function saisonVie() { return SAISONS_VIE[moisCalendaire()]; }
 
   function phase() {
     if (S.metierId && REVES[S.metierId]) return 'travail'; // carrière de rêve : la vie active a déjà commencé
@@ -104,53 +106,86 @@ const Vie = (() => {
     // salaire − loyer/factures ≈ reste à vivre ; intérim : 300 €
   }
 
-  /* ---------- Le tour de jeu : une activité = un mois ---------- */
+  /* ---------- Le flux de cartes : une question = une saison ---------- */
 
-  function jouerMois(lieuId, activiteId, amiId) {
-    if (S.gameOver || S.sceneActive || S.choixOrientation || S.essaiPropose) return { ok: false };
-    const lieu = LIEUX.find(l => l.id === lieuId);
-    const act = lieu && lieu.activites.find(a => a.id === activiteId);
-    if (!act) return { ok: false };
-    if (act.ageMin && age() < act.ageMin) return { ok: false, msg: `Pas avant ${act.ageMin} ans.` };
-    if ((act.effets.argent || 0) < 0 && S.argent + act.effets.argent < 0)
-      return { ok: false, msg: 'Pas assez d\'argent pour ça ce mois-ci.' };
-
-    S.position = lieuId;
-
-    /* effets de l'activité */
-    const effets = { ...act.effets };
-    let noteAmi = '';
-    if (amiId) {
-      const ami = S.amis.find(a => a.id === amiId);
-      const defAmi = AMIS.find(a => a.id === amiId);
-      if (ami && defAmi) {
-        ami.relation = clamp100(ami.relation + 12);
-        S.stats.social = clamp100(S.stats.social + 5);
-        for (const [k, v] of Object.entries(defAmi.bonusActivite)) {
-          if (k === 'argent') S.argent += v;
-          else if (S.stats[k] !== undefined) S.stats[k] = clamp100(S.stats[k] + v);
-        }
-        noteAmi = ` Avec ${defAmi.icone} ${defAmi.nom} : lien renforcé.`;
-      }
-    }
-    appliquerEffets(effets);
-    if (act.talent) {
-      S.talents[act.talent] = clamp100(S.talents[act.talent] + act.talentGain);
-      if (S.talents[act.talent] >= 25 && S.talents[act.talent] < 35)
-        notifier(REVES[act.talent].icone, `Tu progresses sérieusement en ${act.talent === 'foot' ? 'foot' : 'chant'}…`);
-    }
-    log(`${lieu.icone} ${act.nom} — ${act.note}${noteAmi}`);
-
-    /* le mois s'écoule */
-    finDeMois();
-    return { ok: true, note: act.note + noteAmi, icone: lieu.icone };
+  function amiAuHasard() {
+    const a = S.amis[Math.floor(Math.random() * S.amis.length)];
+    return a ? a.id : null;
   }
 
-  function nePasSortir() {
-    if (S.gameOver || S.sceneActive || S.choixOrientation || S.essaiPropose) return { ok: false };
-    log('🛋️ Un mois tranquille, sans rien de spécial.');
+  function nouvelleCarte() {
+    if (S.gameOver || S.choixOrientation || S.essaiPropose) { S.carte = null; return; }
+    // une scène narrative la plupart du temps, sinon une question de rythme
+    if (Math.random() < VIE_CFG.PROBA_SCENE) {
+      const ph = phase();
+      for (let essais = 0; essais < SCENES_VIE.length + 1; essais++) {
+        if (!S.pileScenes.length) S.pileScenes = SCENES_VIE.map(s => s.id).sort(() => Math.random() - 0.5);
+        const id = S.pileScenes.pop();
+        const sc = SCENES_VIE.find(x => x.id === id);
+        if (sc.phases && !sc.phases.includes(ph)) continue;
+        if (sc.ageMin && age() < sc.ageMin) continue;
+        S.carte = { type: 'scene', id, amiId: amiAuHasard() };
+        return;
+      }
+    }
+    if (!S.pileRythmes.length) S.pileRythmes = RYTHMES.map(r => r.id).sort(() => Math.random() - 0.5);
+    S.carte = { type: 'rythme', id: S.pileRythmes.pop(), amiId: amiAuHasard() };
+  }
+
+  /* La carte courante, prête à afficher ({ami} remplacé, options filtrées) */
+  function carteCourante() {
+    if (!S.carte) return null;
+    const ami = AMIS.find(a => a.id === S.carte.amiId) || AMIS[0];
+    const remplacer = (txt) => txt.replaceAll('{ami}', ami.nom).replaceAll('{ville}', S.commune);
+    if (S.carte.type === 'scene') {
+      const sc = SCENES_VIE.find(x => x.id === S.carte.id);
+      return {
+        type: 'scene', icone: sc.icone, de: sc.de, ami,
+        texte: remplacer(sc.texte),
+        options: sc.options.map(o => ({ txt: remplacer(o.txt), note: remplacer(o.note), effets: o.effets })),
+      };
+    }
+    const r = RYTHMES.find(x => x.id === S.carte.id);
+    return {
+      type: 'rythme', icone: r.icone, ami,
+      texte: remplacer(r.texte),
+      options: r.options.map(o => ({
+        txt: o.ami ? `${o.txt} (avec ${ami.icone} ${ami.nom})` : o.txt,
+        note: o.note, effets: o.effets, ami: o.ami, talent: o.talent,
+        bloquee: (o.ageMin && age() < o.ageMin) || ((o.effets.argent || 0) < 0 && S.argent + o.effets.argent < 0),
+      })),
+    };
+  }
+
+  function repondreCarte(indexOption) {
+    const carte = carteCourante();
+    if (!carte || S.gameOver) return { ok: false };
+    const opt = carte.options[indexOption];
+    if (!opt || opt.bloquee) return { ok: false, msg: 'Pas possible pour l\'instant.' };
+
+    if (carte.type === 'scene') {
+      appliquerEffets(opt.effets, S.carte.amiId);
+      gagnerXP(15);
+    } else {
+      appliquerEffets(opt.effets);
+      if (opt.ami) {
+        const a = S.amis.find(x => x.id === S.carte.amiId);
+        if (a) a.relation = clamp100(a.relation + 12);
+        S.stats.social = clamp100(S.stats.social + 4);
+      }
+      if (opt.talent) {
+        S.talents[opt.talent] = clamp100(S.talents[opt.talent] + 7);
+        if (S.talents[opt.talent] >= 25 && S.talents[opt.talent] < 33)
+          notifier(REVES[opt.talent].icone, `Tu progresses sérieusement en ${opt.talent === 'foot' ? 'foot' : 'chant'}…`);
+      }
+      gagnerXP(8);
+    }
+    log(`${carte.icone} ${opt.txt} — ${opt.note}`);
+    S.carte = null;
     finDeMois();
-    return { ok: true };
+    if (!S.gameOver) nouvelleCarte();
+    verifierObjectifs();
+    return { ok: true, note: opt.note, icone: carte.icone };
   }
 
   function appliquerEffets(eff, amiScene) {
@@ -223,9 +258,6 @@ const Vie = (() => {
       }
     }
 
-    /* scène de vie aléatoire */
-    if (!S.gameOver && !S.choixOrientation && !S.essaiPropose && Math.random() < VIE_CFG.PROBA_SCENE) tirerScene();
-
     verifierObjectifs();
   }
 
@@ -270,6 +302,7 @@ const Vie = (() => {
     if (!S.choixOrientation) return { ok: false };
     S.orientationId = id;
     S.choixOrientation = false;
+    nouvelleCarte();
     if (id === 'travail') demarrerRecherche();
     else {
       const o = ORIENTATIONS.find(x => x.id === id);
@@ -304,6 +337,7 @@ const Vie = (() => {
     if (!tenter) {
       S.essaisTentes[id]++;
       log(`${reve.icone} Tu as décliné, pour l'instant. Le talent, lui, reste.`);
+      nouvelleCarte();
       return { ok: true, tente: false };
     }
     const score = S.talents[id] + S.stats[reve.stat] * 0.5;
@@ -325,6 +359,7 @@ const Vie = (() => {
       log(`${reve.icone} Essai manqué (score ${Math.round(score)}/100). Retente quand tu seras plus fort·e.`);
       S.cinematiques.push({ emoji: '😔', titre: 'Pas cette fois', texte: reve.echec + ' (Continue à t\'entraîner : talent et ' + (id === 'foot' ? 'forme' : 'social') + ' font la différence.)' });
     }
+    nouvelleCarte();
     return { ok: true, tente: true, reussi };
   }
 
@@ -361,56 +396,15 @@ const Vie = (() => {
       log(`💼 Entretien raté pour ${m.nom} (score ${Math.round(score)}/100). On retente la saison prochaine.`);
       notifier('😕', `Recalé·e pour ${m.nom}. Une saison pour se refaire.`);
     }
-    finDeMois(); // un entretien, ça occupe le mois
+    finDeMois(); // un entretien, ça occupe la saison
+    if (!S.gameOver) nouvelleCarte();
     return { ok: true, reussi, score: Math.round(score) };
-  }
-
-  /* ---------- Scènes de vie ---------- */
-
-  function tirerScene() {
-    const ph = phase();
-    for (let essais = 0; essais < SCENES_VIE.length + 1; essais++) {
-      if (!S.pileScenes.length) S.pileScenes = SCENES_VIE.map(s => s.id).sort(() => Math.random() - 0.5);
-      const id = S.pileScenes.pop();
-      const sc = SCENES_VIE.find(x => x.id === id);
-      if (sc.phases && !sc.phases.includes(ph)) continue;
-      if (sc.ageMin && age() < sc.ageMin) continue;
-      const ami = S.amis[Math.floor(Math.random() * S.amis.length)];
-      S.sceneActive = { id, amiId: ami ? ami.id : null };
-      notifier('📱', 'Il se passe un truc… (nouvelle scène)');
-      return;
-    }
-  }
-
-  function sceneCourante() {
-    if (!S.sceneActive) return null;
-    const sc = SCENES_VIE.find(x => x.id === S.sceneActive.id);
-    const ami = AMIS.find(a => a.id === S.sceneActive.amiId) || AMIS[0];
-    const remplacer = (txt) => txt.replaceAll('{ami}', `${ami.nom}`);
-    return {
-      ...sc,
-      ami,
-      texte: remplacer(sc.texte),
-      options: sc.options.map(o => ({ ...o, txt: remplacer(o.txt), note: remplacer(o.note) })),
-    };
-  }
-
-  function resoudreScene(indexOption) {
-    const sc = sceneCourante();
-    if (!sc) return { ok: false };
-    const opt = sc.options[indexOption];
-    appliquerEffets(opt.effets, S.sceneActive.amiId);
-    S.sceneActive = null;
-    gagnerXP(15);
-    log(`${sc.icone} ${opt.txt} — ${opt.note}`);
-    verifierObjectifs();
-    return { ok: true, note: opt.note, icone: sc.icone };
   }
 
   /* ---------- Objectifs & progression ---------- */
 
   function objectifCourant() {
-    return S.objectifIndex < OBJECTIFS_VIE.length ? OBJECTIFS_VIE[S.objectifIndex] : null;
+    return OBJECTIFS_VIE.find(o => !S.objectifsFaits[o.id]) || null;
   }
 
   function objectifAtteint(id) {
@@ -427,13 +421,12 @@ const Vie = (() => {
   }
 
   function verifierObjectifs() {
-    let obj = objectifCourant();
-    while (obj && objectifAtteint(obj.id)) {
-      S.objectifIndex++;
+    for (const obj of OBJECTIFS_VIE) {
+      if (S.objectifsFaits[obj.id] || !objectifAtteint(obj.id)) continue;
+      S.objectifsFaits[obj.id] = true;
       if (obj.xp) gagnerXP(obj.xp);
       log(`🎯 Objectif de vie atteint : ${obj.texte} !`);
       notifier('🎯', `Objectif atteint : ${obj.texte} !`);
-      obj = objectifCourant();
     }
   }
 
@@ -489,6 +482,7 @@ const Vie = (() => {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return null;
       S = JSON.parse(raw);
+      if (S.carte === undefined) return null; // ancienne version du jeu : on repart de zéro
       return S;
     } catch (e) { return null; }
   }
@@ -497,7 +491,7 @@ const Vie = (() => {
   return {
     get etat() { return S; },
     nouvellePartie, charger, sauvegarder, effacerSauvegarde,
-    jouerMois, nePasSortir, resoudreScene, sceneCourante,
+    carteCourante, repondreCarte, nouvelleCarte,
     choisirOrientation, orientationsPossibles,
     repondreEssai, metiersDisponibles, passerEntretien,
     age, phase, NOMS_PHASE, classeActuelle, moisCalendaire, saisonVie,

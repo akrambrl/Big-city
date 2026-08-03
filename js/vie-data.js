@@ -349,4 +349,71 @@ const OBJECTIFS_VIE = [
   { id: 'trentaine', icone: '🎂', texte: 'Arrive à 25 ans épanoui·e', xp: 0 },
 ];
 
+
+/* ------------------------------------------------------------
+   QUESTIONS DE RYTHME — le cœur du jeu : à chaque saison, une
+   question. Tes réponses ÉCRIVENT ta vie (façon Destiny Eleven).
+   `ami: true` = l'option se vit avec un de tes potes (lien +),
+   `talent` = l'option nourrit un rêve (foot / musique).
+   ------------------------------------------------------------ */
+const SAISONS_VIE = ['hiver', 'hiver', 'printemps', 'printemps', 'printemps', 'ete', 'ete', 'ete', 'automne', 'automne', 'automne', 'hiver'];
+
+const RYTHMES = [
+  { id: 'r_tri', icone: '🗓️', texte: 'Nouvelle saison à {ville}. Elle ressemble à quoi, ta vie, ces temps-ci ?',
+    options: [
+      { txt: '📚 Tête dans les cours, sérieux total', effets: { savoir: 7, energie: -8 }, note: 'Tes fiches font des jaloux.' },
+      { txt: '🎉 Les potes d\'abord, on verra le reste', effets: { social: 8, moral: 8, savoir: -2 }, ami: true, note: 'Des souvenirs plein le téléphone.' },
+      { txt: '🥅 Foot à fond, entraînements non-stop', effets: { forme: 10, energie: -8 }, talent: 'foot', note: 'Tes crampons connaissent le chemin par cœur.' },
+      { txt: '😴 Mode cocon : dormir, souffler', effets: { energie: 26, moral: 6 }, note: 'Batterie rechargée à bloc.' },
+    ] },
+  { id: 'r_weekend', icone: '🌤️', texte: 'Tes week-ends de la saison, tu les passes où ?',
+    options: [
+      { txt: '📖 Bibliothèque, au calme', effets: { savoir: 8, energie: -10 }, note: 'Trois mois de concentration pure. Gratuit, en plus.' },
+      { txt: '⚽ Terrain avec la bande', effets: { forme: 8, social: 6, moral: 6, energie: -6 }, ami: true, note: 'Scores contestés, fous rires garantis.' },
+      { txt: '🎤 Micro en main, à répéter', effets: { moral: 7, social: 4, energie: -6 }, talent: 'musique', note: 'Ta voix porte de plus en plus loin.' },
+      { txt: '🛋️ Canapé, plaid, séries', effets: { energie: 22, moral: 5, social: -3 }, note: 'Saison terminée. La série aussi.' },
+    ] },
+  { id: 'r_argent', icone: '💶', texte: 'Fin de mois compliquées : il te faudrait un peu d\'argent…',
+    options: [
+      { txt: '🧾 Petit boulot tous les samedis', effets: { argent: 260, energie: -16, savoir: -2 }, ageMin: 16, note: '« Bonjour, vous avez la carte de fidélité ? » × 400.' },
+      { txt: '🍔 Quelques baby-sittings / livraisons', effets: { argent: 120, energie: -8 }, note: 'Ça dépanne, et ça fait des anecdotes.' },
+      { txt: '🙏 Serrer le budget, zéro extra', effets: { moral: -4, argent: 30 }, note: 'Les pâtes, c\'est la vie.' },
+      { txt: '🛹 Un plan débrouille avec un pote', effets: { argent: 90, moral: 4 }, ami: true, note: 'Pas très officiel, mais efficace.' },
+    ] },
+  { id: 'r_forme', icone: '💪', texte: 'Ton corps t\'envoie des signaux. Tu réponds quoi ?',
+    options: [
+      { txt: '🏃 Programme sport sérieux', effets: { forme: 14, moral: 6, energie: -8 }, note: 'Courbatures, puis fierté.' },
+      { txt: '🥅 Version compétition : foot intensif', effets: { forme: 11, energie: -10 }, talent: 'foot', note: 'Le coach t\'a regardé deux fois de plus que d\'habitude.' },
+      { txt: '🚶 Des balades, tranquille', effets: { forme: 6, moral: 8, energie: 6 }, note: 'La ville est belle quand on lève la tête.' },
+      { txt: '🍕 On verra plus tard', effets: { moral: 6, forme: -4 }, note: 'La pizza a gagné. Encore.' },
+    ] },
+  { id: 'r_soiree', icone: '🎊', texte: 'LA soirée de la saison approche. Tout le monde y sera.',
+    options: [
+      { txt: '🌟 Y aller à fond, playlist préparée', effets: { social: 12, moral: 8, energie: -8, argent: -20 }, note: 'On parlera de cette soirée pendant des mois.' },
+      { txt: '🎟️ Y passer une heure, dire bonjour', effets: { social: 5, moral: 4 }, ami: true, note: 'Dosage parfait. Couché à minuit.' },
+      { txt: '🎧 Rester répéter ta musique', effets: { energie: -4, moral: 4 }, talent: 'musique', note: 'Pendant qu\'ils dansent, toi tu progresses.' },
+      { txt: '🚪 Zapper : pas l\'ambiance', effets: { energie: 12, social: -5 }, note: 'Aucun regret. Enfin, presque.' },
+    ] },
+  { id: 'r_examens', icone: '📝', texte: 'Grosse période d\'évaluations en vue. Ta stratégie ?',
+    options: [
+      { txt: '🗂️ Réviser en groupe, planning béton', effets: { savoir: 8, social: 4, energie: -10 }, ami: true, note: 'On a ri, on a bossé. Combo rare.' },
+      { txt: '🤓 Réviser seul·e, porte fermée', effets: { savoir: 10, energie: -12, social: -3 }, note: 'Silence, café, résultats.' },
+      { txt: '🍀 Improviser le jour J', effets: { moral: 6, savoir: -3 }, note: 'L\'adrénaline comme méthode. Audacieux.' },
+    ] },
+  { id: 'r_passion', icone: '🔥', texte: 'Une saison entière devant toi. Si tu la donnais à ta passion ?',
+    options: [
+      { txt: '🥅 Le foot : stage intensif', effets: { forme: 12, energie: -12 }, talent: 'foot', note: 'Tu joues des deux pieds maintenant.' },
+      { txt: '🎤 La musique : maquette enregistrée', effets: { moral: 8, argent: -30, energie: -6 }, talent: 'musique', note: 'Trois titres. Le deuxième est vraiment bien.' },
+      { txt: '🧠 Les études, c\'est ça ta passion', effets: { savoir: 9, energie: -8 }, note: 'Les concours n\'ont qu\'à bien se tenir.' },
+      { txt: '🫂 Les gens. Juste les gens', effets: { social: 10, moral: 8 }, ami: true, note: 'Ta bande est ta plus belle œuvre.' },
+    ] },
+  { id: 'r_hiver', icone: '☔', texte: 'Saison grise, moral en dents de scie. Ton antidote ?',
+    options: [
+      { txt: '🏋️ Transpirer, quoi qu\'il pleuve', effets: { forme: 10, moral: 8, energie: -6 }, note: 'La pluie ne gagne pas contre toi.' },
+      { txt: '🍲 Grandes tablées chez les potes', effets: { social: 8, moral: 10, argent: -15 }, ami: true, note: 'Raclette-thérapie. Scientifiquement prouvé.' },
+      { txt: '📚 En profiter pour prendre de l\'avance', effets: { savoir: 7, energie: -6 }, note: 'Pendant que la ville hiberne, toi tu avances.' },
+      { txt: '🛌 Hiberner franchement', effets: { energie: 24, social: -4 }, note: 'Réveil prévu au printemps.' },
+    ] },
+];
+
 const NOMS_MOIS_VIE = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
