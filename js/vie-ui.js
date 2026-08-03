@@ -715,8 +715,33 @@ const UI = (() => {
     });
   }
 
+  /* ---- Le bilan d'année : gros titre de presse, tuiles, potins ---- */
+
+  function modaleBilanAnnee(S) {
+    const b = S.bilanAnnee;
+    modale(`
+      <div class="bilan-annee">
+        <p class="bilan-entete">📋 ANNÉE ${b.saison} · ${esc(S.commune).toUpperCase()}
+          <span class="badge badge-classe">${b.classe}</span></p>
+        <blockquote class="presse-cita">📰 ${b.titrePresse}</blockquote>
+        <div class="bilan-tuiles">
+          ${b.tuiles.map(t => `<div class="tuile"><span class="tuile-val">${t.val}</span><span class="tuile-lib">${t.lib}</span></div>`).join('')}
+        </div>
+        <div class="bilan-lignes">${b.lignes.map(l => `<p>${l}</p>`).join('')}</div>
+        <p class="bilan-potin">${b.potin}</p>
+        <button class="btn btn-grand btn-large" id="btn-bilan-suite">Continuer</button>
+      </div>`, { bloquant: true });
+    FX.son('question');
+    document.getElementById('btn-bilan-suite').addEventListener('click', () => {
+      S.bilanAnnee = null;
+      FX.son('clic');
+      fermerModale(); E.sauvegarder(); rendre();
+    });
+  }
+
   function afficherModalesAutomatiques(S) {
     if (S.gameOver) return modaleFin(S);
+    if (S.bilanAnnee) return modaleBilanAnnee(S);
     if (S.cinematiques && S.cinematiques.length) {
       const scenes = S.cinematiques.splice(0);
       E.sauvegarder();

@@ -12,6 +12,7 @@ Aucune dépendance, aucun build : ouvre `index.html`. Sauvegarde automatique dan
 
 - **🔥 Défi du jour** : chaque jour, toute la France vit LA MÊME vie (même ville, mêmes questions, même hasard). Le streamer joue, le chat rejoue la même partie et compare les scores.
 - **✍️ Une conséquence après chaque réponse**, façon Destiny Eleven : tu choisis, la vie te répond, et c'est ce moment-là qu'on clippe.
+- **📋 Bilan d'année mis en scène** (toutes les 4 saisons) : gros titre de presse sur ton année (« Jade, la machine à bonnes notes d'Annecy »), tuiles de stats (moyenne, ami·e n°1, bonheur, argent), passage de classe, avertissements, et le potin de la ville en prime.
 - **🌟 Moments rares** : des cartes dorées à ~7 % de chance (ticket gagnant, TikTok à 2 M de vues, tournage en ville…) — le moment de crier devant la caméra.
 - **🏆 Titres de vie** à collectionner en fin de partie : La Légende du Stade, La Tête d'Affiche, Le Cerveau, Le Fantôme, Le Phénix…
 - **📸 Image de partage 9:16** générée en un clic (canvas, format story/TikTok) + récap texte à coller, avec #BigCityLife.

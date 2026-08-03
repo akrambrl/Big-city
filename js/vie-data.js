@@ -9,6 +9,7 @@
 const VIE_CFG = {
   MOIS_DEPART: 8,        // on commence en septembre (rentrée de seconde)
   AGE_DEPART: 15,
+  ANNEE_DEPART: 2026,    // année civile de la rentrée de seconde
   MOIS_BAC: 12,          // juin de l'année de terminale (12ᵉ saison)
   MOIS_DIPLOME: 24,      // juin, trois ans après le bac
   MOIS_FIN: 41,          // 25 ans : l'heure du bilan
@@ -464,6 +465,59 @@ const DEPTS_FR = {
   '975': 'Saint-Pierre-et-Miquelon', '976': 'Mayotte', '977': 'Saint-Barthélemy', '978': 'Saint-Martin',
   '986': 'Wallis-et-Futuna', '987': 'Polynésie française', '988': 'Nouvelle-Calédonie',
 };
+
+/* ------------------------------------------------------------
+   BILAN D'ANNÉE — la mise en scène de fin de saison :
+   gros titre de presse + tuiles de stats + potins de la ville
+   ------------------------------------------------------------ */
+const TITRES_ANNEE = {
+  savoir: [
+    '« {prenom}, la machine à bonnes notes de {ville} »',
+    '« Les profs n\'ont plus rien à lui apprendre » — la rumeur du bahut',
+    '« {prenom} vise plus haut que {ville} », murmure la salle des profs',
+  ],
+  social: [
+    '« Aucune soirée à {ville} ne commence sans {prenom} »',
+    '« {prenom}, maire officieux·se de {ville} »',
+    '« Tout le monde connaît {prenom}. Tout le monde. »',
+  ],
+  forme: [
+    '« {prenom}, la machine physique de {ville} »',
+    '« On l\'a vu·e courir sous la pluie. Encore. » — {ville} Matin',
+    '« {prenom} ne s\'arrête jamais », s\'épuise son entourage',
+  ],
+  moral: [
+    '« {prenom}, l\'année du grand sourire »',
+    '« Rien ne semble pouvoir toucher {prenom} cette année »',
+  ],
+  foot: [
+    '« {prenom}, le crack du stade de {ville} »',
+    '« Un recruteur aurait été aperçu au bord du terrain de {ville}… »',
+  ],
+  musique: [
+    '« La voix de {prenom} résonne dans tout {ville} »',
+    '« {prenom} en concert : la salle de {ville} était pleine »',
+  ],
+  argent: [
+    '« {prenom}, le/la businessman·woman de {ville} »',
+    '« À ce rythme, {prenom} rachète la mairie de {ville} »',
+  ],
+  discret: [
+    '« {prenom} ? Connais pas. » — tout {ville}',
+    '« L\'année la plus calme de {prenom}, de mémoire de {ville} »',
+  ],
+};
+
+const POTINS_VILLE = [
+  '📰 Le kebab de {ville} lance une carte de fidélité. La file dépasse la mairie.',
+  '📰 Le rond-point de {ville} a été refait. Personne ne sait pourquoi.',
+  '📰 Un chat coincé dans un arbre à {ville} : les pompiers applaudis.',
+  '📰 La boulangerie de {ville} élue « meilleure baguette du canton ». Émeute polie.',
+  '📰 Le club de pétanque de {ville} recrute. Ambiance électrique.',
+  '📰 Wi-Fi gratuit sur la place de {ville} : la jeunesse en liesse.',
+  '📰 Un influenceur a filmé le marché de {ville}. 214 vues.',
+  '📰 La fête de {ville} reportée pour cause de pluie. Comme l\'an dernier.',
+];
 
 /* ------------------------------------------------------------
    TITRES DE VIE — l'archétype qu'on partage à la fin

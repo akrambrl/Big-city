@@ -75,6 +75,9 @@ const Vie = (() => {
       sceneActive: null,         // (compat interne : les scènes passent par `carte`)
       choixOrientation: false,   // vrai quand il faut choisir post-bac
       objectifsFaits: {},        // id -> true (chaque objectif se valide indépendamment)
+      refAnnee: { argent: famille.argentDepart }, // photo de début d'année (pour le bilan)
+      bilanAnnee: null,          // la mise en scène de fin d'année, à afficher
+      annee: 1,
       xp: 0, niveau: 1,
       notifications: [],
       journal: [],
@@ -286,6 +289,9 @@ const Vie = (() => {
     S.historique.push({ mois: S.mois, bonheur: Math.round(bonheur().note), argent: S.argent });
     S.mois++;
 
+    /* fin d'année scolaire (toutes les 4 saisons) : la mise en scène du bilan */
+    if (S.mois > 1 && (S.mois - 1) % 4 === 0 && S.mois <= VIE_CFG.MOIS_FIN) genererBilanAnnee();
+
     /* rendez-vous fixes */
     if (S.mois === VIE_CFG.MOIS_BAC + 1) passerBac();
     if (S.mois === VIE_CFG.MOIS_DIPLOME + 1 && phase() === 'travail' && !S.metierId && S.orientationId !== 'travail') obtenirDiplome();
@@ -308,6 +314,66 @@ const Vie = (() => {
     }
 
     verifierObjectifs();
+  }
+
+  /* ---------- Le bilan d'année : gros titre, tuiles, potins ---------- */
+
+  function genererBilanAnnee() {
+    const a = (S.mois - 1) / 4;                       // l'année qui vient de se finir (1..10)
+    S.annee = a;
+    const s = S.stats;
+    const deltaArgent = S.argent - (S.refAnnee ? S.refAnnee.argent : S.argent);
+    const meilleurAmi = S.amis.reduce((m, x) => x.relation > m.relation ? x : m, S.amis[0]);
+    const amiDef = AMIS.find(x => x.id === meilleurAmi.id);
+
+    /* la classe de l'année écoulée */
+    let classe;
+    if (a <= 3) classe = ['Seconde', 'Première', 'Terminale'][a - 1];
+    else if (S.metierId) classe = METIERS.find(m => m.id === S.metierId).nom;
+    else if (S.orientationId && S.orientationId !== 'travail' && S.mois <= VIE_CFG.MOIS_DIPLOME + 1)
+      classe = ORIENTATIONS.find(x => x.id === S.orientationId).nom;
+    else classe = 'Vie active';
+
+    /* le gros titre de presse : le trait dominant de ton année */
+    let trait;
+    if (S.talents.foot >= 40 && S.talents.foot >= S.talents.musique) trait = 'foot';
+    else if (S.talents.musique >= 40) trait = 'musique';
+    else if (deltaArgent >= 800) trait = 'argent';
+    else {
+      const max = Math.max(s.savoir, s.social, s.forme, s.moral);
+      if (max < 45) trait = 'discret';
+      else trait = s.savoir === max ? 'savoir' : s.social === max ? 'social' : s.forme === max ? 'forme' : 'moral';
+    }
+    const modeles = TITRES_ANNEE[trait];
+    const remplacer = (t) => t.replaceAll('{prenom}', S.perso.prenom).replaceAll('{ville}', S.commune);
+    const titrePresse = remplacer(modeles[Math.floor(rnd() * modeles.length)]);
+
+    /* les lignes du bilan */
+    const lignes = [];
+    if (a === 1 || a === 2) lignes.push(s.savoir >= 40
+      ? `✅ Passage en ${a === 1 ? 'première' : 'terminale'} sans trembler.`
+      : `⚠️ Passage en ${a === 1 ? 'première' : 'terminale'}… de justesse. Le conseil de classe a « des attentes ».`);
+    if (a === 3) lignes.push('🎓 L\'année du bac — les résultats tombent tout de suite…');
+    const obj = objectifCourant();
+    lignes.push(obj ? `🎯 Objectif en cours : ${obj.icone} ${obj.texte}` : '🎯 Tous tes objectifs de vie sont cochés !');
+    lignes.push(`🫂 Ton pilier de l'année : ${amiDef.icone} ${amiDef.nom} (${Math.round(meilleurAmi.relation)}/100)`);
+    if (s.energie < 30) lignes.push('⚠️ Tu tires sur la corde — dors, sérieusement.');
+    else if (s.moral < 35) lignes.push('⚠️ Le moral a pris cher cette année. Prends soin de toi.');
+    if (S.argent < 40) lignes.push('⚠️ Les fins de mois piquent. Un petit boulot ?');
+
+    S.bilanAnnee = {
+      saison: `${VIE_CFG.ANNEE_DEPART + a - 1}-${String(VIE_CFG.ANNEE_DEPART + a).slice(2)}`,
+      classe, titrePresse,
+      tuiles: [
+        { val: (s.savoir * 0.16 + 3).toFixed(1).replace('.', ','), lib: 'moyenne' },
+        { val: Math.round(meilleurAmi.relation), lib: `ami·e n°1` },
+        { val: (bonheur().note / 20).toFixed(1).replace('.', ','), lib: 'bonheur /5' },
+        { val: `${deltaArgent >= 0 ? '+' : '−'}${Math.abs(Math.round(deltaArgent))} €`, lib: 'cette année' },
+      ],
+      lignes,
+      potin: remplacer(POTINS_VILLE[Math.floor(rnd() * POTINS_VILLE.length)]),
+    };
+    S.refAnnee = { argent: S.argent };
   }
 
   /* ---------- Examens & carrière ---------- */
@@ -564,6 +630,8 @@ const Vie = (() => {
       if (S.raresVues === undefined) S.raresVues = [];
       if (S.burnouts === undefined) S.burnouts = 0;
       if (S.defi === undefined) S.defi = null;
+      if (S.refAnnee === undefined) S.refAnnee = { argent: S.argent };
+      if (S.bilanAnnee === undefined) S.bilanAnnee = null;
       return S;
     } catch (e) { return null; }
   }
