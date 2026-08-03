@@ -73,6 +73,8 @@ const Vie = (() => {
       argent: famille.argentDepart,
       abonnes: 150,              // tes abonnés sur les réseaux — ça peut devenir un métier
       drapeaux: {},              // permis, chien, voiture… les traces de tes choix
+      saisonsFaibleForme: 0,     // trop de saisons en mauvaise forme → maladie
+      maladies: 0,
       arcs: { foot: { etape: 0, prochainMois: 0, actif: true }, tiktok: { etape: 0, prochainMois: 0, actif: true } },
       amis: amisIds.map(id => ({ id, relation: 50 })),
       carte: null,               // la question en cours { type: 'scene'|'rythme', id, amiId }
@@ -274,8 +276,10 @@ const Vie = (() => {
         texte: remplacer(source.texte),
         options: source.options.map(o => ({
           txt: remplacer(o.txt), note: remplacer(o.note), effets: o.effets,
-          bloquee: (o.si && !S.drapeaux[o.si]) || ((o.effets.argent || 0) < 0 && S.argent + o.effets.argent < 0),
-          bloqueeRaison: o.si && !S.drapeaux[o.si] ? (o.si === 'permis' ? 'Il te faut le permis.' : 'Pas encore possible.') : null,
+          bloquee: (o.si && !S.drapeaux[o.si]) || (o.formeMin && S.stats.forme < o.formeMin)
+            || ((o.effets.argent || 0) < 0 && S.argent + o.effets.argent < 0),
+          bloqueeRaison: o.si && !S.drapeaux[o.si] ? (o.si === 'permis' ? 'Il te faut le permis.' : 'Pas encore possible.')
+            : (o.formeMin && S.stats.forme < o.formeMin) ? `Il te faut ${o.formeMin} de 💪 forme.` : null,
         })),
       };
     }
@@ -286,7 +290,9 @@ const Vie = (() => {
       options: r.options.map(o => ({
         txt: remplacer(o.ami ? `${o.txt} (avec ${ami.icone} ${ami.nom})` : o.txt),
         note: remplacer(o.note), effets: o.effets, ami: o.ami, talent: o.talent,
-        bloquee: (o.ageMin && age() < o.ageMin) || ((o.effets.argent || 0) < 0 && S.argent + o.effets.argent < 0),
+        bloquee: (o.ageMin && age() < o.ageMin) || (o.formeMin && S.stats.forme < o.formeMin)
+          || ((o.effets.argent || 0) < 0 && S.argent + o.effets.argent < 0),
+        bloqueeRaison: (o.formeMin && S.stats.forme < o.formeMin) ? `Il te faut ${o.formeMin} de 💪 forme.` : null,
       })),
     };
   }
@@ -398,6 +404,23 @@ const Vie = (() => {
     S.stats.forme = clamp100(S.stats.forme - VIE_CFG.DECAY.forme);
     S.stats.savoir = clamp100(S.stats.savoir + (famille.bonus.savoir || 0) * 0.3 - (famille.malus.savoir || 0) * 0.3);
     for (const a of S.amis) a.relation = clamp100(a.relation - VIE_CFG.DECAY.relation);
+
+    /* la forme au tapis trop longtemps : le corps finit par lâcher */
+    S.saisonsFaibleForme = S.stats.forme < 20 ? S.saisonsFaibleForme + 1 : 0;
+    if (S.saisonsFaibleForme >= 3) {
+      S.saisonsFaibleForme = 0;
+      S.maladies = (S.maladies || 0) + 1;
+      S.stats.forme = 40;
+      S.stats.energie = clamp100(S.stats.energie - 10);
+      S.stats.moral = clamp100(S.stats.moral - 6);
+      S.argent = Math.max(0, S.argent - 80);
+      S.cinematiques.push({
+        emoji: '🤒', titre: 'Le corps lâche',
+        texte: 'Des mois à négliger ton corps, et l\'addition arrive : grosse grippe, deux semaines au tapis, pharmacie hors de prix. Ton corps est ton premier équipement — entretiens-le.',
+      });
+      notifier('🤒', 'Malade ! Trop de saisons sans prendre soin de ta forme.');
+      log('🤒 Malade : le corps a fini par dire stop. (−80 €, moral en berne)');
+    }
 
     /* coup de mou sévère : l'infirmerie de la vie */
     if (S.stats.energie <= 5 && S.stats.moral <= 15) {
@@ -552,6 +575,7 @@ const Vie = (() => {
     return ORIENTATIONS.filter(o => {
       if (o.pause && S.pauseFaite) return false;          // une seule année off par vie
       if (o.argentMin && S.argent < o.argentMin) return false;
+      if (o.formeMin && S.stats.forme < o.formeMin) return false;
       if (!o.pause && o.id !== 'travail' && S.bacObtenu === false) return false;
       return S.stats.savoir >= o.minSavoir - 10; // un peu de souplesse
     });
@@ -639,7 +663,11 @@ const Vie = (() => {
     return METIERS
       .filter(m => m.orientation === (S.orientationId || 'travail'))
       .filter(m => !m.filiere || m.filiere === S.filiereId)
-      .map(m => ({ ...m, accessible: S.stats.savoir >= m.minSavoir }));
+      .map(m => ({
+        ...m,
+        accessible: S.stats.savoir >= m.minSavoir && S.stats.forme >= (m.minForme || 0),
+        manqueForme: S.stats.forme < (m.minForme || 0),
+      }));
   }
 
   function passerEntretien(metierId, nbBonnesReponses) {
@@ -647,7 +675,10 @@ const Vie = (() => {
     if (!m || !S.rechercheEmploi) return { ok: false };
     if (S.mois < S.entretienDispo) return { ok: false, msg: 'Le prochain entretien attendra un peu.' };
     if (S.stats.savoir < m.minSavoir) return { ok: false, msg: 'Il te manque du savoir pour ce poste.' };
-    const score = nbBonnesReponses * 25 + S.stats.social * 0.25 + Math.min(20, (S.stats.savoir - m.minSavoir) * 0.4);
+    if (m.minForme && S.stats.forme < m.minForme) return { ok: false, msg: 'Ce poste est physique : il te manque de la forme.' };
+    /* bien dans ton corps = de la présence en entretien (jusqu'à +8) */
+    const score = nbBonnesReponses * 25 + S.stats.social * 0.25 + Math.min(20, (S.stats.savoir - m.minSavoir) * 0.4)
+      + Math.min(8, S.stats.forme * 0.08);
     const reussi = score >= 68;
     if (reussi) {
       S.metierId = m.id;
@@ -792,6 +823,7 @@ const Vie = (() => {
       if (S.monde && !S.monde.marque) S.monde.marque = genererMonde().marque;
       if (S.pauseFaite === undefined) { S.pauseFaite = false; S.finPause = null; }
       if (S.abonnes === undefined) S.abonnes = 150;
+      if (S.saisonsFaibleForme === undefined) { S.saisonsFaibleForme = 0; S.maladies = 0; }
       if (S.drapeaux === undefined) S.drapeaux = {};
       if (S.arcs === undefined) S.arcs = { foot: { etape: 0, prochainMois: 0, actif: true }, tiktok: { etape: 0, prochainMois: 0, actif: true } };
       return S;

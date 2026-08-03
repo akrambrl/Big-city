@@ -98,7 +98,7 @@ const ORIENTATIONS = [
   { id: 'sabbatique', nom: 'Année sabbatique', icone: '🧳', minSavoir: 0, pause: true,
     desc: 'Un an pour souffler : petits boulots, projets perso, les idées qui se remettent en place. Tu choisiras après.',
     savoirMois: 0.4 },
-  { id: 'voyage', nom: 'Voyage sac à dos', icone: '✈️', minSavoir: 0, pause: true, argentMin: 400,
+  { id: 'voyage', nom: 'Voyage sac à dos', icone: '✈️', minSavoir: 0, pause: true, argentMin: 400, formeMin: 35,
     desc: 'Un an sur les routes du monde (400 € de départ). Ça coûte, ça fatigue, ça change une vie.',
     savoirMois: 0.8 },
 ];
@@ -146,9 +146,9 @@ const METIERS = [
   { id: 'technicien', nom: 'Technicien·ne', icone: '⚙️', orientation: 'courtes', minSavoir: 50, salaire: 1900 },
   { id: 'infirmier', nom: 'Infirmier·ère', icone: '🩺', orientation: 'courtes', minSavoir: 40, salaire: 1800 },
   { id: 'commercial', nom: 'Commercial·e', icone: '🤝', orientation: 'courtes', minSavoir: 0, salaire: 1700 },
-  { id: 'artisan', nom: 'Artisan·e', icone: '🔨', orientation: 'travail', filiere: 'pro', minSavoir: 35, salaire: 1800 },
+  { id: 'artisan', nom: 'Artisan·e', icone: '🔨', orientation: 'travail', filiere: 'pro', minSavoir: 35, minForme: 40, salaire: 1800 },
   { id: 'vendeur', nom: 'Vendeur·se', icone: '🏬', orientation: 'travail', minSavoir: 0, salaire: 1450 },
-  { id: 'livreur', nom: 'Livreur·se', icone: '📦', orientation: 'travail', minSavoir: 0, salaire: 1400 },
+  { id: 'livreur', nom: 'Livreur·se', icone: '📦', orientation: 'travail', minSavoir: 0, minForme: 45, salaire: 1400 },
 ];
 
 /* ------------------------------------------------------------
@@ -388,7 +388,7 @@ const SCENES_VIE = [
   { id: 's_festival', icone: '🎪', ageMin: 16,
     texte: '{ami} a deux places pour le festival près de {ville}. Problème : c\'est le week-end… des révisions prévues.',
     options: [
-      { txt: '🎶 Le festival, évidemment', effets: { moral: 15, social: 8, relation: 10, argent: -35, energie: -10, abonnes: 300 }, note: 'Tu as chanté jusqu\'à l\'extinction de voix. Aucun regret. Peut-être un petit.' },
+      { txt: '🎶 Le festival, évidemment (3 jours debout)', effets: { moral: 15, social: 8, relation: 10, argent: -35, energie: -10, abonnes: 300 }, formeMin: 20, note: 'Tu as chanté jusqu\'à l\'extinction de voix. Aucun regret. Peut-être un petit.' },
       { txt: '📚 Les révisions (le cœur lourd)', effets: { savoir: 7, moral: -5, relation: -4 }, note: '{ami} t\'a envoyé 47 vidéos du concert. Courage.' },
       { txt: '🌗 Y aller juste le samedi soir', effets: { moral: 8, social: 4, savoir: 3, argent: -20 }, note: 'Le compromis du siècle. Fatigué mais fier.' },
     ] },
@@ -533,7 +533,7 @@ const RYTHMES = [
     ] },
   { id: 'r_defi_perso', icone: '🎯', texte: 'Un défi personnel pour ce trimestre, ça te tente ?',
     options: [
-      { txt: '🏃 Courir un 10 km d\'ici trois mois', effets: { forme: 14, moral: 6, energie: -8 }, note: '58 minutes, genoux en vrac, fierté intacte.' },
+      { txt: '🏃 Courir un 10 km d\'ici trois mois', effets: { forme: 14, moral: 6, energie: -8 }, formeMin: 25, note: '58 minutes, genoux en vrac, fierté intacte.' },
       { txt: '📚 Lire trois vrais livres', effets: { savoir: 6, moral: 5 }, note: 'Le troisième t\'a retourné le cerveau. Tu en parles à tout le monde.' },
       { txt: '🍫 90 jours sans sucre', effets: { forme: 8, moral: -5 }, note: 'Jour 47 : tu as rêvé d\'un pain au chocolat. Tenu quand même.' },
       { txt: '😅 Le défi de ne pas prendre de défi', effets: { moral: 7, energie: 6 }, note: 'Réussi haut la main.' },
@@ -779,7 +779,7 @@ const ARCS = {
   foot_2: { icone: '🧢',
     texte: 'Un recruteur du {club} a vu le clip. Il te propose un STAGE d\'une semaine au centre de formation… en pleine période de cours. Le {lycee} ne validera jamais.',
     options: [
-      { txt: '⚽ Y aller — on verra pour les cours', effets: { forme: 6, savoir: -6, moral: 8 }, talentPlus: { foot: 14 }, suite: true, delai: 2,
+      { txt: '⚽ Y aller — on verra pour les cours', effets: { forme: 6, savoir: -6, moral: 8 }, formeMin: 35, talentPlus: { foot: 14 }, suite: true, delai: 2,
         note: 'Une semaine de rêve, un carnet de correspondance en feu. Le coach t\'a noté « à suivre de près ».' },
       { txt: '🤝 Négocier un aménagement avec le {lycee}', effets: { savoir: -1, moral: 4 }, talentPlus: { foot: 7 }, suite: true, delai: 3,
         note: 'Trois jours au lieu de sept, devoirs dans le bus. Le recruteur a apprécié le sérieux.' },

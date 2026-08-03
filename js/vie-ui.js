@@ -591,6 +591,7 @@ const UI = (() => {
           if (!ok) {
             if (o.pause && S.pauseFaite) pourquoi = ' · (déjà fait — on ne vit qu\'une année off)';
             else if (o.argentMin && S.argent < o.argentMin) pourquoi = ` · (il te faut ${o.argentMin} € de côté)`;
+            else if (o.formeMin && S.stats.forme < o.formeMin) pourquoi = ` · (il te faut ${o.formeMin} de 💪 forme)`;
             else if (o.id !== 'travail' && S.bacObtenu === false) pourquoi = ' · (il faut le bac)';
             else pourquoi = ' · (il te manque du savoir)';
           }
@@ -639,11 +640,13 @@ const UI = (() => {
     modale(`
       <h2>💼 Choisis ton métier</h2>
       <p class="note">${cooldown ? 'Dernier entretien encore frais — la saison prochaine, promis.' :
-        'Postule, passe l\'entretien, décroche le poste. Ton 🫂 social et ton 🧠 savoir comptent autant que tes réponses.'}</p>
+        'Postule, passe l\'entretien, décroche le poste. Ton 🫂 social, ton 🧠 savoir et ta 💪 forme comptent autant que tes réponses.'}</p>
       <div class="crise-options">
         ${metiers.map(m => `<button class="option-crise choix-metier" data-id="${m.id}" ${m.accessible && !cooldown ? '' : 'disabled'}>
           <span class="opt-titre">${m.icone} ${m.nom}</span>
-          <span class="opt-note">${m.salaire} €/mois${m.accessible ? '' : ` · demande ${m.minSavoir} de savoir (tu en as ${Math.round(S.stats.savoir)})`}</span>
+          <span class="opt-note">${m.salaire} €/mois${m.accessible ? '' : m.manqueForme
+            ? ` · poste physique : demande ${m.minForme} de 💪 forme (tu en as ${Math.round(S.stats.forme)})`
+            : ` · demande ${m.minSavoir} de savoir (tu en as ${Math.round(S.stats.savoir)})`}</span>
         </button>`).join('')}
       </div>
       <div class="modale-boutons"><button class="btn-lien" id="emplois-plus-tard">Plus tard</button></div>`);
