@@ -13,67 +13,100 @@ const UI = (() => {
   let notifsOuvertes = false;
   let persoSuivi = null;
   let finJouee = false;
+  let defiEnCours = null;   // { cle, dateFr, graine } quand on joue le Défi du jour
+  let consequence = null;   // la conséquence de la dernière réponse, à afficher avant la suite
+  let rareAnnonce = null;   // id du moment rare déjà fêté (son + confettis une seule fois)
 
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nb = (v) => Math.round(v).toLocaleString('fr-FR');
   const eur = (v) => nb(v) + ' €';
 
-  /* ================= CRÉATION : ville → perso → famille → amis → filière ================= */
+  /* ================= CRÉATION : région → département → ville → perso → famille → amis → filière ================= */
 
   function ecranAccueil() {
-    let villeChoisie = null;
+    defiEnCours = null;
+    consequence = null;
+    const defi = E.defiDuJour();
     app().innerHTML = `
     <div class="accueil">
       <p class="surtitre">Big City Life · Une vie en 40 questions</p>
       <h1>Où veux-tu <span class="filet">grandir</span> ?</h1>
-      <p class="sous-titre">Choisis ta ville parmi les ${COMMUNES_FR.nombre.toLocaleString('fr-FR')} communes de France.
-      Puis réponds : chaque question écrit une saison de ta vie, de 15 à 25 ans.</p>
-      <div class="recherche-bloc">
-        <input type="search" id="recherche-ville" placeholder="🔎 Cherche ta ville… (Lille, Aurillac, Bandol…)"
-          autocomplete="off" spellcheck="false">
-        <div id="resultats-villes" class="resultats" role="listbox"></div>
-        <button id="ville-hasard" class="btn-lien">🎲 Une ville au hasard</button>
-      </div>
-      <div id="etape-ville" class="etape-ambiance" hidden>
-        <p class="ville-choisie" id="ville-choisie-txt"></p>
-        <p style="margin-top:1em"><button class="btn btn-grand" id="btn-continuer">Grandir ici ▸</button></p>
-      </div>
+      <p class="sous-titre">Chaque question écrit une saison de ta vie, de 15 à 25 ans.</p>
+      <button class="carte-defi" id="btn-defi">
+        <span class="defi-flamme">🔥</span>
+        <span class="defi-txt"><b>Défi du jour · ${defi.dateFr}</b><br>
+        Toute la France vit la même vie à <b>${esc(defi.ville.nom)}</b> aujourd'hui.
+        Filme ta partie, compare ton score !</span>
+        <span class="defi-go">▸</span>
+      </button>
+      <div id="choix-lieu" class="choix-lieu"></div>
       <p class="note" style="margin-top:2em"><a class="btn-lien" href="maire.html">🏛️ L'autre jeu : deviens maire</a></p>
     </div>`;
-
-    const champ = document.getElementById('recherche-ville');
-    const resultats = document.getElementById('resultats-villes');
-    function afficherResultats() {
-      const villes = COMMUNES_FR.chercher(champ.value);
-      resultats.innerHTML = villes.map((v, i) =>
-        `<button class="resultat-ville" data-i="${i}"><b>${esc(v.nom)}</b> <span class="badge">${esc(v.dept)}</span>
-          <span class="resultat-pop">${nb(v.pop)} hab.</span></button>`).join('');
-      resultats.querySelectorAll('.resultat-ville').forEach(b =>
-        b.addEventListener('click', () => choisir(villes[parseInt(b.dataset.i, 10)])));
-    }
-    champ.addEventListener('input', afficherResultats);
-    document.getElementById('ville-hasard').addEventListener('click', () => choisir(COMMUNES_FR.auHasard(1000)));
-
-    function choisir(v) {
-      villeChoisie = v;
-      champ.value = `${v.nom} (${v.dept})`;
-      resultats.innerHTML = '';
-      document.getElementById('etape-ville').hidden = false;
-      document.getElementById('ville-choisie-txt').innerHTML =
-        `🏙️ <b>${esc(v.nom)}</b> (${esc(v.dept)}) — ${nb(v.pop)} habitants, dont bientôt toi.`;
-    }
-    document.getElementById('btn-continuer').addEventListener('click', () => {
-      if (!villeChoisie) return;
-      FX.son('clic');
-      ecranPerso(villeChoisie);
+    document.getElementById('btn-defi').addEventListener('click', () => {
+      defiEnCours = { cle: defi.cle, dateFr: defi.dateFr, graine: defi.graine };
+      FX.son('niveau');
+      ecranPerso(defi.ville);
     });
+    etapeRegion();
+  }
+
+  function etapeRegion() {
+    const zone = document.getElementById('choix-lieu');
+    zone.innerHTML = `
+      <h2 class="etape-titre">1 · Ta région</h2>
+      <div class="grille-lieux">
+        ${REGIONS_FR.map((r, i) => `<button class="choix-pastille choix-region" data-i="${i}">
+          <span class="pastille-ic">${r.icone}</span>${esc(r.nom)}</button>`).join('')}
+      </div>
+      <p style="margin-top:.9em"><button id="ville-hasard" class="btn-lien">🎲 Une ville au hasard</button></p>`;
+    zone.querySelectorAll('.choix-region').forEach(b => b.addEventListener('click', () => {
+      FX.son('clic');
+      etapeDept(REGIONS_FR[parseInt(b.dataset.i, 10)]);
+    }));
+    document.getElementById('ville-hasard').addEventListener('click', () => {
+      FX.son('clic');
+      ecranPerso(COMMUNES_FR.auHasard(1000));
+    });
+  }
+
+  function etapeDept(region) {
+    const zone = document.getElementById('choix-lieu');
+    zone.innerHTML = `
+      <h2 class="etape-titre"><button class="btn-lien fil-retour" id="retour-region">◂ Régions</button>
+        2 · Ton département <span class="badge">${region.icone} ${esc(region.nom)}</span></h2>
+      <div class="grille-lieux">
+        ${region.depts.map(d => `<button class="choix-pastille choix-dept" data-d="${d}">
+          <span class="pastille-ic">${esc(d)}</span>${esc(DEPTS_FR[d] || d)}</button>`).join('')}
+      </div>`;
+    document.getElementById('retour-region').addEventListener('click', etapeRegion);
+    zone.querySelectorAll('.choix-dept').forEach(b => b.addEventListener('click', () => {
+      FX.son('clic');
+      etapeVille(region, b.dataset.d);
+    }));
+  }
+
+  function etapeVille(region, dept) {
+    const zone = document.getElementById('choix-lieu');
+    const villes = COMMUNES_FR.parDept(dept);
+    zone.innerHTML = `
+      <h2 class="etape-titre"><button class="btn-lien fil-retour" id="retour-dept">◂ ${esc(DEPTS_FR[dept] || dept)}</button>
+        3 · Ta ville <span class="badge">${villes.length.toLocaleString('fr-FR')} communes</span></h2>
+      <div class="liste-villes">
+        ${villes.map((v, i) => `<button class="resultat-ville choix-ville" data-i="${i}">
+          <b>${esc(v.nom)}</b><span class="resultat-pop">${nb(v.pop)} hab.</span></button>`).join('')}
+      </div>`;
+    document.getElementById('retour-dept').addEventListener('click', () => etapeDept(region));
+    zone.querySelectorAll('.choix-ville').forEach(b => b.addEventListener('click', () => {
+      FX.son('clic');
+      ecranPerso(villes[parseInt(b.dataset.i, 10)]);
+    }));
   }
 
   function ecranPerso(ville) {
     let genre = null, emoji = null;
     app().innerHTML = `
     <div class="accueil">
-      <p class="surtitre">${esc(ville.nom)} · Étape 1 / 4</p>
+      <p class="surtitre">${defiEnCours ? '🔥 Défi du jour · ' : ''}${esc(ville.nom)} · Étape 1 / 4</p>
       <h1>Qui es-<span class="filet">tu</span> ?</h1>
       <section class="carte carte-creation">
         <h2>Tu es…</h2>
@@ -183,6 +216,8 @@ const UI = (() => {
       E.nouvellePartie({
         ville: { nom: ville.nom, dept: ville.dept, pop: ville.pop, littoral: !!ville.littoral },
         ambiance: 'moyenne', perso, familleId, amisIds, filiereId: b.dataset.id,
+        graine: defiEnCours ? defiEnCours.graine : undefined,
+        defi: defiEnCours ? { cle: defiEnCours.cle, dateFr: defiEnCours.dateFr } : null,
       });
       E.sauvegarder();
       const famille = FAMILLES.find(f => f.id === familleId);
@@ -236,19 +271,52 @@ const UI = (() => {
         <span class="barre-vie-txt">saison ${Math.min(S.mois, VIE_CFG.MOIS_FIN)}/${VIE_CFG.MOIS_FIN}</span></div>
       ${obj ? `<div class="barre-objectif">🎯 <b>Objectif :</b> ${obj.icone} ${obj.texte}
         <span class="obj-recompense">+${obj.xp} XP</span></div>` : ''}
-      <main class="vue ecran-question">${htmlCarte(S)}</main>
+      <main class="vue ecran-question">${consequence ? htmlConsequence(S) : htmlCarte(S)}</main>
       ${moiOuvert ? htmlPanneauMoi(S) : ''}
       ${notifsOuvertes ? htmlPanneauNotifs(S) : ''}
     </div>`;
 
     brancherEvenements(S);
-    afficherModalesAutomatiques(S);
+    /* la conséquence se lit d'abord — les cinématiques et modales attendent le « Continuer » */
+    if (!consequence) {
+      const carte = E.carteCourante();
+      if (carte && carte.rare && rareAnnonce !== S.carte.id) {
+        rareAnnonce = S.carte.id;
+        FX.son('niveau');
+        FX.confettis(['🌟', '✨', '🎉']);
+      }
+      afficherModalesAutomatiques(S);
+    }
   }
 
   function chipStat(ic, v) {
     const cl = v < 25 ? 'basse' : '';
     return `<span class="chip-stat ${cl}" title="${ic} ${Math.round(v)}/100">${ic}
       <span class="chip-stat-barre"><span style="width:${Math.round(v)}%"></span></span></span>`;
+  }
+
+  /* ---- Les puces d'effets (partagées carte / conséquence) ---- */
+
+  function chipsEffets(effets) {
+    return Object.entries(effets || {}).map(([k, v]) => {
+      const ic = { energie: '⚡', moral: '😊', savoir: '🧠', social: '🫂', forme: '💪', argent: '💰', relation: '🫶' }[k];
+      return ic ? `<span class="chip-effet ${v > 0 ? 'plus' : 'moins'}">${ic} ${v > 0 ? '+' : ''}${k === 'argent' ? v + ' €' : v}</span>` : '';
+    }).filter(Boolean).join('');
+  }
+
+  /* ---- La conséquence de ta réponse — façon Destiny Eleven ---- */
+
+  function htmlConsequence(S) {
+    const c = consequence;
+    return `
+    <div class="carte-jeu consequence ${c.rare ? 'rare' : ''}">
+      <p class="conseq-etiquette">${c.rare ? '🌟 MOMENT RARE' : '✍️ Conséquence'}</p>
+      <div class="conseq-icone">${c.icone}</div>
+      <p class="conseq-choix">Tu as choisi : <b>${c.choix}</b></p>
+      <p class="conseq-texte">${c.note}</p>
+      <div class="conseq-effets">${chipsEffets(c.effets) || '<span class="chip-effet">Rien ne change… en apparence.</span>'}</div>
+      <button class="btn btn-grand" id="btn-conseq-suite">Continuer ▸</button>
+    </div>`;
   }
 
   /* ---- La carte-question, plein écran ---- */
@@ -259,11 +327,13 @@ const UI = (() => {
       return `<div class="carte-jeu"><p class="note" style="text-align:center">✨ Un grand moment se prépare…</p></div>`;
     }
     const tetes = { prof: ['👩‍🏫', 'Le prof'], famille: ['👨‍👩‍👧', 'Ta famille'], boulot: ['🧑‍💼', 'Le taf'] };
-    const [emoji, nom] = carte.type === 'scene'
-      ? (carte.de && tetes[carte.de] ? tetes[carte.de] : [carte.ami.icone, carte.ami.nom])
-      : ['📆', 'Ta saison'];
+    const [emoji, nom] = carte.rare
+      ? ['🌟', 'MOMENT RARE']
+      : carte.type === 'scene'
+        ? (carte.de && tetes[carte.de] ? tetes[carte.de] : [carte.ami.icone, carte.ami.nom])
+        : ['📆', 'Ta saison'];
     return `
-    <div class="carte-jeu">
+    <div class="carte-jeu ${carte.rare ? 'rare' : ''}">
       <div class="adjoint"><span class="adjoint-avatar">${emoji}</span>
         <div class="adjoint-bulle"><b>${nom}</b></div></div>
       <p class="crise-texte">${carte.icone} ${carte.texte}</p>
@@ -489,16 +559,122 @@ const UI = (() => {
     poser();
   }
 
+  /* ---- La fin façon « Wrapped » : le bilan qu'on a envie de poster ---- */
+
   function modaleFin(S) {
     const g = S.gameOver;
+    const t = g.titreVie || E.titreDeVie();
+    const r = g.recap || { bonheur: 0, amisMoy: 0, argent: Math.round(S.argent), metier: '🧭 Électron libre', bac: S.bacObtenu === true, rares: 0, defi: null };
     if (!finJouee) { finJouee = true; FX.son('niveau'); FX.confettis(['🎂', '🎉', '⭐']); }
     modale(`
-      <h2>🎂 ${g.titre}</h2>
-      <p class="crise-texte">${g.texte}</p>
-      <div class="modale-boutons"><button class="btn" id="btn-rejouer">Vivre une autre vie</button></div>`, { bloquant: true });
+      <div class="fin-wrapped">
+        <p class="fin-surtitre">${r.defi ? `🔥 Défi du jour · ${r.defi.dateFr}` : '🎒 Big City Life'} · ${esc(S.commune)}</p>
+        <div class="fin-avatar">${S.perso.emoji}</div>
+        <p class="fin-prenom">${esc(S.perso.prenom)}, 25 ans</p>
+        <div class="fin-titrevie">${t.icone} ${t.nom}</div>
+        <p class="fin-desc">${t.desc}</p>
+        <div class="fin-score"><span class="fin-score-val">${g.score}</span><span class="fin-score-max">/100</span>
+          <span class="fin-score-lib">score de vie</span></div>
+        <div class="fin-stats">
+          <span>${r.bac ? '🎓 Bac ✔' : '🎓 Sans bac'}</span>
+          <span>${r.metier}</span>
+          <span>😊 ${r.bonheur}</span>
+          <span>🫂 ${r.amisMoy}</span>
+          <span>💰 ${nb(r.argent)} €</span>
+          ${r.rares ? `<span>🌟 ${r.rares} moment${r.rares > 1 ? 's' : ''} rare${r.rares > 1 ? 's' : ''}</span>` : ''}
+        </div>
+        <div class="fin-boutons">
+          <button class="btn btn-grand" id="btn-partager">📸 Partager ma vie</button>
+          <button class="btn" id="btn-copier">📋 Copier le récap</button>
+          <button class="btn-lien" id="btn-rejouer">🔁 Vivre une autre vie</button>
+        </div>
+        <p class="note" style="text-align:center;margin-top:.6em">Filme ta partie, poste ton bilan — #BigCityLife</p>
+      </div>`, { bloquant: true });
+    document.getElementById('btn-partager').addEventListener('click', () => partagerImage(S));
+    document.getElementById('btn-copier').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(texteRecap(S));
+        toast('📋 Récap copié — colle-le où tu veux !');
+      } catch (e) { toast('❌ Copie impossible ici.'); }
+    });
     document.getElementById('btn-rejouer').addEventListener('click', () => {
       E.effacerSauvegarde(); fermerModale(); ecranAccueil();
     });
+  }
+
+  function texteRecap(S) {
+    const g = S.gameOver, t = g.titreVie, r = g.recap;
+    return [
+      '🎒 BIG CITY LIFE — ma vie en 40 questions',
+      r.defi ? `🔥 Défi du jour (${r.defi.dateFr}) à ${S.commune}` : `🏙️ ${S.perso.prenom} a grandi à ${S.commune}`,
+      `${t.icone} ${t.nom}`,
+      `${r.bac ? '🎓 Bac ✅' : '🎓 Sans bac'} · ${r.metier} · 💰 ${nb(r.argent)} €`,
+      `⭐ Score de vie : ${g.score}/100`,
+      'Tu feras mieux ? 👀 #BigCityLife',
+    ].join('\n');
+  }
+
+  /* L'image 9:16 à poster en story / TikTok */
+  function imageBilan(S) {
+    const g = S.gameOver, t = g.titreVie, r = g.recap;
+    const c = document.createElement('canvas');
+    c.width = 1080; c.height = 1920;
+    const x = c.getContext('2d');
+    const grad = x.createLinearGradient(0, 0, 0, 1920);
+    grad.addColorStop(0, '#232655'); grad.addColorStop(.55, '#5A3F8E'); grad.addColorStop(1, '#E86F4A');
+    x.fillStyle = grad; x.fillRect(0, 0, 1080, 1920);
+    for (let i = 0; i < 80; i++) {
+      x.globalAlpha = .18 + ((i * 37) % 40) / 130;
+      x.fillStyle = '#fff';
+      x.fillRect((i * 173) % 1080, (i * 397) % 950, 4, 4);
+    }
+    x.globalAlpha = 1;
+    x.textAlign = 'center';
+    const centre = (txt, y, police, couleur = '#fff') => { x.font = police; x.fillStyle = couleur; x.fillText(txt, 540, y); };
+    const enLignes = (txt, larg) => {
+      const mots = txt.split(' '); const lignes = []; let l = '';
+      for (const m of mots) {
+        if ((l + ' ' + m).trim().length > larg) { lignes.push(l.trim()); l = m; } else l += ' ' + m;
+      }
+      if (l.trim()) lignes.push(l.trim());
+      return lignes;
+    };
+    centre('BIG CITY LIFE', 160, '800 68px Fredoka, sans-serif', '#FFD75E');
+    centre('MA VIE EN 40 QUESTIONS', 225, '600 36px Fredoka, sans-serif', 'rgba(255,255,255,.8)');
+    if (r.defi) centre(`🔥 DÉFI DU JOUR · ${r.defi.dateFr.toUpperCase()}`, 300, '700 40px Fredoka, sans-serif', '#FFB86B');
+    x.beginPath(); x.arc(540, 560, 175, 0, 7);
+    x.fillStyle = 'rgba(255,255,255,.14)'; x.fill();
+    x.lineWidth = 8; x.strokeStyle = 'rgba(255,255,255,.4)'; x.stroke();
+    centre(S.perso.emoji, 630, '190px serif');
+    centre(`${S.perso.prenom} · ${S.commune}`, 850, '700 58px Fredoka, sans-serif');
+    centre(`${t.icone} ${t.nom}`, 970, '800 80px Fredoka, sans-serif', '#FFD75E');
+    let y = 1050;
+    for (const ligne of enLignes(t.desc, 38)) { centre(ligne, y, '500 42px Fredoka, sans-serif', 'rgba(255,255,255,.9)'); y += 56; }
+    centre('SCORE DE VIE', 1310, '700 40px Fredoka, sans-serif', 'rgba(255,255,255,.75)');
+    centre(`${g.score}`, 1480, '800 190px Fredoka, sans-serif', '#FFD75E');
+    centre('/100', 1540, '600 48px Fredoka, sans-serif', 'rgba(255,255,255,.75)');
+    x.fillStyle = 'rgba(255,255,255,.25)'; x.fillRect(190, 1590, 700, 26);
+    x.fillStyle = '#FFD75E'; x.fillRect(190, 1590, 700 * Math.min(100, g.score) / 100, 26);
+    centre(`${r.bac ? '🎓 Bac' : '🚀 Autodidacte'} · ${r.metier} · 💰 ${nb(r.argent)} €`, 1700, '600 40px Fredoka, sans-serif');
+    centre('Tu feras mieux ? 👀  #BigCityLife', 1830, '700 46px Fredoka, sans-serif', '#FFD75E');
+    return c;
+  }
+
+  async function partagerImage(S) {
+    try {
+      const c = imageBilan(S);
+      const blob = await new Promise(res => c.toBlob(res, 'image/png'));
+      const fichier = new File([blob], 'ma-vie-bigcitylife.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [fichier] })) {
+        try { await navigator.share({ files: [fichier], title: 'Big City Life' }); return; } catch (e) { /* partage annulé : on télécharge */ }
+      }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'ma-vie-bigcitylife.png';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      toast('📸 Image enregistrée — poste-la en story !');
+    } catch (e) { toast('❌ Impossible de générer l\'image ici.'); }
   }
 
   /* ================= ÉVÉNEMENTS ================= */
@@ -524,14 +700,19 @@ const UI = (() => {
       });
     }
 
-    /* répondre à la question du moment */
+    /* répondre à la question du moment → on lit la CONSÉQUENCE avant la suite */
     app().querySelectorAll('.opt-carte').forEach(b => b.addEventListener('click', () => {
       const res = E.repondreCarte(parseInt(b.dataset.i, 10));
       if (!res.ok) { if (res.msg) toast('❌ ' + res.msg); return; }
-      FX.son('clic');
+      FX.son(res.rare ? 'niveau' : 'clic');
+      consequence = { icone: res.icone, note: res.note, effets: res.effets, choix: res.choix, rare: res.rare };
       E.sauvegarder(); rendre();
-      if (res.note) toast(`${res.icone} ${res.note}`);
     }));
+    on('btn-conseq-suite', () => {
+      consequence = null;
+      FX.son('clic');
+      rendre();
+    });
   }
 
   function afficherModalesAutomatiques(S) {

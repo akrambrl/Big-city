@@ -35004,5 +35004,10 @@ Leménil-Mitry|54|2`;
     return melange.slice(0, n).map(c => ({ nom: c.nom, pop: c.pop }));
   }
 
-  return { chercher, auHasard, voisines, get nombre() { return toutes().length; } };
+  /* Toutes les communes d'un departement, triees par population (ordre du fichier) */
+  function parDept(dept) {
+    return toutes().filter(c => c.dept === dept);
+  }
+
+  return { chercher, auHasard, voisines, parDept, get nombre() { return toutes().length; } };
 })();

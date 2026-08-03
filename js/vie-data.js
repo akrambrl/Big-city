@@ -13,6 +13,7 @@ const VIE_CFG = {
   MOIS_DIPLOME: 24,      // juin, trois ans après le bac
   MOIS_FIN: 41,          // 25 ans : l'heure du bilan
   PROBA_SCENE: 0.55,     // chance de scène de vie chaque saison
+  PROBA_RARE: 0.07,      // chance d'un MOMENT RARE (une seule fois chacun)
   DECAY: { energie: 8, moral: 6, social: 4, forme: 3, relation: 3 },
 };
 
@@ -417,3 +418,97 @@ const RYTHMES = [
 ];
 
 const NOMS_MOIS_VIE = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+/* ------------------------------------------------------------
+   RÉGIONS & DÉPARTEMENTS — pour choisir sa ville en trois tapes
+   ------------------------------------------------------------ */
+const REGIONS_FR = [
+  { nom: 'Île-de-France', icone: '🗼', depts: ['75', '77', '78', '91', '92', '93', '94', '95'] },
+  { nom: 'Auvergne-Rhône-Alpes', icone: '⛰️', depts: ['01', '03', '07', '15', '26', '38', '42', '43', '63', '69', '73', '74'] },
+  { nom: 'Nouvelle-Aquitaine', icone: '🏄', depts: ['16', '17', '19', '23', '24', '33', '40', '47', '64', '79', '86', '87'] },
+  { nom: 'Occitanie', icone: '☀️', depts: ['09', '11', '12', '30', '31', '32', '34', '46', '48', '65', '66', '81', '82'] },
+  { nom: 'Hauts-de-France', icone: '🍟', depts: ['02', '59', '60', '62', '80'] },
+  { nom: 'Provence-Alpes-Côte d\'Azur', icone: '🌊', depts: ['04', '05', '06', '13', '83', '84'] },
+  { nom: 'Grand Est', icone: '🥨', depts: ['08', '10', '51', '52', '54', '55', '57', '67', '68', '88'] },
+  { nom: 'Pays de la Loire', icone: '🏰', depts: ['44', '49', '53', '72', '85'] },
+  { nom: 'Bretagne', icone: '🥞', depts: ['22', '29', '35', '56'] },
+  { nom: 'Normandie', icone: '🐮', depts: ['14', '27', '50', '61', '76'] },
+  { nom: 'Bourgogne-Franche-Comté', icone: '🍇', depts: ['21', '25', '39', '58', '70', '71', '89', '90'] },
+  { nom: 'Centre-Val de Loire', icone: '🌻', depts: ['18', '28', '36', '37', '41', '45'] },
+  { nom: 'Corse', icone: '🏝️', depts: ['2A', '2B'] },
+  { nom: 'Outre-mer', icone: '🌴', depts: ['971', '972', '973', '974', '975', '976', '977', '978', '986', '987', '988'] },
+];
+
+const DEPTS_FR = {
+  '01': 'Ain', '02': 'Aisne', '03': 'Allier', '04': 'Alpes-de-Haute-Provence', '05': 'Hautes-Alpes',
+  '06': 'Alpes-Maritimes', '07': 'Ardèche', '08': 'Ardennes', '09': 'Ariège', '10': 'Aube',
+  '11': 'Aude', '12': 'Aveyron', '13': 'Bouches-du-Rhône', '14': 'Calvados', '15': 'Cantal',
+  '16': 'Charente', '17': 'Charente-Maritime', '18': 'Cher', '19': 'Corrèze', '21': 'Côte-d\'Or',
+  '22': 'Côtes-d\'Armor', '23': 'Creuse', '24': 'Dordogne', '25': 'Doubs', '26': 'Drôme',
+  '27': 'Eure', '28': 'Eure-et-Loir', '29': 'Finistère', '2A': 'Corse-du-Sud', '2B': 'Haute-Corse',
+  '30': 'Gard', '31': 'Haute-Garonne', '32': 'Gers', '33': 'Gironde', '34': 'Hérault',
+  '35': 'Ille-et-Vilaine', '36': 'Indre', '37': 'Indre-et-Loire', '38': 'Isère', '39': 'Jura',
+  '40': 'Landes', '41': 'Loir-et-Cher', '42': 'Loire', '43': 'Haute-Loire', '44': 'Loire-Atlantique',
+  '45': 'Loiret', '46': 'Lot', '47': 'Lot-et-Garonne', '48': 'Lozère', '49': 'Maine-et-Loire',
+  '50': 'Manche', '51': 'Marne', '52': 'Haute-Marne', '53': 'Mayenne', '54': 'Meurthe-et-Moselle',
+  '55': 'Meuse', '56': 'Morbihan', '57': 'Moselle', '58': 'Nièvre', '59': 'Nord',
+  '60': 'Oise', '61': 'Orne', '62': 'Pas-de-Calais', '63': 'Puy-de-Dôme', '64': 'Pyrénées-Atlantiques',
+  '65': 'Hautes-Pyrénées', '66': 'Pyrénées-Orientales', '67': 'Bas-Rhin', '68': 'Haut-Rhin', '69': 'Rhône',
+  '70': 'Haute-Saône', '71': 'Saône-et-Loire', '72': 'Sarthe', '73': 'Savoie', '74': 'Haute-Savoie',
+  '75': 'Paris', '76': 'Seine-Maritime', '77': 'Seine-et-Marne', '78': 'Yvelines', '79': 'Deux-Sèvres',
+  '80': 'Somme', '81': 'Tarn', '82': 'Tarn-et-Garonne', '83': 'Var', '84': 'Vaucluse',
+  '85': 'Vendée', '86': 'Vienne', '87': 'Haute-Vienne', '88': 'Vosges', '89': 'Yonne',
+  '90': 'Territoire de Belfort', '91': 'Essonne', '92': 'Hauts-de-Seine', '93': 'Seine-Saint-Denis',
+  '94': 'Val-de-Marne', '95': 'Val-d\'Oise',
+  '971': 'Guadeloupe', '972': 'Martinique', '973': 'Guyane', '974': 'La Réunion',
+  '975': 'Saint-Pierre-et-Miquelon', '976': 'Mayotte', '977': 'Saint-Barthélemy', '978': 'Saint-Martin',
+  '986': 'Wallis-et-Futuna', '987': 'Polynésie française', '988': 'Nouvelle-Calédonie',
+};
+
+/* ------------------------------------------------------------
+   TITRES DE VIE — l'archétype qu'on partage à la fin
+   (le moteur teste les conditions dans l'ordre : le premier gagne)
+   ------------------------------------------------------------ */
+const TITRES_VIE = [
+  { id: 'ballon_or', icone: '⚽', nom: 'La Légende du Stade', desc: 'Footballeur·se pro — {ville} a un maillot à ton nom.' },
+  { id: 'tete_affiche', icone: '🎤', nom: 'La Tête d\'Affiche', desc: 'Signé·e en musique — {ville} chante tes refrains.' },
+  { id: 'cerveau', icone: '🧠', nom: 'Le Cerveau', desc: 'Un savoir hors norme. {ville} n\'avait jamais vu ça.' },
+  { id: 'main_doree', icone: '🤑', nom: 'La Main Dorée', desc: 'Un compte en banque qui brille plus que la mairie de {ville}.' },
+  { id: 'coeur_quartier', icone: '🫶', nom: 'Le Cœur du Quartier', desc: 'Des amitiés en béton armé. Tout {ville} te connaît.' },
+  { id: 'phenix', icone: '🔥', nom: 'Le Phénix', desc: 'Tombé·e, relevé·e, plus fort·e. {ville} se souvient.' },
+  { id: 'zen', icone: '🧘', nom: 'Maître Zen', desc: 'Un bonheur insolent, zéro pression. La belle vie à {ville}.' },
+  { id: 'papillon', icone: '🦋', nom: 'Le Papillon Social', desc: 'Invité·e partout, tout le temps. {ville} est ton salon.' },
+  { id: 'fantome', icone: '👻', nom: 'Le Fantôme', desc: 'Dix ans à {ville} et personne ne t\'a jamais vraiment vu·e…' },
+  { id: 'electron', icone: '⚡', nom: 'L\'Électron Libre', desc: 'Inclassable, imprévisible, 100 % toi. {ville} s\'en remet encore.' },
+];
+
+/* ------------------------------------------------------------
+   MOMENTS RARES — les cartes « à clip » : rares, absurdes,
+   grosses conséquences. Une seule fois chacune par vie.
+   ------------------------------------------------------------ */
+const SCENES_RARES = [
+  { id: 'v_tiktok', icone: '🤳',
+    texte: 'Tu filmes un truc débile au marché de {ville}. Avant de poster, ton pouce hésite…',
+    options: [
+      { txt: '🚀 POSTER. Advienne que pourra', effets: { social: 18, moral: 12 }, note: '2,3 MILLIONS de vues. Le boulanger de {ville} te demande un selfie.' },
+      { txt: '🗑️ Supprimer, trop risqué', effets: { moral: 3 }, note: 'Le monde ne saura jamais. Toi si.' },
+    ] },
+  { id: 'v_gratte', icone: '🎫',
+    texte: '{ami} t\'offre un ticket à gratter « porte-bonheur » pour te remercier d\'être là.',
+    options: [
+      { txt: '🪙 Gratter maintenant, devant {ami}', effets: { argent: 500, relation: 10, moral: 15 }, note: '500 € !!! Vous avez hurlé si fort que les voisins sont sortis.' },
+      { txt: '🖼️ L\'encadrer sans le gratter', effets: { relation: 14, moral: 8 }, note: 'Le geste avant le gain. {ami} en parle encore.' },
+    ] },
+  { id: 'v_tournage', icone: '🎬',
+    texte: 'Un tournage débarque à {ville} ! Ils cherchent des figurants pour une scène de foule.',
+    options: [
+      { txt: '🎥 Y aller à fond, premier rang', effets: { argent: 120, social: 12, moral: 10 }, note: 'On voit ton coude 0,8 seconde dans le film. GLOIRE ÉTERNELLE.' },
+      { txt: '👀 Regarder de loin', effets: { moral: 5 }, note: 'Tu as vu une star manger un sandwich. Anecdote en or.' },
+    ] },
+  { id: 'v_micro', icone: '🎙️',
+    texte: 'Micro-trottoir surprise dans la rue : « Une question philosophique : c\'est quoi, réussir sa vie ? »',
+    options: [
+      { txt: '💬 Sortir LA punchline', effets: { social: 15, moral: 10 }, note: 'Ta réponse tourne en boucle sur les réseaux. Tu es « la sagesse de {ville} ».' },
+      { txt: '🏃 Fuir en marchant vite', effets: { energie: 4 }, note: 'On te voit fuir à l\'image. C\'est devenu un même local.' },
+    ] },
+];

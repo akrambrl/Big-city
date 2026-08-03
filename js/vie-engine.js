@@ -10,12 +10,45 @@ const Vie = (() => {
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
   const clamp100 = (v) => clamp(v, 0, 100);
 
+  /* ---------- Hasard à graine : le Défi du jour est le même pour tout le monde ---------- */
+
+  function graineDepuis(txt) {
+    let h = 2166136261;
+    for (let i = 0; i < txt.length; i++) { h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+
+  function rnd() {
+    S.rngN = (S.rngN + 1) | 0;
+    let t = (S.graine + Math.imul(S.rngN, 0x6D2B79F5)) | 0;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
+  /* Le défi du jour : même graine, même ville, mêmes questions pour toute la France */
+  function defiDuJour() {
+    const d = new Date();
+    const cle = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const graine = graineDepuis('bcl-defi-' + cle);
+    const codes = Object.keys(DEPTS_FR);
+    const dept = codes[graine % codes.length];
+    const ville = COMMUNES_FR.parDept(dept)[0] || COMMUNES_FR.chercher('Paris')[0];
+    const dateFr = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+    return { cle, dateFr, graine, ville };
+  }
+
   /* ---------- Création ---------- */
 
-  function nouvellePartie({ ville, ambiance, perso, familleId, amisIds, filiereId }) {
+  function nouvellePartie({ ville, ambiance, perso, familleId, amisIds, filiereId, graine, defi }) {
     const famille = FAMILLES.find(f => f.id === familleId);
     S = {
       version: 1,
+      graine: graine || ((Math.random() * 4294967296) >>> 0),
+      rngN: 0,
+      defi: defi || null,        // { cle, dateFr } quand c'est le Défi du jour
+      raresVues: [],             // moments rares déjà vécus (une fois chacun)
+      burnouts: 0,
       ville, profil: ambiance,
       commune: ville.nom,
       voisines: ville.voisines || null,
@@ -109,17 +142,27 @@ const Vie = (() => {
   /* ---------- Le flux de cartes : une question = une saison ---------- */
 
   function amiAuHasard() {
-    const a = S.amis[Math.floor(Math.random() * S.amis.length)];
+    const a = S.amis[Math.floor(rnd() * S.amis.length)];
     return a ? a.id : null;
   }
 
   function nouvelleCarte() {
     if (S.gameOver || S.choixOrientation || S.essaiPropose) { S.carte = null; return; }
+    // un MOMENT RARE ? (jamais deux fois le même, jamais à la première saison)
+    if (S.mois > 2 && rnd() < VIE_CFG.PROBA_RARE) {
+      const restants = SCENES_RARES.filter(r => !S.raresVues.includes(r.id));
+      if (restants.length) {
+        const r = restants[Math.floor(rnd() * restants.length)];
+        S.raresVues.push(r.id);
+        S.carte = { type: 'rare', id: r.id, amiId: amiAuHasard() };
+        return;
+      }
+    }
     // une scène narrative la plupart du temps, sinon une question de rythme
-    if (Math.random() < VIE_CFG.PROBA_SCENE) {
+    if (rnd() < VIE_CFG.PROBA_SCENE) {
       const ph = phase();
       for (let essais = 0; essais < SCENES_VIE.length + 1; essais++) {
-        if (!S.pileScenes.length) S.pileScenes = SCENES_VIE.map(s => s.id).sort(() => Math.random() - 0.5);
+        if (!S.pileScenes.length) S.pileScenes = SCENES_VIE.map(s => s.id).sort(() => rnd() - 0.5);
         const id = S.pileScenes.pop();
         const sc = SCENES_VIE.find(x => x.id === id);
         if (sc.phases && !sc.phases.includes(ph)) continue;
@@ -128,7 +171,7 @@ const Vie = (() => {
         return;
       }
     }
-    if (!S.pileRythmes.length) S.pileRythmes = RYTHMES.map(r => r.id).sort(() => Math.random() - 0.5);
+    if (!S.pileRythmes.length) S.pileRythmes = RYTHMES.map(r => r.id).sort(() => rnd() - 0.5);
     S.carte = { type: 'rythme', id: S.pileRythmes.pop(), amiId: amiAuHasard() };
   }
 
@@ -137,10 +180,10 @@ const Vie = (() => {
     if (!S.carte) return null;
     const ami = AMIS.find(a => a.id === S.carte.amiId) || AMIS[0];
     const remplacer = (txt) => txt.replaceAll('{ami}', ami.nom).replaceAll('{ville}', S.commune);
-    if (S.carte.type === 'scene') {
-      const sc = SCENES_VIE.find(x => x.id === S.carte.id);
+    if (S.carte.type === 'scene' || S.carte.type === 'rare') {
+      const sc = (S.carte.type === 'rare' ? SCENES_RARES : SCENES_VIE).find(x => x.id === S.carte.id);
       return {
-        type: 'scene', icone: sc.icone, de: sc.de, ami,
+        type: S.carte.type, icone: sc.icone, de: sc.de, ami, rare: S.carte.type === 'rare',
         texte: remplacer(sc.texte),
         options: sc.options.map(o => ({ txt: remplacer(o.txt), note: remplacer(o.note), effets: o.effets })),
       };
@@ -163,7 +206,11 @@ const Vie = (() => {
     const opt = carte.options[indexOption];
     if (!opt || opt.bloquee) return { ok: false, msg: 'Pas possible pour l\'instant.' };
 
-    if (carte.type === 'scene') {
+    if (carte.type === 'rare') {
+      appliquerEffets(opt.effets, S.carte.amiId);
+      gagnerXP(35);
+      notifier('🌟', 'Tu as vécu un MOMENT RARE. Ça se raconte, ça !');
+    } else if (carte.type === 'scene') {
       appliquerEffets(opt.effets, S.carte.amiId);
       gagnerXP(15);
     } else {
@@ -181,11 +228,12 @@ const Vie = (() => {
       gagnerXP(8);
     }
     log(`${carte.icone} ${opt.txt} — ${opt.note}`);
+    const rare = carte.type === 'rare';
     S.carte = null;
     finDeMois();
     if (!S.gameOver) nouvelleCarte();
     verifierObjectifs();
-    return { ok: true, note: opt.note, icone: carte.icone };
+    return { ok: true, note: opt.note, icone: carte.icone, effets: opt.effets || {}, choix: opt.txt, rare };
   }
 
   function appliquerEffets(eff, amiScene) {
@@ -225,6 +273,7 @@ const Vie = (() => {
 
     /* coup de mou sévère : l'infirmerie de la vie */
     if (S.stats.energie <= 5 && S.stats.moral <= 15) {
+      S.burnouts = (S.burnouts || 0) + 1;
       S.stats.energie = 45; S.stats.moral = 40;
       S.argent = Math.max(0, S.argent - 60);
       S.cinematiques.push({
@@ -440,7 +489,27 @@ const Vie = (() => {
     }
   }
 
-  /* ---------- Bilan final à 30 ans ---------- */
+  /* ---------- Le titre de vie : l'archétype qu'on partage ---------- */
+
+  function titreDeVie() {
+    const s = S.stats;
+    const amisMoy = S.amis.length ? S.amis.reduce((x, a) => x + a.relation, 0) / S.amis.length : 0;
+    const b = bonheur().note;
+    let id = 'electron';
+    if (S.metierId === 'foot') id = 'ballon_or';
+    else if (S.metierId === 'musique') id = 'tete_affiche';
+    else if (s.savoir >= 85) id = 'cerveau';
+    else if (S.argent >= 5000) id = 'main_doree';
+    else if (amisMoy >= 82) id = 'coeur_quartier';
+    else if ((S.burnouts || 0) >= 1 && b >= 55) id = 'phenix';
+    else if (b >= 78) id = 'zen';
+    else if (s.social >= 85) id = 'papillon';
+    else if (s.social < 25 && amisMoy < 35) id = 'fantome';
+    const t = TITRES_VIE.find(x => x.id === id);
+    return { ...t, desc: t.desc.replaceAll('{ville}', S.commune) };
+  }
+
+  /* ---------- Bilan final à 25 ans ---------- */
 
   function bilanFinal() {
     const b = bonheur().note;
@@ -450,12 +519,19 @@ const Vie = (() => {
     let phrase;
     if (score >= 80) phrase = 'Une vie qui donne envie : des amis en or, un métier qui te va, et le sourire en prime.';
     else if (score >= 60) phrase = 'Une belle trajectoire, avec ses hauts, ses bas, et pas mal de fierté au compteur.';
-    else if (score >= 40) phrase = 'Une vie cabossée mais bien à toi. Et à 30 ans, tout reste ouvert.';
+    else if (score >= 40) phrase = 'Une vie cabossée mais bien à toi. Et à 25 ans, tout reste ouvert.';
     else phrase = 'Ça a tangué. Mais tu es encore debout, et c\'est déjà une victoire.';
     S.gameOver = {
       victoire: true, score,
       titre: `25 ans — score de vie : ${score}/100`,
       texte: `${S.perso.prenom}, ${metier ? metier.nom : 'électron libre'} à ${S.commune}. Bonheur ${Math.round(b)}/100, amitiés ${Math.round(amisMoy)}/100, ${Math.round(S.argent)} € de côté. ${phrase}`,
+      titreVie: titreDeVie(),
+      recap: {
+        bonheur: Math.round(b), amisMoy: Math.round(amisMoy), argent: Math.round(S.argent),
+        metier: metier ? `${metier.icone} ${metier.nom}` : '🧭 Électron libre',
+        bac: S.bacObtenu === true, rares: (S.raresVues || []).length,
+        defi: S.defi || null,
+      },
     };
   }
 
@@ -483,6 +559,11 @@ const Vie = (() => {
       if (!raw) return null;
       S = JSON.parse(raw);
       if (S.carte === undefined) return null; // ancienne version du jeu : on repart de zéro
+      /* migration douce : sauvegardes d'avant le pack viral */
+      if (S.graine === undefined) { S.graine = (Math.random() * 4294967296) >>> 0; S.rngN = 0; }
+      if (S.raresVues === undefined) S.raresVues = [];
+      if (S.burnouts === undefined) S.burnouts = 0;
+      if (S.defi === undefined) S.defi = null;
       return S;
     } catch (e) { return null; }
   }
@@ -497,5 +578,6 @@ const Vie = (() => {
     age, phase, NOMS_PHASE, classeActuelle, moisCalendaire, saisonVie,
     bonheur, revenuMensuel, objectifCourant, xpPourNiveau,
     notifsNonLues, marquerNotifsLues,
+    defiDuJour, titreDeVie,
   };
 })();

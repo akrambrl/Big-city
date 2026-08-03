@@ -827,3 +827,125 @@ hr { border: none; border-top: 3px solid var(--bord); border-radius: 2px; margin
   .modale, .panneau-notifs, .secousse, .nav-btn.actif .nav-ic, .confetti { animation: none; }
   .carte-profil, .onglet, .btn, .btn-temps, .carte.equip, .option-crise, .flottant { transition: none; }
 }
+
+/* ============ CHOIX DU LIEU : région → département → ville ============ */
+.choix-lieu { max-width: 640px; margin: 0 auto; text-align: left; }
+.etape-titre {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 1.05rem; margin: 1.1em 0 .6em;
+}
+.fil-retour { font-size: .9rem; }
+.grille-lieux { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.choix-pastille {
+  display: flex; align-items: center; gap: 9px; text-align: left;
+  font-family: var(--jeu); font-weight: 600; font-size: .92rem; color: var(--encre);
+  background: var(--creme); border: 3px solid var(--bord-fort); border-radius: 14px;
+  padding: 10px 12px; cursor: pointer;
+  box-shadow: 0 3px 0 rgba(138, 93, 51, .18);
+  transition: transform .12s, border-color .12s;
+}
+.choix-pastille:hover { transform: translateY(-2px); border-color: var(--soleil); }
+.pastille-ic {
+  flex: none; min-width: 34px; height: 34px; display: grid; place-items: center;
+  font-size: 1.05rem; background: var(--creme-2); border-radius: 10px; font-variant-numeric: tabular-nums;
+}
+.liste-villes {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 52vh; overflow-y: auto; padding: 4px;
+  border: 3px solid var(--bord); border-radius: 14px; background: rgba(255, 255, 255, .35);
+}
+
+/* ============ LE DÉFI DU JOUR — la même vie pour toute la France ============ */
+.carte-defi {
+  display: flex; align-items: center; gap: 12px; width: 100%; max-width: 640px;
+  margin: 0 auto 6px; padding: 14px 16px; text-align: left; cursor: pointer;
+  font-family: var(--jeu); color: #fff;
+  background: linear-gradient(105deg, #E85D4A, #F0932B 60%, #FFA928);
+  border: 3px solid #C13E2C; border-radius: 18px;
+  box-shadow: 0 5px 0 #a33322, 0 12px 26px rgba(193, 62, 44, .35);
+  transition: transform .12s;
+}
+.carte-defi:hover { transform: translateY(-2px) scale(1.01); }
+.carte-defi:active { transform: translateY(1px); }
+.defi-flamme { font-size: 2rem; animation: flamme 1.2s ease-in-out infinite alternate; }
+@keyframes flamme { from { transform: scale(1) rotate(-4deg); } to { transform: scale(1.15) rotate(5deg); } }
+.defi-txt { flex: 1; font-size: .92rem; line-height: 1.35; text-shadow: 0 1px 0 rgba(0, 0, 0, .2); }
+.defi-txt b { font-size: 1rem; }
+.defi-go { font-size: 1.6rem; font-weight: 800; }
+
+/* ============ SÉLECTIONS VISIBLES (amis, famille…) ============ */
+.carte.equip { position: relative; transition: transform .12s, border-color .12s, background .12s; }
+.carte.equip.choisie {
+  border-color: var(--herbe);
+  background: #EAF7E4;
+  box-shadow: 0 5px 0 var(--herbe-ombre), 0 12px 26px rgba(66, 148, 57, .25);
+  transform: translateY(-2px);
+}
+.carte.equip.choisie::after {
+  content: '✔'; position: absolute; top: -12px; right: -8px;
+  width: 32px; height: 32px; display: grid; place-items: center;
+  font-size: 1rem; font-weight: 800; color: #fff;
+  background: var(--herbe); border: 3px solid #fff; border-radius: 999px;
+  box-shadow: 0 3px 8px rgba(66, 148, 57, .5);
+  animation: pop .25s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* ============ MOMENT RARE — la carte qui brille ============ */
+.carte-jeu.rare {
+  border-color: var(--soleil);
+  background: linear-gradient(160deg, #FFFBEE, #FFF3D0);
+  box-shadow: 0 6px 0 var(--soleil-ombre), 0 0 0 4px rgba(255, 215, 94, .45), 0 16px 40px rgba(216, 133, 11, .35);
+  animation: pop .3s cubic-bezier(.34, 1.56, .64, 1), lueur 1.6s ease-in-out infinite alternate;
+}
+@keyframes lueur {
+  from { box-shadow: 0 6px 0 var(--soleil-ombre), 0 0 0 4px rgba(255, 215, 94, .35), 0 16px 40px rgba(216, 133, 11, .3); }
+  to { box-shadow: 0 6px 0 var(--soleil-ombre), 0 0 0 7px rgba(255, 215, 94, .6), 0 16px 46px rgba(216, 133, 11, .45); }
+}
+
+/* ============ LA CONSÉQUENCE — on lit ce que la vie répond ============ */
+.carte-jeu.consequence { text-align: center; }
+.conseq-etiquette {
+  display: inline-block; font-size: .78rem; font-weight: 800; letter-spacing: .06em;
+  color: var(--bois-fonce); background: var(--creme-2);
+  border: 2px solid var(--bord-fort); border-radius: 999px; padding: 4px 12px;
+}
+.carte-jeu.rare .conseq-etiquette { color: var(--soleil-ombre); border-color: var(--soleil); background: #FFF0CE; }
+.conseq-icone { font-size: 3.2rem; margin: .35em 0 .1em; animation: rebond .5s cubic-bezier(.34, 1.56, .64, 1); }
+.conseq-choix { font-size: .88rem; color: var(--encre-2); margin-bottom: .5em; }
+.conseq-texte {
+  font-family: var(--recit); font-style: italic; font-size: 1.18rem; line-height: 1.45;
+  margin: 0 auto .8em; max-width: 42ch;
+}
+.conseq-effets { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 1.1em; }
+.chip-effet {
+  font-size: .88rem; font-weight: 700; padding: 5px 11px; border-radius: 999px;
+  background: var(--creme-2); border: 2px solid var(--bord-fort); color: var(--encre);
+}
+.chip-effet.plus { background: #EAF7E4; border-color: var(--herbe); color: var(--herbe-ombre); }
+.chip-effet.moins { background: var(--rouge-fond); border-color: var(--rouge); color: var(--rouge-ombre); }
+
+/* ============ LA FIN « WRAPPED » — le bilan qu'on poste ============ */
+.fin-wrapped { text-align: center; }
+.fin-surtitre { font-size: .82rem; font-weight: 700; letter-spacing: .05em; color: var(--encre-2); text-transform: uppercase; }
+.fin-avatar {
+  width: 92px; height: 92px; margin: .5em auto .2em; display: grid; place-items: center;
+  font-size: 3rem; background: var(--creme-2); border: 4px solid var(--soleil); border-radius: 999px;
+  box-shadow: 0 5px 0 var(--soleil-ombre);
+}
+.fin-prenom { font-weight: 700; }
+.fin-titrevie { font-size: 1.55rem; font-weight: 800; color: var(--soleil-ombre); margin: .25em 0 .1em; }
+.fin-desc { font-family: var(--recit); font-style: italic; font-size: 1.02rem; color: var(--encre-2); max-width: 40ch; margin: 0 auto .6em; }
+.fin-score { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin: .3em 0 .5em; }
+.fin-score-val { font-size: 3rem; font-weight: 800; color: var(--herbe-ombre); font-variant-numeric: tabular-nums; }
+.fin-score-max { font-size: 1.2rem; font-weight: 700; color: var(--encre-3); }
+.fin-score-lib { font-size: .82rem; color: var(--encre-3); margin-left: 8px; }
+.fin-stats { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 1em; }
+.fin-stats span {
+  font-size: .85rem; font-weight: 700; padding: 5px 11px; border-radius: 999px;
+  background: var(--creme-2); border: 2px solid var(--bord-fort);
+}
+.fin-boutons { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .defi-flamme, .carte-jeu.rare, .conseq-icone { animation: none; }
+}
