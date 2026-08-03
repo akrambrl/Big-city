@@ -1,6 +1,6 @@
 # 🎒 Big City Life — Vis ta vie dans ta vraie ville
 
-Un mélange de **Sims et de Pokémon**, pensé pour la nouvelle génération : tu choisis la ville de France où tu veux grandir, ta famille, tes amis, ta filière — puis tu vis, de 15 à 30 ans. Tu te déplaces de lieu en lieu sur la carte, chaque sortie fait avancer le temps d'un mois, et ta vie s'écrit : le bac, les entretiens d'embauche, les carrières de rêve, les potes.
+Un mélange de **Sims et de Pokémon**, pensé pour la nouvelle génération : tu choisis la ville de France où tu veux grandir, ta famille, tes amis, ta filière — puis tu vis, de 15 à 25 ans — **une partie complète dure 20 à 25 minutes**. Tu te déplaces de lieu en lieu sur la carte, chaque sortie fait avancer le temps d'une saison, et ta vie s'écrit : le bac, les entretiens d'embauche, les carrières de rêve, les potes.
 
 > 🏛️ L'ancien jeu « deviens maire » reste jouable sur `maire.html`.
 
@@ -18,14 +18,14 @@ Aucune dépendance, aucun build : ouvre `index.html`. Sauvegarde automatique dan
 
 ## La boucle de jeu
 
-- **La carte est ton monde** : maison, lycée, stade, café, ciné, parc, bibliothèque, centre commercial, salle de concert, bord de l'eau. Touche un lieu, choisis l'activité et avec qui — **chaque activité = un mois de ta vie**.
+- **La carte est ton monde** : maison, lycée, stade, café, ciné, parc, bibliothèque, centre commercial, salle de concert, bord de l'eau. Touche un lieu, choisis l'activité et avec qui — **chaque activité = une saison de ta vie** (~40 décisions pour une vie entière).
 - **5 stats** (⚡ énergie, 😊 moral, 🧠 savoir, 🫂 social, 💪 forme) + 💰 ton argent + l'amitié de chaque pote. Tout se gère : trop de fêtes et le bac s'éloigne, trop de révisions et le moral craque.
 - **Scènes de vie** à choix multiples (~18) : contrôle surprise, rumeur sur un pote, crush qui t'écrit, plan douteux de Marco, collègue qui s'attribue ton travail…
 - **Le bac** (résultat selon ton savoir) puis **l'orientation** : études longues, BTS/BUT ou travail direct.
 - **Ton métier, c'est toi qui le décroches** : choisis un poste sur le tableau des métiers puis passe un **entretien d'embauche** (3 questions piège + ton social et ton savoir font le score). Raté ? Deux mois d'intérim et on retente.
 - **Les carrières de rêve** ⚽🎤 : entraîne-toi au stade ou répète à la salle de concert — ton talent monte, un recruteur finit par te repérer, et l'essai décide de tout (talent + forme ou social ≥ 100). Footballeur pro à 17 ans ou chanteuse signée, c'est possible.
 - **Cinématiques** letterbox aux grands moments (rentrée, résultats du bac, premier jour de boulot, contrat pro) et **objectifs de vie** en fil rouge.
-- **À 30 ans, le bilan** : bonheur, amitiés, carrière, économies → ton score de vie.
+- **À 25 ans, le bilan** : bonheur, amitiés, carrière, économies → ton score de vie. Le bac tombe au bout de ~5 minutes de jeu, le rythme ne retombe jamais.
 
 ## Structure du code
 

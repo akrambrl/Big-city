@@ -4,13 +4,15 @@
    études, jobs, objectifs. De 15 à 30 ans dans ta vraie ville.
    ============================================================ */
 
+/* Un tour de jeu = UNE SAISON (3 mois). La vie entière tient en
+   ~40 décisions : le bac au tour 12, le bilan à 25 ans (tour 41). */
 const VIE_CFG = {
   MOIS_DEPART: 8,        // on commence en septembre (rentrée de seconde)
   AGE_DEPART: 15,
-  MOIS_BAC: 34,          // juin de l'année de terminale
-  MOIS_DIPLOME: 70,      // juin, trois ans après le bac
-  MOIS_FIN: 180,         // 30 ans : l'heure du bilan
-  PROBA_SCENE: 0.4,      // chance de scène de vie chaque mois
+  MOIS_BAC: 12,          // juin de l'année de terminale (12ᵉ saison)
+  MOIS_DIPLOME: 24,      // juin, trois ans après le bac
+  MOIS_FIN: 41,          // 25 ans : l'heure du bilan
+  PROBA_SCENE: 0.55,     // chance de scène de vie chaque saison
   DECAY: { energie: 8, moral: 6, social: 4, forme: 3, relation: 3 },
 };
 
@@ -344,7 +346,7 @@ const OBJECTIFS_VIE = [
   { id: 'metier', icone: '💼', texte: 'Décroche ton premier vrai job', xp: 100 },
   { id: 'equilibre', icone: '⭐', texte: 'Atteins 3,5 de bonheur', xp: 80 },
   { id: 'fortune', icone: '🏦', texte: 'Économise 3 000 €', xp: 80 },
-  { id: 'trentaine', icone: '🎂', texte: 'Arrive à 30 ans épanoui·e', xp: 0 },
+  { id: 'trentaine', icone: '🎂', texte: 'Arrive à 25 ans épanoui·e', xp: 0 },
 ];
 
 const NOMS_MOIS_VIE = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];

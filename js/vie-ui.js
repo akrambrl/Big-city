@@ -212,7 +212,7 @@ const UI = (() => {
       cinematique([
         { emoji: '📦', titre: 'La nouvelle vie', texte: `${ville.nom}. ${famille.ambiance} C'est ici que tout va se jouer : le lycée, les potes, les premières payes, les grandes décisions.` },
         { emoji: '🎒', titre: 'Jour de rentrée', texte: `Devant la grille du lycée, sac trop lourd, boule au ventre. ${copains[0].icone} ${copains[0].nom} et ${copains[1].icone} ${copains[1].nom} te font signe : « ${perso.prenom} ! Par ici ! » Ça va aller.` },
-        { emoji: '🗺️', titre: 'Ta ville t\'attend', texte: 'Le café, le stade, le parc, le ciné… Chaque sortie fait avancer le temps d\'un mois. À toi de doser : les potes, les cours, le sommeil — et le bac dans trois ans.' },
+        { emoji: '🗺️', titre: 'Ta ville t\'attend', texte: 'Le café, le stade, le parc, le ciné… Chaque sortie fait avancer le temps d\'une saison. À toi de doser : les potes, les cours, le sommeil — et le bac dans trois ans.' },
       ], () => { FX.son('niveau'); FX.confettis(['🎒', '🎉', '✨']); rendre(); });
     }));
   }
@@ -253,7 +253,7 @@ const UI = (() => {
         <span class="obj-recompense">+${obj.xp} XP</span></div>` : ''}
       <main class="vue vue-${vueActive === 'ville' ? 'carte' : 'autre'}">${htmlVue(S)}</main>
       ${vueActive === 'ville' ? `<div class="pilule-temps">
-        <button id="btn-passer-mois" class="btn-temps" title="Un mois sans rien de spécial">😴 Passer le mois</button>
+        <button id="btn-passer-mois" class="btn-temps" title="Une saison sans rien de spécial">😴 Passer la saison</button>
       </div>` : ''}
       <nav class="barre-bas">
         ${[['ville', '🗺️', 'Ville'], ['moi', '🎒', 'Moi'], ['amis', '🫂', 'Amis'], ['journal', '📔', 'Journal']]
@@ -338,7 +338,7 @@ const UI = (() => {
         <button id="zoom-moins" class="btn-zoom">−</button>
         <button id="zoom-reset" class="btn-zoom">⌖</button>
       </div>
-      <span class="chip-aide">📍 touche un lieu pour y aller — chaque sortie = un mois</span>
+      <span class="chip-aide">📍 touche un lieu pour y aller — chaque sortie = une saison</span>
       ${lieuxDispo.map(l => `<button class="marqueur-lieu" id="lieu-${l.id}" data-lieu="${l.id}"
         title="${l.nom}" style="left:${l.pos.x * 100}%;top:${l.pos.y * 100}%">${l.icone}</button>`).join('')}
       <span class="marqueur-moi" id="marqueur-moi">${S.perso.emoji}</span>
@@ -400,7 +400,7 @@ const UI = (() => {
       </section>
       <section class="carte">
         <h2>⚙️ Partie</h2>
-        <p class="note">Tu vis à ${esc(S.commune)} jusqu'à tes 30 ans. Bilan final au bout !</p>
+        <p class="note">Tu vis à ${esc(S.commune)} jusqu'à tes 25 ans — une quarantaine de saisons. Bilan final au bout !</p>
         <button class="btn-lien" id="btn-nouvelle">Recommencer une vie</button>
         · <a class="btn-lien" href="maire.html">🏛️ Jouer au maire</a>
       </section>
@@ -430,7 +430,7 @@ const UI = (() => {
             <button class="preset plan-ami" data-ami="${a.id}" data-lieu="stade" data-act="match">
               <span class="preset-nom">⚽ Match</span><span class="preset-note">gratuit</span></button>
           </div>
-          <p class="note-inline">Chaque plan fait avancer le temps d'un mois.</p>
+          <p class="note-inline">Chaque plan fait avancer le temps d'une saison.</p>
         </section>`;
       }).join('')}
     </div>`;
@@ -441,7 +441,7 @@ const UI = (() => {
     <div class="defilable">
       <section class="carte">
         <h2>📔 Ton journal</h2>
-        <ul class="journal">${S.journal.map(l => `<li><span class="jour-tag">${E.age() - Math.floor((S.mois - l.mois) / 12)} ans</span> ${l.txt}</li>`).join('')}</ul>
+        <ul class="journal">${S.journal.map(l => `<li><span class="jour-tag">${VIE_CFG.AGE_DEPART + Math.floor(((l.mois - 1) * 3 + 8) / 12)} ans</span> ${l.txt}</li>`).join('')}</ul>
       </section>
     </div>`;
   }
@@ -536,7 +536,7 @@ const UI = (() => {
           return `<button class="preset" data-ami="${a.id}"><span class="preset-nom">${d.icone} ${d.nom}</span>
             <span class="preset-note">amitié ${Math.round(a.relation)}</span></button>`; }).join('')}
       </div>
-      <p class="note" style="margin-top:.8em">Quoi faire ? <span class="note-inline">(chaque activité = un mois)</span></p>
+      <p class="note" style="margin-top:.8em">Quoi faire ? <span class="note-inline">(chaque activité = une saison de 3 mois)</span></p>
       <div class="crise-options">
         ${lieu.activites.map((a, i) => {
           const bloquee = (a.ageMin && E.age() < a.ageMin) || ((a.effets.argent || 0) < 0 && S.argent + a.effets.argent < 0);
@@ -681,7 +681,7 @@ const UI = (() => {
           const res = E.passerEntretien(metierId, bonnes);
           fermerModale();
           if (res.ok && res.reussi) { FX.son('niveau'); FX.confettis([m.icone, '💼', '🎉']); }
-          else if (res.ok) { FX.son('crise'); toast(`😕 Recalé·e (score ${res.score}/100). Muscle ton social et retente dans 2 mois.`); }
+          else if (res.ok) { FX.son('crise'); toast(`😕 Recalé·e (score ${res.score}/100). Muscle ton social et retente la saison prochaine.`); }
           else if (res.msg) toast('❌ ' + res.msg);
           E.sauvegarder(); rendre();
         }

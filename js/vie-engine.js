@@ -54,8 +54,9 @@ const Vie = (() => {
 
   /* ---------- Temps & phases ---------- */
 
-  function age() { return VIE_CFG.AGE_DEPART + Math.floor((S.mois - 1 + 8) / 12); }
-  function moisCalendaire() { return (VIE_CFG.MOIS_DEPART + S.mois - 1) % 12; }
+  /* S.mois compte des TOURS ; un tour = une saison de trois mois */
+  function age() { return VIE_CFG.AGE_DEPART + Math.floor(((S.mois - 1) * 3 + 8) / 12); }
+  function moisCalendaire() { return (VIE_CFG.MOIS_DEPART + (S.mois - 1) * 3) % 12; }
   function saisonVie() { return SAISONS[moisCalendaire()]; }
 
   function phase() {
@@ -69,7 +70,7 @@ const Vie = (() => {
 
   function classeActuelle() {
     if (phase() === 'lycee') {
-      const annee = Math.ceil(S.mois / 12);
+      const annee = Math.ceil(S.mois / 4);
       return ['Seconde', 'Première', 'Terminale'][Math.min(annee - 1, 2)];
     }
     if (phase() === 'etudes') {
@@ -204,8 +205,8 @@ const Vie = (() => {
     /* rendez-vous fixes */
     if (S.mois === VIE_CFG.MOIS_BAC + 1) passerBac();
     if (S.mois === VIE_CFG.MOIS_DIPLOME + 1 && phase() === 'travail' && !S.metierId && S.orientationId !== 'travail') obtenirDiplome();
-    if (S.mois === 121) { // 25 ans
-      S.cinematiques.push({ emoji: '🎂', titre: '25 ans', texte: 'Un quart de siècle. Quelqu\'un a mis une seule bougie « 25 » sur le gâteau, par flemme. Tu as souri : la suite t\'appartient.' });
+    if (S.mois === 21) { // 20 ans
+      S.cinematiques.push({ emoji: '🎂', titre: '20 ans', texte: 'Deux dizaines au compteur. Quelqu\'un a mis une seule bougie « 20 » sur le gâteau, par flemme. Tu as souri : la suite t\'appartient.' });
     }
     if (S.mois > VIE_CFG.MOIS_FIN && !S.gameOver) bilanFinal();
 
@@ -348,17 +349,17 @@ const Vie = (() => {
       S.rechercheEmploi = false;
       S.promotions = 0;
       gagnerXP(80);
-      log(`💼 EMBAUCHÉ·E : ${m.icone} ${m.nom}, ${m.salaire} €/mois !`);
+      log(`💼 EMBAUCHÉ·E : ${m.icone} ${m.nom} !`);
       notifier('💼', `Embauché·e : ${m.nom} !`);
       S.cinematiques.push({
         emoji: m.icone, titre: 'Premier jour de boulot',
         texte: `Badge tout neuf, café de machine, collègues curieux. Te voilà ${m.nom} — ${m.salaire} €/mois. Ta carrière commence.`,
       });
     } else {
-      S.entretienDispo = S.mois + 2;
+      S.entretienDispo = S.mois + 1;
       S.stats.moral = clamp100(S.stats.moral - 6);
-      log(`💼 Entretien raté pour ${m.nom} (score ${Math.round(score)}/100). On retente dans deux mois.`);
-      notifier('😕', `Recalé·e pour ${m.nom}. Deux mois pour se refaire.`);
+      log(`💼 Entretien raté pour ${m.nom} (score ${Math.round(score)}/100). On retente la saison prochaine.`);
+      notifier('😕', `Recalé·e pour ${m.nom}. Une saison pour se refaire.`);
     }
     finDeMois(); // un entretien, ça occupe le mois
     return { ok: true, reussi, score: Math.round(score) };
@@ -460,7 +461,7 @@ const Vie = (() => {
     else phrase = 'Ça a tangué. Mais tu es encore debout, et c\'est déjà une victoire.';
     S.gameOver = {
       victoire: true, score,
-      titre: `30 ans — score de vie : ${score}/100`,
+      titre: `25 ans — score de vie : ${score}/100`,
       texte: `${S.perso.prenom}, ${metier ? metier.nom : 'électron libre'} à ${S.commune}. Bonheur ${Math.round(b)}/100, amitiés ${Math.round(amisMoy)}/100, ${Math.round(S.argent)} € de côté. ${phrase}`,
     };
   }
