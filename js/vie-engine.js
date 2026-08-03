@@ -73,9 +73,11 @@ const Vie = (() => {
       argent: famille.argentDepart,
       abonnes: 150,              // tes abonnés sur les réseaux — ça peut devenir un métier
       drapeaux: {},              // permis, chien, voiture… les traces de tes choix
+      enfants: [],               // les prénoms de tes enfants (si tu choisis d'en avoir)
       saisonsFaibleForme: 0,     // trop de saisons en mauvaise forme → maladie
       maladies: 0,
       arcs: { foot: { etape: 0, prochainMois: 0, actif: true }, tiktok: { etape: 0, prochainMois: 0, actif: true } },
+      parcours: { noeud: 'p1', prochainMois: 1, voie: null }, // le scénario principal qui bifurque
       amis: amisIds.map(id => ({ id, relation: 50 })),
       carte: null,               // la question en cours { type: 'scene'|'rythme', id, amiId }
       pileScenes: [],
@@ -131,6 +133,7 @@ const Vie = (() => {
       .replaceAll('{influenceur}', S.monde.influenceur)
       .replaceAll('{club}', S.monde.club)
       .replaceAll('{marque}', S.monde.marque || MARQUES[0])
+      .replaceAll('{enfant}', (S.enfants && S.enfants[0]) || 'ton enfant')
       .replaceAll('{film}', filmDuMoment())
       .replaceAll('{tiktok}', tendanceDuMoment())
       .replaceAll('{destination}', DESTINATIONS[(S.graine + Math.floor((S.mois - 1) / 4)) % DESTINATIONS.length]);
@@ -138,9 +141,18 @@ const Vie = (() => {
 
   /* ---------- Temps & phases ---------- */
 
-  /* S.mois compte des TOURS ; un tour = une saison de trois mois */
-  function age() { return VIE_CFG.AGE_DEPART + Math.floor(((S.mois - 1) * 3 + 8) / 12); }
-  function moisCalendaire() { return (VIE_CFG.MOIS_DEPART + (S.mois - 1) * 3) % 12; }
+  /* S.mois compte des TOURS. Le temps s'accélère avec la vie :
+     tours 1-12 = 3 mois (lycée), 13-24 = 6 mois (études/débuts),
+     25+ = 1 an (vie adulte). */
+  function moisEcoules(tour) {
+    const t = Math.max(1, tour);
+    if (t <= 12) return (t - 1) * 3;
+    if (t <= 24) return 36 + (t - 13) * 6;
+    return 108 + (t - 25) * 12;
+  }
+  function ageAuTour(tour) { return VIE_CFG.AGE_DEPART + Math.floor((moisEcoules(tour) + VIE_CFG.MOIS_DEPART) / 12); }
+  function age() { return ageAuTour(S.mois); }
+  function moisCalendaire() { return (VIE_CFG.MOIS_DEPART + moisEcoules(S.mois)) % 12; }
   function saisonVie() { return SAISONS_VIE[moisCalendaire()]; }
 
   function orientation() { return ORIENTATIONS.find(x => x.id === S.orientationId) || null; }
@@ -223,6 +235,11 @@ const Vie = (() => {
 
   function nouvelleCarte() {
     if (S.gameOver || S.choixOrientation || S.essaiPropose) { S.carte = null; return; }
+    // LE PARCOURS d'abord : le scénario principal qui bifurque selon tes réponses
+    if (S.parcours && S.parcours.noeud && PARCOURS[S.parcours.noeud] && S.mois >= S.parcours.prochainMois) {
+      S.carte = { type: 'parcours', id: S.parcours.noeud, amiId: amiAuHasard() };
+      return;
+    }
     // un épisode d'histoire t'attend ? (foot repéré, marques qui te contactent…)
     const arc = arcDisponible();
     if (arc) { S.carte = { type: 'arc', id: arc, amiId: amiAuHasard() }; return; }
@@ -269,10 +286,12 @@ const Vie = (() => {
     if (S.carte.type !== 'rythme') {
       const source = S.carte.type === 'rare' ? SCENES_RARES.find(x => x.id === S.carte.id)
         : S.carte.type === 'arc' ? { ...ARCS[S.carte.id], id: S.carte.id }
+        : S.carte.type === 'parcours' ? { icone: PARCOURS[S.carte.id].emoji, ...PARCOURS[S.carte.id], id: S.carte.id }
         : SCENES_VIE.find(x => x.id === S.carte.id);
       return {
         type: S.carte.type, icone: source.icone, de: source.de, ami,
         rare: S.carte.type === 'rare', arc: S.carte.type === 'arc',
+        parcours: S.carte.type === 'parcours', chapitre: source.chapitre, qui: source.qui, decor: source.decor,
         texte: remplacer(source.texte),
         options: source.options.map(o => ({
           txt: remplacer(o.txt), note: remplacer(o.note), effets: o.effets,
@@ -305,13 +324,29 @@ const Vie = (() => {
 
     /* les traces persistantes et les bonus d'arc */
     const optSource = carte.type === 'arc' ? ARCS[S.carte.id].options[indexOption]
+      : carte.type === 'parcours' ? PARCOURS[S.carte.id].options[indexOption]
       : carte.type === 'rythme' ? null
       : (carte.type === 'rare' ? SCENES_RARES : SCENES_VIE).find(x => x.id === S.carte.id).options[indexOption];
-    if (optSource && optSource.drapeau) S.drapeaux[optSource.drapeau] = true;
+    if (optSource && optSource.drapeau) {
+      S.drapeaux[optSource.drapeau] = true;
+      if (optSource.drapeau === 'parent' && !S.enfants.length) {
+        const g = graineDepuis('enfant-' + S.graine);
+        S.enfants.push(PRENOMS_ENFANTS[g % PRENOMS_ENFANTS.length]);
+        notifier('👶', `${S.enfants[0]} entre dans ta vie. Rien ne sera plus pareil.`);
+        log(`👶 ${S.enfants[0]} est arrivé·e. Ta plus grande aventure commence.`);
+      }
+    }
     if (optSource && optSource.talentPlus) {
       for (const [t, v] of Object.entries(optSource.talentPlus)) S.talents[t] = clamp100(S.talents[t] + v);
     }
-    if (carte.type === 'arc') {
+    if (carte.type === 'parcours') {
+      appliquerEffets(opt.effets, S.carte.amiId);
+      gagnerXP(25);
+      if (optSource.voie) S.parcours.voie = optSource.voie;
+      S.parcours.noeud = optSource.suivant || null;
+      S.parcours.prochainMois = S.mois + (optSource.dans || 2);
+      if (!S.parcours.noeud) log('📖 Ton parcours est écrit. La suite t\'appartient.');
+    } else if (carte.type === 'arc') {
       appliquerEffets(opt.effets, S.carte.amiId);
       gagnerXP(30);
       const arcId = S.carte.id.startsWith('foot') ? 'foot' : 'tiktok';
@@ -456,8 +491,11 @@ const Vie = (() => {
     /* rendez-vous fixes */
     if (S.mois === VIE_CFG.MOIS_BAC + 1) passerBac();
     if (S.mois === VIE_CFG.MOIS_DIPLOME + 1 && phase() === 'travail' && !S.metierId && S.orientationId !== 'travail') obtenirDiplome();
-    if (S.mois === 21) { // 20 ans
+    if (S.mois === 15) { // ~20 ans
       S.cinematiques.push({ emoji: '🎂', titre: '20 ans', texte: 'Deux dizaines au compteur. Quelqu\'un a mis une seule bougie « 20 » sur le gâteau, par flemme. Tu as souri : la suite t\'appartient.' });
+    }
+    if (S.mois === 25) { // 25 ans : le temps passe à l'année
+      S.cinematiques.push({ emoji: '⏳', titre: 'La vie s\'accélère', texte: 'Vingt-cinq ans. Les années se mettent à défiler plus vite — chaque question compte désormais pour une année entière de ta vie. Choisis bien.' });
     }
     if (S.mois > VIE_CFG.MOIS_FIN && !S.gameOver) bilanFinal();
 
@@ -522,12 +560,13 @@ const Vie = (() => {
     lignes.push(`🫂 Ton pilier de l'année : ${amiDef.icone} ${amiDef.nom} (${Math.round(meilleurAmi.relation)}/100)`);
     if (S.abonnes >= 1000) lignes.push(`📱 ${S.abonnes.toLocaleString('fr-FR')} abonnés te suivent${deltaAbonnes > 0 ? ` (+${deltaAbonnes.toLocaleString('fr-FR')} cette année)` : ''}.`);
     if (S.drapeaux.chien) lignes.push('🐶 Biscotte approuve cette année. (Il a mangé une chaussure.)');
+    if (S.enfants && S.enfants.length) lignes.push(`👶 ${S.enfants[0]} grandit — et te ressemble un peu trop.`);
     if (s.energie < 30) lignes.push('⚠️ Tu tires sur la corde — dors, sérieusement.');
     else if (s.moral < 35) lignes.push('⚠️ Le moral a pris cher cette année. Prends soin de toi.');
     if (S.argent < 40) lignes.push('⚠️ Les fins de mois piquent. Un petit boulot ?');
 
     S.bilanAnnee = {
-      saison: `${VIE_CFG.ANNEE_DEPART + a - 1}-${String(VIE_CFG.ANNEE_DEPART + a).slice(2)}`,
+      saison: `tes ${age()} ans`,
       classe, titrePresse,
       tuiles: [
         { val: (s.savoir * 0.16 + 3).toFixed(1).replace('.', ','), lib: 'moyenne' },
@@ -588,7 +627,7 @@ const Vie = (() => {
     S.choixOrientation = false;
     if (o && o.pause) {
       S.pauseFaite = true;
-      S.finPause = S.mois + 3; // l'année off : 4 saisons
+      S.finPause = S.mois + (S.mois >= 13 ? 1 : 3); // une année, quel que soit le rythme du temps
       if (id === 'voyage') {
         S.argent = Math.max(0, S.argent - (o.argentMin || 0));
         log('✈️ Billet aller, sac de 12 kilos. Le monde t\'attend.');
@@ -716,6 +755,7 @@ const Vie = (() => {
       case 'metier': return !!S.metierId;
       case 'equilibre': return bonheur().note >= 70;
       case 'fortune': return S.argent >= 3000;
+      case 'famille': return !!(S.drapeaux.parent || S.drapeaux.sansEnfant);
       case 'trentaine': return S.mois > VIE_CFG.MOIS_FIN;
       default: return false;
     }
@@ -768,21 +808,32 @@ const Vie = (() => {
     const b = bonheur().note;
     const amisMoy = S.amis.length ? S.amis.reduce((s, a) => s + a.relation, 0) / S.amis.length : 0;
     const metier = METIERS.find(m => m.id === S.metierId);
-    const score = Math.round(b * 0.4 + amisMoy * 0.25 + Math.min(100, S.argent / 80) * 0.2 + (metier ? Math.min(100, metier.salaire / 26) : 20) * 0.15);
+    /* la vie de famille (ou son choix assumé) compte dans le bilan */
+    let fam = 30;
+    if (S.drapeaux.couple) fam += 25;
+    if (S.drapeaux.parent || S.drapeaux.sansEnfant) fam += 35;
+    if (S.drapeaux.proprio) fam += 10;
+    fam = Math.min(100, fam);
+    const score = Math.round(b * 0.35 + amisMoy * 0.2 + Math.min(100, S.argent / 80) * 0.15
+      + (metier ? Math.min(100, metier.salaire / 26) : 20) * 0.15 + fam * 0.15);
     let phrase;
-    if (score >= 80) phrase = 'Une vie qui donne envie : des amis en or, un métier qui te va, et le sourire en prime.';
-    else if (score >= 60) phrase = 'Une belle trajectoire, avec ses hauts, ses bas, et pas mal de fierté au compteur.';
-    else if (score >= 40) phrase = 'Une vie cabossée mais bien à toi. Et à 25 ans, tout reste ouvert.';
+    if (score >= 80) phrase = 'Une vie qui donne envie : des gens en or, un métier qui te va, une maison qui te ressemble.';
+    else if (score >= 60) phrase = 'Une belle trajectoire, avec ses hauts, ses bas, et beaucoup de fierté au compteur.';
+    else if (score >= 40) phrase = 'Une vie cabossée mais bien à toi. Et à 50 ans, il reste tant à vivre.';
     else phrase = 'Ça a tangué. Mais tu es encore debout, et c\'est déjà une victoire.';
+    const famTxt = S.enfants.length ? `${S.enfants[0]} et les tiens t'entourent.`
+      : S.drapeaux.sansEnfant ? 'Ta vie sans enfants, tu l\'as choisie et remplie.' : '';
     S.gameOver = {
       victoire: true, score,
-      titre: `25 ans — score de vie : ${score}/100`,
-      texte: `${S.perso.prenom}, ${metier ? metier.nom : 'électron libre'} à ${S.commune}. Bonheur ${Math.round(b)}/100, amitiés ${Math.round(amisMoy)}/100, ${Math.round(S.argent)} € de côté. ${phrase}`,
+      titre: `50 ans — score de vie : ${score}/100`,
+      texte: `${S.perso.prenom}, ${metier ? metier.nom : 'électron libre'} à ${S.commune}. Bonheur ${Math.round(b)}/100, amitiés ${Math.round(amisMoy)}/100, ${Math.round(S.argent)} € de côté. ${famTxt} ${phrase}`,
       titreVie: titreDeVie(),
       recap: {
         bonheur: Math.round(b), amisMoy: Math.round(amisMoy), argent: Math.round(S.argent),
         metier: metier ? `${metier.icone} ${metier.nom}` : '🧭 Électron libre',
         bac: S.bacObtenu === true, rares: (S.raresVues || []).length,
+        famille: S.enfants.length ? `👨‍👩‍👧 ${S.enfants.length} enfant${S.enfants.length > 1 ? 's' : ''} (${S.enfants[0]})`
+          : S.drapeaux.sansEnfant ? '🌍 Sans enfants, par choix' : '🧭 Célibat longue durée',
         defi: S.defi || null,
       },
     };
@@ -824,7 +875,9 @@ const Vie = (() => {
       if (S.pauseFaite === undefined) { S.pauseFaite = false; S.finPause = null; }
       if (S.abonnes === undefined) S.abonnes = 150;
       if (S.saisonsFaibleForme === undefined) { S.saisonsFaibleForme = 0; S.maladies = 0; }
+      if (S.parcours === undefined) S.parcours = { noeud: S.mois <= 2 ? 'p1' : null, prochainMois: S.mois, voie: null };
       if (S.drapeaux === undefined) S.drapeaux = {};
+      if (S.enfants === undefined) S.enfants = [];
       if (S.arcs === undefined) S.arcs = { foot: { etape: 0, prochainMois: 0, actif: true }, tiktok: { etape: 0, prochainMois: 0, actif: true } };
       return S;
     } catch (e) { return null; }
@@ -837,7 +890,7 @@ const Vie = (() => {
     carteCourante, repondreCarte, nouvelleCarte,
     choisirOrientation, orientationsPossibles,
     repondreEssai, metiersDisponibles, passerEntretien,
-    age, phase, NOMS_PHASE, classeActuelle, moisCalendaire, saisonVie,
+    age, ageAuTour, phase, NOMS_PHASE, classeActuelle, moisCalendaire, saisonVie,
     bonheur, revenuMensuel, objectifCourant, xpPourNiveau,
     notifsNonLues, marquerNotifsLues,
     defiDuJour, titreDeVie, remplacerMonde,

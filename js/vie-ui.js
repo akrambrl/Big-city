@@ -29,9 +29,9 @@ const UI = (() => {
     const defi = E.defiDuJour();
     app().innerHTML = `
     <div class="accueil">
-      <p class="surtitre">Big City Life · Une vie en 40 questions</p>
+      <p class="surtitre">Big City Life · Une vie en 50 questions</p>
       <h1>Où veux-tu <span class="filet">grandir</span> ?</h1>
-      <p class="sous-titre">Chaque question écrit une saison de ta vie, de 15 à 25 ans.</p>
+      <p class="sous-titre">De 16 à 50 ans : trouve ton travail, construis ta vie de famille (ou pas) — chaque question écrit un bout de ta vie.</p>
       <button class="carte-defi" id="btn-defi">
         <span class="defi-flamme">🔥</span>
         <span class="defi-txt"><b>Défi du jour · ${defi.dateFr}</b><br>
@@ -228,7 +228,7 @@ const UI = (() => {
       cinematique([
         { emoji: '📦', titre: 'La nouvelle vie', texte: `${ville.nom}. ${famille.ambiance} C'est ici que tout va se jouer : le ${monde.lycee}, les soirées au ${monde.fastfood}, les premières payes, les grandes décisions.` },
         { emoji: '🎒', titre: 'Jour de rentrée', texte: `Devant la grille du ${monde.lycee}, sac trop lourd, boule au ventre. ${copains[0].icone} ${copains[0].nom} et ${copains[1].icone} ${copains[1].nom} te font signe : « ${perso.prenom} ! Par ici ! » Ça va aller.` },
-        { emoji: '❓', titre: 'Une vie en 40 questions', texte: 'À chaque saison, une question. Tes réponses font tout : le bac, les amitiés, l\'argent, les rêves. Il n\'y a pas de bonne réponse — il y a TA réponse.' },
+        { emoji: '❓', titre: 'Une vie en 50 questions', texte: 'De 16 à 50 ans, une question à chaque étape — et le temps s\'accélère avec la vie. Tes réponses font tout : le bac, le travail, l\'amour, la famille (ou pas). Il n\'y a pas de bonne réponse — il y a TA réponse.' },
       ], () => { FX.son('niveau'); FX.confettis(['🎒', '🎉', '✨']); rendre(); });
     }));
   }
@@ -271,7 +271,7 @@ const UI = (() => {
         ${chipStat('🫂', S.stats.social)}${chipStat('💪', S.stats.forme)}
       </div>
       <div class="barre-vie"><div class="barre-vie-rempli" style="width:${progression}%"></div>
-        <span class="barre-vie-txt">saison ${Math.min(S.mois, VIE_CFG.MOIS_FIN)}/${VIE_CFG.MOIS_FIN}</span></div>
+        <span class="barre-vie-txt">étape ${Math.min(S.mois, VIE_CFG.MOIS_FIN)}/${VIE_CFG.MOIS_FIN} · ${E.age()} ans</span></div>
       ${obj ? `<div class="barre-objectif">🎯 <b>Objectif :</b> ${obj.icone} ${obj.texte}
         <span class="obj-recompense">+${obj.xp} XP</span></div>` : ''}
       <main class="vue ecran-question">${consequence ? htmlConsequence(S) : htmlCarte(S)}</main>
@@ -344,7 +344,7 @@ const UI = (() => {
     }
     const sc = miseEnScene(S, carte);
     return `
-    <div class="scene-visuelle ${sc.decor} ${carte.rare ? 'carte-rare-scene' : ''} ${carte.arc ? 'carte-histoire-scene' : ''}">
+    <div class="scene-visuelle ${sc.decor} ${carte.rare ? 'carte-rare-scene' : ''} ${carte.arc ? 'carte-histoire-scene' : ''} ${carte.parcours ? 'carte-parcours-scene' : ''}">
       <span class="scene-etiquette">${sc.etiquette}</span>
       ${htmlDecor(sc)}
       <div class="scene-acteurs">
@@ -424,6 +424,10 @@ const UI = (() => {
   /* Qui parle, où, sur quel décor — la mise en scène de la carte */
   function miseEnScene(S, carte) {
     const saison = E.saisonVie();
+    if (carte.parcours) return {
+      emoji: carte.icone, nom: carte.qui, decor: carte.decor || 'decor-rue',
+      etiquette: `📖 CHAPITRE ${carte.chapitre} · Ton parcours`, toi: true,
+    };
     if (carte.rare) return { emoji: carte.icone, nom: 'Moment rare', decor: 'decor-rare', etiquette: '🌟 MOMENT RARE', toi: true };
     if (carte.arc) {
       const foot = String(S.carte.id).startsWith('foot');
@@ -484,7 +488,7 @@ const UI = (() => {
         <div class="liste-notifs" style="display:block;padding:12px 14px">
           <p class="note">${famille.icone} ${famille.nom} · ${fil.icone} ${fil.nom} · ${E.NOMS_PHASE[E.phase()]} (${E.classeActuelle()})${E.phase() === 'lycee' ? ` · 🏫 ${S.monde.lycee}` : ''}<br>
           📍 QG de la bande : ${S.monde.fastfood} · ⚽ ${S.monde.club}<br>
-          👥 ${S.abonnes.toLocaleString('fr-FR')} abonnés${S.drapeaux.permis ? ' · 🚗 permis' : ''}${S.drapeaux.voiture ? ' · 🚙 Josiane' : ''}${S.drapeaux.chien ? ' · 🐶 Biscotte' : ''}<br>
+          👥 ${S.abonnes.toLocaleString('fr-FR')} abonnés${S.drapeaux.permis ? ' · 🚗 permis' : ''}${S.drapeaux.voiture ? ' · 🚙 Josiane' : ''}${S.drapeaux.chien ? ' · 🐶 Biscotte' : ''}${S.enfants && S.enfants.length ? ` · 👶 ${S.enfants.join(', ')}` : ''}<br>
           💰 ${eur(S.argent)} · revenu ${eur(E.revenuMensuel())}/saison · ⭐ niveau ${S.niveau}</p>
           <div class="composantes">
             ${stats.map(([n, v]) => `<div class="composante"><span class="comp-nom">${n}</span>
@@ -511,7 +515,7 @@ const UI = (() => {
           ${S.rechercheEmploi && !S.metierId ? `<p style="margin-top:.8em"><button class="btn" id="btn-emplois">💼 Voir les métiers & postuler</button></p>` : ''}
           <h3>📔 Derniers moments</h3>
           <ul class="journal" style="max-height:180px">${S.journal.slice(0, 12).map(l =>
-            `<li><span class="jour-tag">${VIE_CFG.AGE_DEPART + Math.floor(((l.mois - 1) * 3 + 8) / 12)} ans</span> ${l.txt}</li>`).join('')}</ul>
+            `<li><span class="jour-tag">${E.ageAuTour(l.mois)} ans</span> ${l.txt}</li>`).join('')}</ul>
           <p style="margin-top:1em"><button class="btn-lien" id="btn-nouvelle">Recommencer une vie</button>
           · <a class="btn-lien" href="maire.html">🏛️ Jouer au maire</a></p>
         </div>
@@ -698,7 +702,7 @@ const UI = (() => {
       <div class="fin-wrapped">
         <p class="fin-surtitre">${r.defi ? `🔥 Défi du jour · ${r.defi.dateFr}` : '🎒 Big City Life'} · ${esc(S.commune)}</p>
         <div class="fin-avatar">${S.perso.emoji}</div>
-        <p class="fin-prenom">${esc(S.perso.prenom)}, 25 ans</p>
+        <p class="fin-prenom">${esc(S.perso.prenom)}, 50 ans</p>
         <div class="fin-titrevie">${t.icone} ${t.nom}</div>
         <p class="fin-desc">${t.desc}</p>
         <div class="fin-score"><span class="fin-score-val">${g.score}</span><span class="fin-score-max">/100</span>
@@ -706,6 +710,7 @@ const UI = (() => {
         <div class="fin-stats">
           <span>${r.bac ? '🎓 Bac ✔' : '🎓 Sans bac'}</span>
           <span>${r.metier}</span>
+          ${r.famille ? `<span>${r.famille}</span>` : ''}
           <span>😊 ${r.bonheur}</span>
           <span>🫂 ${r.amisMoy}</span>
           <span>💰 ${nb(r.argent)} €</span>
@@ -733,10 +738,10 @@ const UI = (() => {
   function texteRecap(S) {
     const g = S.gameOver, t = g.titreVie, r = g.recap;
     return [
-      '🎒 BIG CITY LIFE — ma vie en 40 questions',
+      '🎒 BIG CITY LIFE — ma vie en 50 questions',
       r.defi ? `🔥 Défi du jour (${r.defi.dateFr}) à ${S.commune}` : `🏙️ ${S.perso.prenom} a grandi à ${S.commune}`,
       `${t.icone} ${t.nom}`,
-      `${r.bac ? '🎓 Bac ✅' : '🎓 Sans bac'} · ${r.metier} · 💰 ${nb(r.argent)} €`,
+      `${r.bac ? '🎓 Bac ✅' : '🎓 Sans bac'} · ${r.metier}${r.famille ? ' · ' + r.famille : ''} · 💰 ${nb(r.argent)} €`,
       `⭐ Score de vie : ${g.score}/100`,
       'Tu feras mieux ? 👀 #BigCityLife',
     ].join('\n');
@@ -768,7 +773,7 @@ const UI = (() => {
       return lignes;
     };
     centre('BIG CITY LIFE', 160, '800 68px Fredoka, sans-serif', '#FFD75E');
-    centre('MA VIE EN 40 QUESTIONS', 225, '600 36px Fredoka, sans-serif', 'rgba(255,255,255,.8)');
+    centre('MA VIE EN 50 QUESTIONS', 225, '600 36px Fredoka, sans-serif', 'rgba(255,255,255,.8)');
     if (r.defi) centre(`🔥 DÉFI DU JOUR · ${r.defi.dateFr.toUpperCase()}`, 300, '700 40px Fredoka, sans-serif', '#FFB86B');
     x.beginPath(); x.arc(540, 560, 175, 0, 7);
     x.fillStyle = 'rgba(255,255,255,.14)'; x.fill();
@@ -783,7 +788,8 @@ const UI = (() => {
     centre('/100', 1540, '600 48px Fredoka, sans-serif', 'rgba(255,255,255,.75)');
     x.fillStyle = 'rgba(255,255,255,.25)'; x.fillRect(190, 1590, 700, 26);
     x.fillStyle = '#FFD75E'; x.fillRect(190, 1590, 700 * Math.min(100, g.score) / 100, 26);
-    centre(`${r.bac ? '🎓 Bac' : '🚀 Autodidacte'} · ${r.metier} · 💰 ${nb(r.argent)} €`, 1700, '600 40px Fredoka, sans-serif');
+    centre(`${r.bac ? '🎓 Bac' : '🚀 Autodidacte'} · ${r.metier} · 💰 ${nb(r.argent)} €`, 1670, '600 40px Fredoka, sans-serif');
+    if (r.famille) centre(r.famille, 1730, '600 40px Fredoka, sans-serif', 'rgba(255,255,255,.9)');
     centre('Tu feras mieux ? 👀  #BigCityLife', 1830, '700 46px Fredoka, sans-serif', '#FFD75E');
     return c;
   }
@@ -851,7 +857,7 @@ const UI = (() => {
     const b = S.bilanAnnee;
     modale(`
       <div class="bilan-annee">
-        <p class="bilan-entete">📋 ANNÉE ${b.saison} · ${esc(S.commune).toUpperCase()}
+        <p class="bilan-entete">📋 BILAN · ${b.saison.toUpperCase()} · ${esc(S.commune).toUpperCase()}
           <span class="badge badge-classe">${b.classe}</span></p>
         <blockquote class="presse-cita">📰 ${b.titrePresse}</blockquote>
         <div class="bilan-tuiles">

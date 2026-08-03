@@ -1118,3 +1118,8 @@ hr { border: none; border-top: 3px solid var(--bord); border-radius: 2px; margin
   font-size: .82rem; font-weight: 800; color: #fff;
   background: rgba(40, 55, 75, .75); border-radius: 999px; padding: 3px 12px;
 }
+
+/* ============ LE PARCOURS — le scénario principal qui bifurque ============ */
+.carte-parcours-scene { border-color: #8A5FC9; box-shadow: 0 6px 0 #5F3E93, 0 0 0 4px rgba(138, 95, 201, .22), 0 16px 40px rgba(95, 62, 147, .3); }
+.carte-parcours-scene .scene-nom { background: #6B46A8; }
+.carte-parcours-scene .scene-etiquette { background: #EFE6FB; color: #5F3E93; }

@@ -4,15 +4,16 @@
    études, jobs, objectifs. De 15 à 30 ans dans ta vraie ville.
    ============================================================ */
 
-/* Un tour de jeu = UNE SAISON (3 mois). La vie entière tient en
-   ~40 décisions : le bac au tour 12, le bilan à 25 ans (tour 41). */
+/* Le temps s'accélère avec la vie : tours 1-12 = saisons (lycée,
+   16-19 ans), tours 13-24 = semestres (études/débuts, 19-25 ans),
+   tours 25-49 = années (vie adulte, 25-50 ans). ~49 questions. */
 const VIE_CFG = {
-  MOIS_DEPART: 8,        // on commence en septembre (rentrée de seconde)
-  AGE_DEPART: 15,
+  MOIS_DEPART: 8,        // on commence en septembre (rentrée post-brevet)
+  AGE_DEPART: 16,        // juste après le brevet
   ANNEE_DEPART: 2026,    // année civile de la rentrée de seconde
-  MOIS_BAC: 12,          // juin de l'année de terminale (12ᵉ saison)
-  MOIS_DIPLOME: 24,      // juin, trois ans après le bac
-  MOIS_FIN: 41,          // 25 ans : l'heure du bilan
+  MOIS_BAC: 12,          // juin de l'année de terminale (12ᵉ tour)
+  MOIS_DIPLOME: 18,      // fin d'études (~22 ans)
+  MOIS_FIN: 49,          // 50 ans : l'heure du bilan
   PROBA_SCENE: 0.66,     // chance de scène de vie chaque saison
   PROBA_RARE: 0.07,      // chance d'un MOMENT RARE (une seule fois chacun)
   DECAY: { energie: 8, moral: 6, social: 4, forme: 3, relation: 3 },
@@ -429,8 +430,9 @@ const OBJECTIFS_VIE = [
   { id: 'bac', icone: '🎓', texte: 'Décroche ton bac', xp: 100 },
   { id: 'metier', icone: '💼', texte: 'Décroche ton premier vrai job', xp: 100 },
   { id: 'equilibre', icone: '⭐', texte: 'Atteins 3,5 de bonheur', xp: 80 },
+  { id: 'famille', icone: '🏡', texte: 'Choisis ta vie de famille (avec ou sans enfants)', xp: 80 },
   { id: 'fortune', icone: '🏦', texte: 'Économise 3 000 €', xp: 80 },
-  { id: 'trentaine', icone: '🎂', texte: 'Arrive à 25 ans épanoui·e', xp: 0 },
+  { id: 'trentaine', icone: '🎂', texte: 'Arrive à 50 ans épanoui·e', xp: 0 },
 ];
 
 
@@ -627,6 +629,7 @@ const CAFES = [
 ];
 const PREFIXES_CLUB = ['FC', 'AS', 'US', 'Olympique', 'Étoile Sportive', 'Racing Club'];
 const MARQUES = ['Volt Énergie', 'Bloom Drink', 'Fizzly', 'Nuage Soda', 'Torrent', 'Kiwaï'];
+const PRENOMS_ENFANTS = ['Léo', 'Nina', 'Adam', 'Zoé', 'Naël', 'Lya', 'Marius', 'Aya', 'Côme', 'Isra'];
 const INFLUENCEURS = [
   '@JujuFitness', '@LeoVlogs_off', '@MamieDanse', '@TheoGaming', '@LinaMakeUp',
   '@KevinDuCoin', '@SarahFoodTour', '@MaxRider_officiel',
@@ -809,5 +812,339 @@ const ARCS = {
         note: 'Contrat signé ! Ton premier partenariat national tombe la semaine suivante.' },
       { txt: '🎓 Refuser : tu as d\'autres plans', effets: { moral: 4, savoir: 3 }, stop: true,
         note: 'L\'agence a insisté deux fois. Toi, tu sais où tu vas.' },
+    ] },
+};
+
+
+/* ------------------------------------------------------------
+   LE PARCOURS — le scénario principal, façon Destiny Eleven :
+   une histoire PRÉDÉFINIE qui bifurque selon tes réponses.
+   Chaque nœud : { chapitre, qui, emoji, decor, texte, options }
+   Chaque option : { txt, effets, note, suivant, dans, voie?, drapeau?, talentPlus? }
+   `suivant` = le prochain nœud (la bifurcation) ; `dans` = dans
+   combien de saisons (des scènes libres respirent entre-temps).
+   ------------------------------------------------------------ */
+const PARCOURS = {
+  /* ===== ACTE 1 · LE LYCÉE ===== */
+  p1: { chapitre: 1, qui: 'La cantine', emoji: '🍽️', decor: 'decor-classe',
+    texte: 'Premier midi au {lycee}. Plateau en main, tu balaies la salle : la table des premiers de classe, la bande du fond qui rigole fort, les sportifs du {club}, et le coin des créatifs avec une guitare. Tu t\'assois où ?',
+    options: [
+      { txt: '🤓 Avec les premiers de classe', effets: { savoir: 6 }, voie: 'tete', suivant: 'p_tete1', dans: 2,
+        note: 'On t\'a tendu une fiche de révision en guise de bienvenue. Efficace.' },
+      { txt: '😎 La bande du fond', effets: { social: 6, moral: 4 }, voie: 'bande', suivant: 'p_bande1', dans: 2,
+        note: 'En dix minutes, tu as trois surnoms et une place attitrée.' },
+      { txt: '⚽ Les sportifs du {club}', effets: { forme: 6 }, voie: 'sport', suivant: 'p_sport1', dans: 2, talentPlus: { foot: 5 },
+        note: 'On t\'a demandé ton poste préféré avant ton prénom.' },
+      { txt: '🎸 Le coin des créatifs', effets: { moral: 6 }, voie: 'crea', suivant: 'p_crea1', dans: 2, talentPlus: { musique: 5 },
+        note: 'Quelqu\'un a accordé la guitare et dit : « tu chantes ? »' },
+    ] },
+
+  /* — chapitre 2 : ta voie s'installe (4 branches) — */
+  p_tete1: { chapitre: 2, qui: 'Le prof principal', emoji: '👩‍🏫', decor: 'decor-classe',
+    texte: '« J\'ai remarqué ton niveau. Le concours académique approche — je peux te préparer. Mais c\'est des heures en plus, tous les mercredis. »',
+    options: [
+      { txt: '🏆 Viser le concours', effets: { savoir: 9, energie: -8 }, suivant: 'p_tete2', dans: 2,
+        note: 'Les mercredis brûlent, ton niveau explose. Sam te regarde différemment.' },
+      { txt: '🤝 Proposer plutôt un tutorat entre élèves', effets: { savoir: 4, social: 7 }, suivant: 'p_tete2', dans: 2,
+        note: 'Ton petit groupe d\'entraide devient LE bon plan du lycée.' },
+      { txt: '🌪️ Avouer que tu t\'ennuies, tu veux autre chose', effets: { moral: 5 }, suivant: 'p_doute', dans: 2,
+        note: 'Le prof a souri : « Alors cherche ce qui t\'allume. »' },
+    ] },
+  p_bande1: { chapitre: 2, qui: 'La bande', emoji: '😎', decor: 'decor-rue',
+    texte: 'La bande veut marquer le coup : LA soirée de l\'année, dans l\'ancien local près du {fastfood}. Problème : il faut une salle, de la musique, et que personne ne l\'apprenne… ou presque.',
+    options: [
+      { txt: '🎉 L\'organiser, à fond', effets: { social: 10, moral: 6, savoir: -3, argent: -20 }, suivant: 'p_bande2', dans: 2,
+        note: 'Historique. Trois lycées en parlent. Ton nom circule.' },
+      { txt: '📋 Version maligne : négocier la salle des fêtes', effets: { social: 6, savoir: 3 }, suivant: 'p_bande2', dans: 2,
+        note: 'La mairie a dit oui. La bande t\'appelle « le ministre ».' },
+      { txt: '🚪 C\'est trop pour toi, tu t\'éloignes', effets: { moral: -3, savoir: 3 }, suivant: 'p_doute', dans: 2,
+        note: 'La soirée s\'est faite sans toi. Tu te demandes où est ta place.' },
+    ] },
+  p_sport1: { chapitre: 2, qui: 'Le coach', emoji: '🧢', decor: 'decor-stade',
+    texte: 'Le coach du {club} te prend à part : « Les minimes ont besoin d\'un capitaine. Toi. Mais si tu préfères, concentre-toi sur ta propre place en équipe première. »',
+    options: [
+      { txt: '🫡 Capitaine des minimes', effets: { social: 8, forme: 4 }, suivant: 'p_sport2', dans: 2, talentPlus: { foot: 4 },
+        note: 'Mener, ça s\'apprend. Les petits te suivent partout.' },
+      { txt: '🎯 Ta place d\'abord, à fond', effets: { forme: 9, energie: -6 }, suivant: 'p_sport2', dans: 2, talentPlus: { foot: 8 },
+        note: 'Doublé d\'entraînements. Le coach note tout.' },
+      { txt: '😕 Le foot te pèse en ce moment', effets: { moral: 4 }, suivant: 'p_doute', dans: 2,
+        note: '« Reviens quand la flamme revient », dit le coach.' },
+    ] },
+  p_crea1: { chapitre: 2, qui: 'Le groupe', emoji: '🎸', decor: 'decor-maison',
+    texte: 'Le groupe répète dans un garage. On te propose : premier mini-concert au {cafe}… ou poster vos covers en ligne d\'abord, pour « exister sur les réseaux ».',
+    options: [
+      { txt: '🎤 Le concert au {cafe}', effets: { moral: 8, social: 6, energie: -5 }, suivant: 'p_crea2', dans: 2, talentPlus: { musique: 8 },
+        note: 'Vingt personnes, deux rappels. Tes jambes tremblaient, ta voix non.' },
+      { txt: '📱 Les covers en ligne', effets: { abonnes: 700, moral: 5 }, suivant: 'p_crea2', dans: 2, talentPlus: { musique: 5 },
+        note: 'La troisième vidéo décolle. Des inconnus fredonnent TA version.' },
+      { txt: '🌫️ Tu doutes de ta place dans le groupe', effets: { moral: 3 }, suivant: 'p_doute', dans: 2,
+        note: 'Tu as posé la guitare. Pour l\'instant.' },
+    ] },
+  p_doute: { chapitre: 2, qui: 'Toi-même', emoji: '🪞', decor: 'decor-maison',
+    texte: 'Un dimanche soir, face au plafond : cette voie ne te ressemble pas. Il est encore temps de changer de table. Qu\'est-ce qui t\'attire vraiment ?',
+    options: [
+      { txt: '🤓 Les études, finalement', effets: { savoir: 5 }, voie: 'tete', suivant: 'p_bac_veille', dans: 5,
+        note: 'Tu t\'installes au premier rang. Personne ne commente. Tout le monde a compris.' },
+      { txt: '😎 Les gens, les soirées, la vie', effets: { social: 6 }, voie: 'bande', suivant: 'p_bac_veille', dans: 5,
+        note: 'La bande t\'accueille comme si tu n\'étais jamais parti·e.' },
+      { txt: '⚽ Le terrain', effets: { forme: 5 }, voie: 'sport', suivant: 'p_bac_veille', dans: 5, talentPlus: { foot: 5 },
+        note: 'Le coach a juste dit : « La flamme est revenue ? Enfile les crampons. »' },
+      { txt: '🎤 La musique', effets: { moral: 5 }, voie: 'crea', suivant: 'p_bac_veille', dans: 5, talentPlus: { musique: 5 },
+        note: 'Le groupe a gardé ta place. Et ta guitare.' },
+    ] },
+
+  /* — chapitre 3 : l'épreuve de ta voie — */
+  p_tete2: { chapitre: 3, qui: 'Sam', emoji: '🤓', decor: 'decor-classe',
+    texte: 'Catastrophe : le sujet du prochain contrôle circule sur le groupe de la classe. Tout le monde l\'a vu. Sam te regarde : « On fait quoi, nous ? »',
+    options: [
+      { txt: '🛑 Le signaler au prof, quitte à être impopulaire', effets: { savoir: 4, social: -6, moral: 6 }, suivant: 'p_amour', dans: 2,
+        note: 'Contrôle annulé, classe furieuse, conscience tranquille. Le prof, lui, saura s\'en souvenir.' },
+      { txt: '🙈 Ne rien dire, mais ne pas l\'utiliser', effets: { moral: 3, savoir: 2 }, suivant: 'p_amour', dans: 2,
+        note: 'Tu as composé sans triche. Ta moyenne le prouve — les autres ont eu 18.' },
+      { txt: '👀 Le lire « juste pour vérifier »', effets: { savoir: 5, moral: -5 }, suivant: 'p_amour', dans: 2,
+        note: '19/20. Le chiffre te félicite, le miroir un peu moins.' },
+    ] },
+  p_bande2: { chapitre: 3, qui: 'Théo', emoji: '🎮', decor: 'decor-rue',
+    texte: 'Un gars de la bande a « emprunté » le scooter de son cousin et l\'a rayé. Il panique, il te demande de dire que vous étiez ensemble ce soir-là. Toute la bande te regarde.',
+    options: [
+      { txt: '🤥 Le couvrir, c\'est la famille', effets: { relation: 10, moral: -6 }, suivant: 'p_amour', dans: 2,
+        note: 'La bande t\'est reconnaissante. Le mensonge, lui, pèse trois grammes de trop.' },
+      { txt: '💬 L\'accompagner pour tout avouer au cousin', effets: { moral: 8, social: 4 }, suivant: 'p_amour', dans: 2,
+        note: 'Le cousin a gueulé, puis respecté. La bande a retenu la leçon : tu es droit·e.' },
+      { txt: '🚶 Refuser net et t\'en aller', effets: { moral: 4, relation: -8 }, suivant: 'p_amour', dans: 2,
+        note: 'Tu dors tranquille. La bande fait la tête. Ça passera. Peut-être.' },
+    ] },
+  p_sport2: { chapitre: 3, qui: 'Inès', emoji: '⚽', decor: 'decor-stade',
+    texte: 'Le titulaire à TON poste se blesse à l\'échauffement. Le coach hésite entre toi… et Inès, qui attend sa chance depuis deux ans. Elle te glisse : « Vas-y, toi. T\'es meilleur·e. » Sa voix tremble un peu.',
+    options: [
+      { txt: '⚡ Prendre la place, c\'est le jeu', effets: { forme: 6, moral: 4, relation: -6 }, suivant: 'p_amour', dans: 2, talentPlus: { foot: 8 },
+        note: 'Tu as brillé. Inès a applaudi, les yeux ailleurs.' },
+      { txt: '🎁 Dire au coach de la faire jouer', effets: { relation: 14, moral: 6 }, suivant: 'p_amour', dans: 2,
+        note: 'Elle a marqué. En sortant, elle t\'a serré si fort que t\'as craqué une côte. Ami·e à vie.' },
+      { txt: '🗣️ Proposer au coach un mi-temps chacun', effets: { social: 5, forme: 3, relation: 5 }, suivant: 'p_amour', dans: 2, talentPlus: { foot: 4 },
+        note: 'Solution d\'équipe. Le coach a levé un sourcil : « Pas bête. »' },
+    ] },
+  p_crea2: { chapitre: 3, qui: 'Un « producteur »', emoji: '🕶️', decor: 'decor-rue',
+    texte: 'Après votre passage au {cafe}, un type en veste brillante : « Je produis des artistes. Pour 100 €, je vous enregistre un single et je le place. Offre limitée, décidez ce soir. »',
+    options: [
+      { txt: '🚩 Flairer l\'arnaque et refuser poliment', effets: { savoir: 4, moral: 4 }, suivant: 'p_amour', dans: 2,
+        note: 'Deux semaines plus tard, il « produisait » des montres. Bien vu.' },
+      { txt: '💸 Tenter le coup, on ne sait jamais', effets: { argent: -100, moral: -4 }, suivant: 'p_amour', dans: 2,
+        note: 'Le « single » est un fichier MP3 mal mixé. Leçon à 100 €.' },
+      { txt: '🎙️ Négocier : il paie le studio, vous partagez', effets: { social: 6, moral: 4 }, suivant: 'p_amour', dans: 2, talentPlus: { musique: 5 },
+        note: 'Il a ri, puis accepté. Le morceau est correct. Le type a disparu, le fichier reste.' },
+    ] },
+
+  /* — chapitre 4 : l'amour s'en mêle — */
+  p_amour: { chapitre: 4, qui: 'Ton cœur', emoji: '💘', decor: 'decor-rue',
+    texte: 'Depuis quelques semaines, il y a cette personne. Au {cine}, en cours, partout. Vos regards se croisent une fois de trop pour que ce soit un hasard. Ce soir, elle est à trois mètres de toi.',
+    options: [
+      { txt: '💬 Aller lui parler, maintenant', effets: { moral: 10, social: 5 }, drapeau: 'couple', suivant: 'p_couple', dans: 2,
+        note: 'Deux heures de conversation. Vous avez un « endroit à vous » désormais.' },
+      { txt: '🫂 Rester ami·e·s — c\'est déjà bien', effets: { social: 6, moral: 2 }, suivant: 'p_solo', dans: 2,
+        note: 'Une amitié en or. Avec un léger « et si » en filigrane.' },
+      { txt: '🙈 Fuir. Trop. La. Pression.', effets: { moral: -4, energie: 5 }, suivant: 'p_solo', dans: 2,
+        note: 'Tu as marché très vite vers nulle part. Champion·ne du monde de l\'esquive.' },
+    ] },
+  p_couple: { chapitre: 4, qui: 'Ton couple', emoji: '💑', decor: 'decor-maison',
+    texte: 'Premier vrai choc : samedi, c\'est l\'anniversaire de votre rencontre… et le grand moment de ta bande (match, concert, soirée — tout tombe le même soir).',
+    options: [
+      { txt: '❤️ L\'anniversaire, sans hésiter', effets: { moral: 8, social: -4 }, suivant: 'p_bac_veille', dans: 2,
+        note: 'Une soirée parfaite. Tes potes ont mis trois jours à te pardonner.' },
+      { txt: '🤹 Négocier : les deux, en courant', effets: { energie: -10, moral: 6, social: 4 }, suivant: 'p_bac_veille', dans: 2,
+        note: 'Tu as tout fait, tout réussi, et dormi 14 heures dimanche.' },
+      { txt: '🎟️ Ta bande d\'abord, promis on fête ça dimanche', effets: { social: 6, moral: -5 }, suivant: 'p_bac_veille', dans: 2,
+        note: 'Dimanche, l\'ambiance était… polaire. Rattrapage nécessaire.' },
+    ] },
+  p_solo: { chapitre: 4, qui: 'La bande', emoji: '🎉', decor: 'decor-rue',
+    texte: 'Pas de couple, mais une bande en feu : ils veulent partir camper à l\'arrache le week-end avant la grosse semaine de contrôles.',
+    options: [
+      { txt: '⛺ Y aller — ces souvenirs n\'ont pas de prix', effets: { moral: 10, relation: 8, savoir: -3 }, suivant: 'p_bac_veille', dans: 2,
+        note: 'Feu de camp, étoiles, zéro révision. Aucun regret (pour l\'instant).' },
+      { txt: '📚 Rester réviser, y aller au prochain', effets: { savoir: 6, moral: -3 }, suivant: 'p_bac_veille', dans: 2,
+        note: 'Les photos du camp te narguent. Tes notes te consolent.' },
+      { txt: '🌗 Les rejoindre juste le samedi soir', effets: { moral: 6, relation: 4, savoir: 2 }, suivant: 'p_bac_veille', dans: 2,
+        note: 'L\'art du compromis. Tu commences à devenir fort·e à ce jeu.' },
+    ] },
+
+  /* — chapitre 5 : la veille du bac — */
+  p_bac_veille: { chapitre: 5, qui: 'Ta famille', emoji: '👨‍👩‍👧', decor: 'decor-maison',
+    texte: 'Dernière ligne droite avant le bac. À table, ta famille tente un discours de motivation. Toi, tu choisis ta stratégie pour les dernières semaines.',
+    options: [
+      { txt: '📚 Marathon de révisions, rideau fermé', effets: { savoir: 8, energie: -10, moral: -3 }, suivant: 'p_ete', dans: 3,
+        note: 'Tes fiches ont des fiches. Tu es prêt·e. Épuisé·e, mais prêt·e.' },
+      { txt: '🧘 Réviser bien, dormir bien, vivre bien', effets: { savoir: 5, moral: 5 }, suivant: 'p_ete', dans: 3,
+        note: 'Équilibre trouvé. Tu entres dans l\'examen frais·che comme un matin de printemps.' },
+      { txt: '🎲 Miser sur ton talent naturel', effets: { moral: 6, savoir: -2 }, suivant: 'p_ete', dans: 3,
+        note: 'Audacieux. L\'Histoire jugera. Littéralement, il y a une épreuve d\'histoire.' },
+    ] },
+
+  /* ===== ACTE 2 · APRÈS LE BAC ===== */
+  p_ete: { chapitre: 6, qui: 'L\'été', emoji: '☀️', decor: 'decor-ete',
+    texte: 'L\'été de tous les possibles. Trois plans sur la table, un seul été.',
+    options: [
+      { txt: '🚗 Road-trip avec la bande vers {destination}', effets: { moral: 10, social: 6, argent: -80 }, suivant: 'p_route', dans: 2,
+        note: 'Le coffre ferme à peine. La playlist est prête. En route.' },
+      { txt: '💼 Bosser au {fastfood} tout l\'été', effets: { argent: 350, energie: -12 }, suivant: 'p_argent', dans: 2,
+        note: 'L\'odeur de friture ne part plus. Ton compte en banque, lui, sourit.' },
+      { txt: '📖 Préparer la suite : bosser ton projet', effets: { savoir: 6, moral: 3 }, suivant: 'p_prepa', dans: 2,
+        note: 'Pendant que les autres bronzent, toi tu construis. Chacun son été.' },
+    ] },
+  p_route: { chapitre: 6, qui: 'Marco', emoji: '🛹', decor: 'decor-rue',
+    texte: 'Panne SÈCHE à 400 bornes de chez vous, en pleine campagne, 23 h 40. Marco sort une carte routière de 1998. La bande te regarde : c\'est toi le cerveau de l\'opération.',
+    options: [
+      { txt: '🔧 Réparer vous-mêmes à la lampe torche', effets: { savoir: 5, moral: 8, relation: 8 }, suivant: 'p_20ans', dans: 2,
+        note: 'À 3 h du matin, le moteur a toussé puis ronronné. Vous avez hurlé de joie dans la nuit.' },
+      { txt: '🏕️ Dormir sur place, aviser demain', effets: { moral: 6, energie: 6, relation: 5 }, suivant: 'p_20ans', dans: 2,
+        note: 'Meilleure nuit à la belle étoile de ta vie. La dépanneuse est venue au petit déj.' },
+      { txt: '📞 Appeler les parents (la honte, mais bon)', effets: { moral: -3, argent: -30 }, suivant: 'p_20ans', dans: 2,
+        note: 'Ton père a fait 400 bornes en sifflotant. Tu entendras parler de cette nuit à chaque Noël.' },
+    ] },
+  p_argent: { chapitre: 6, qui: 'Le gérant', emoji: '🧑‍💼', decor: 'decor-bureau',
+    texte: 'Fin août, le gérant du {fastfood} te bloque : « T\'es le/la meilleur·e élément que j\'aie eu. CDI, temps plein, tout de suite. Réfléchis pas trop. »',
+    options: [
+      { txt: '🙏 Décliner avec classe — tu as d\'autres plans', effets: { moral: 5, social: 3 }, suivant: 'p_20ans', dans: 2,
+        note: 'Il a hoché la tête : « Reviens quand tu veux. » Une porte reste ouverte.' },
+      { txt: '💶 Accepter des extras le week-end seulement', effets: { argent: 150, energie: -8 }, suivant: 'p_20ans', dans: 2,
+        note: 'Le meilleur des deux mondes. Fatigant, mais le compte grossit.' },
+      { txt: '🤝 Négocier un poste de responsable', effets: { argent: 80, savoir: 4, social: 4 }, suivant: 'p_20ans', dans: 2,
+        note: 'Il a ri : « T\'as du culot. » Puis il a dit oui pour les vacances scolaires.' },
+    ] },
+  p_prepa: { chapitre: 6, qui: 'Toi-même', emoji: '🪞', decor: 'decor-maison',
+    texte: 'Mi-août. Tout le monde poste ses photos de vacances, toi tu bosses ton avenir. Un soir de doute : ça vaut le coup ?',
+    options: [
+      { txt: '🔥 Oui. Tu redoubles d\'efforts', effets: { savoir: 8, energie: -8 }, suivant: 'p_20ans', dans: 2,
+        note: 'Septembre te trouvera prêt·e comme personne.' },
+      { txt: '🏖️ Tu t\'accordes UNE semaine de vraie pause', effets: { moral: 8, energie: 12, savoir: 2 }, suivant: 'p_20ans', dans: 2,
+        note: 'Sept jours de vide total. Tu reviens affûté·e et bronzé·e.' },
+    ] },
+
+  /* — chapitre 7 : 20 ans, le recentrage — */
+  p_20ans: { chapitre: 7, qui: 'Toi, la vingtaine', emoji: '🎂', decor: 'decor-automne',
+    texte: 'La vingtaine s\'installe. Dans le bus, front contre la vitre, tu te demandes : c\'est quoi, la priorité des prochaines années ?',
+    options: [
+      { txt: '🚀 La carrière : réussir, prouver, construire', effets: { savoir: 4, moral: 3 }, suivant: 'p_carriere1', dans: 4,
+        note: 'Objectif verrouillé. Que ça plaise ou non.' },
+      { txt: '🫂 Les gens : ta bande, ta famille, l\'amour', effets: { social: 5, moral: 4 }, suivant: 'p_amis1', dans: 4,
+        note: 'On ne se souvient pas des open spaces. On se souvient des gens.' },
+      { txt: '🗺️ La liberté : voir, vivre, bouger', effets: { moral: 6 }, suivant: 'p_liberte1', dans: 4,
+        note: 'Posséder peu, vivre beaucoup. Programme validé.' },
+    ] },
+  p_carriere1: { chapitre: 8, qui: 'Le rival', emoji: '🦊', decor: 'decor-bureau',
+    texte: 'Il y a cette personne — même âge, même ambition — qui te double partout : stages, notes, réseau. Aujourd\'hui elle vient de rafler LE poste/la place que tu visais, et te nargue à moitié.',
+    options: [
+      { txt: '💪 Bosser deux fois plus, la dépasser', effets: { savoir: 7, energie: -10 }, suivant: 'p_grand_saut', dans: 4,
+        note: 'Six mois plus tard, c\'est TOI qu\'on cite en exemple. Le rival t\'a envoyé un 👏.' },
+      { txt: '🤝 Lui proposer une alliance', effets: { social: 8, savoir: 3 }, suivant: 'p_grand_saut', dans: 4,
+        note: 'Rivaux devenus tandem. À deux, vous êtes injouables.' },
+      { txt: '🧘 Refuser cette course, tracer TA route', effets: { moral: 8 }, suivant: 'p_grand_saut', dans: 4,
+        note: 'Le jour où tu as arrêté de comparer, tout est devenu plus léger.' },
+    ] },
+  p_amis1: { chapitre: 8, qui: 'Ton meilleur pote', emoji: '🧳', decor: 'decor-rue',
+    texte: 'Coup de tonnerre : ton meilleur pote annonce qu\'il part s\'installer à 800 bornes. Son week-end d\'adieu tombe pile sur une obligation énorme (exam, boulot, sélection — la totale).',
+    options: [
+      { txt: '🚄 Y aller quand même, advienne que pourra', effets: { relation: 14, moral: 8, savoir: -4 }, suivant: 'p_grand_saut', dans: 4,
+        note: 'Tu as eu des ennuis. Aucune importance : certaines nuits valent une carrière.' },
+      { txt: '📹 Organiser un adieu décalé, rien qu\'à vous', effets: { relation: 8, moral: 5 }, suivant: 'p_grand_saut', dans: 4,
+        note: 'Un week-end surprise trois semaines après. Il a pleuré. Toi « non ».' },
+      { txt: '😔 Assumer l\'obligation, s\'excuser', effets: { savoir: 5, relation: -8, moral: -4 }, suivant: 'p_grand_saut', dans: 4,
+        note: 'Il a compris. Mais quelque chose s\'est un peu éteint dans le groupe.' },
+    ] },
+  p_liberte1: { chapitre: 8, qui: 'L\'occasion', emoji: '🎫', decor: 'decor-printemps',
+    texte: 'Une annonce improbable : un van aménagé à retaper, quasi donné, et un festival itinérant qui cherche des bénévoles tout l\'été à travers la France.',
+    options: [
+      { txt: '🚐 Le van + le festival : l\'été nomade', effets: { moral: 12, social: 8, argent: -120, energie: -6 }, suivant: 'p_grand_saut', dans: 4,
+        note: 'Trois mois, quarante villes, cent histoires. Tu ne racontes plus ta vie pareil.' },
+      { txt: '🛠️ Juste le van : le retaper, le louer', effets: { argent: 200, savoir: 5 }, suivant: 'p_grand_saut', dans: 4,
+        note: 'Ton premier « business » qui roule. Littéralement.' },
+      { txt: '📆 Trop tôt — tu notes l\'idée pour plus tard', effets: { moral: -2, argent: 40 }, suivant: 'p_grand_saut', dans: 4,
+        note: 'Le van est parti en trois jours. L\'idée, elle, est restée.' },
+    ] },
+
+  /* ===== ACTE 3 · LE GRAND SAUT ===== */
+  p_grand_saut: { chapitre: 9, qui: 'L\'appel', emoji: '📞', decor: 'decor-bureau',
+    texte: 'LE coup de fil qui change tout : une opportunité à l\'étranger — un an, tout compris (boulot, contrat, aventure, selon ta vie). Ici, tout te retient. Là-bas, tout t\'appelle.',
+    options: [
+      { txt: '✈️ Partir. On ne regrette que ce qu\'on n\'a pas fait', effets: { moral: 8, social: 5, argent: -100 }, drapeau: 'monde', suivant: 'p_retour', dans: 3,
+        note: 'L\'aéroport, la boule au ventre, puis l\'ivresse. Une année qui compte double.' },
+      { txt: '🏡 Rester et construire ici, à {ville}', effets: { argent: 200, moral: 4 }, suivant: 'p_racines', dans: 3,
+        note: 'Les racines aussi, c\'est une aventure. La tienne.' },
+    ] },
+  p_retour: { chapitre: 10, qui: 'Le retour', emoji: '🛬', decor: 'decor-rue',
+    texte: 'Un an après, te revoilà à {ville}. Le {cafe} n\'a pas bougé, toi si. Ta bande a continué sa vie, ton accent a pris des couleurs. Tu reviens comment ?',
+    options: [
+      { txt: '📣 Avec mille projets plein la tête', effets: { moral: 8, savoir: 5, abonnes: 400 }, suivant: 'p_fonder', dans: 3,
+        note: 'Ton énergie est contagieuse. Même le serveur du {cafe} veut partir.' },
+      { txt: '🫂 Discret·e, juste heureux·se de retrouver les tiens', effets: { relation: 10, moral: 6 }, suivant: 'p_fonder', dans: 3,
+        note: 'Les retrouvailles ont duré jusqu\'à 4 h du matin. Comme avant. Mieux qu\'avant.' },
+    ] },
+  p_racines: { chapitre: 10, qui: 'Le notaire (si, si)', emoji: '🗝️', decor: 'decor-bureau',
+    texte: 'À force d\'économies, une porte s\'ouvre : un petit appart à {ville} à retaper, ou continuer à louer et garder ta liberté de mouvement.',
+    options: [
+      { txt: '🔑 Acheter et retaper — TON chez-toi', effets: { argent: -400, moral: 10 }, drapeau: 'proprio', suivant: 'p_fonder', dans: 3,
+        note: 'Des travaux, des jurons, puis ce moment : tes clés, tes murs, ton canapé.' },
+      { txt: '🧳 Rester libre, investir ailleurs', effets: { argent: 100, moral: 4 }, suivant: 'p_fonder', dans: 3,
+        note: 'Ton épargne travaille pendant que tu vis. Pas de murs, pas de chaînes.' },
+    ] },
+  /* ===== ACTE 4 · LA FAMILLE (OU PAS) ===== */
+  p_fonder: { chapitre: 11, qui: 'La grande question', emoji: '🏡', decor: 'decor-maison',
+    texte: 'La trentaine. Autour de toi, ça se marie, ça pouponne, ça achète des poussettes qui coûtent un SMIC. Et toi, tu la veux comment, ta vie ?',
+    options: [
+      { txt: '👶 Fonder une famille — c\'est le moment', effets: { moral: 10, energie: -8, argent: -100 }, drapeau: 'parent', suivant: 'p_famille2', dans: 3,
+        note: 'Neuf mois plus tard, un petit être hurle dans tes bras. Rien ne sera plus jamais pareil. Tant mieux.' },
+      { txt: '🌍 Une vie sans enfants, choisie et assumée', effets: { moral: 8, argent: 150 }, drapeau: 'sansEnfant', suivant: 'p_projets2', dans: 3,
+        note: 'Ta vie, tes règles. Tu réponds « et toi, ça va le travail ? » aux questions indiscrètes des repas de famille.' },
+      { txt: '📋 Adopter, plus tard — le projet se construit', effets: { moral: 6, savoir: 3 }, drapeau: 'parent', suivant: 'p_famille2', dans: 3,
+        note: 'Le dossier est long, l\'attente immense, et le jour où l\'appel arrive, le monde s\'arrête.' },
+    ] },
+  p_famille2: { chapitre: 12, qui: '{enfant}', emoji: '👶', decor: 'decor-maison',
+    texte: '{enfant} a grandi d\'un coup. Ce soir, gros dilemme : présentation cruciale demain au travail, et {enfant} joue son premier spectacle de l\'école. Les deux à 18 h.',
+    options: [
+      { txt: '🎭 Le spectacle. Le travail attendra', effets: { moral: 12, argent: -50 }, suivant: 'p_quarantaine', dans: 4,
+        note: '{enfant} t\'a cherché·e des yeux avant de chanter. Ce regard-là vaut toutes les promotions.' },
+      { txt: '💼 La présentation — tu te rattrapes ce week-end', effets: { argent: 200, moral: -6 }, suivant: 'p_quarantaine', dans: 4,
+        note: 'Présentation brillante. La vidéo du spectacle, filmée par mamie, t\'a serré la gorge.' },
+      { txt: '🤹 Négocier : présentation à distance, au fond de la salle', effets: { energie: -10, moral: 8, savoir: 3 }, suivant: 'p_quarantaine', dans: 4,
+        note: 'Micro coupé, caméra floue, {enfant} qui chante. Tu as TOUT eu. Épuisant et parfait.' },
+    ] },
+  p_projets2: { chapitre: 12, qui: 'Ton grand projet', emoji: '🚀', decor: 'decor-bureau',
+    texte: 'Sans enfants à élever, tu as un luxe rare : du temps et de l\'élan. La décennie est à toi. Tu la consacres à quoi ?',
+    options: [
+      { txt: '🏢 Monter ta propre affaire à {ville}', effets: { argent: -200, savoir: 6, moral: 8 }, drapeau: 'patron', suivant: 'p_quarantaine', dans: 4,
+        note: 'Deux ans de galère, puis ça tourne. Ton nom sur une devanture de {ville}.' },
+      { txt: '🌏 Le grand voyage — six mois, sac au dos, pour de vrai', effets: { moral: 12, social: 6, argent: -250 }, suivant: 'p_quarantaine', dans: 4,
+        note: 'Tu reviens avec 4 000 photos et une paix intérieure que rien n\'entame.' },
+      { txt: '🫂 T\'investir : assos, mairie, la vie de {ville}', effets: { social: 10, moral: 8 }, suivant: 'p_quarantaine', dans: 4,
+        note: 'Tout le monde te connaît. Le maire te demande ton avis. Ta ville a ta signature.' },
+    ] },
+  p_quarantaine: { chapitre: 13, qui: 'Le miroir', emoji: '🪞', decor: 'decor-automne',
+    texte: 'Quarante ans. Un matin, le miroir te tend une embuscade : premiers cheveux blancs, vieux rêves qui toussent. Crise… ou renaissance ?',
+    options: [
+      { txt: '🔥 Renaissance : reprendre un vieux rêve (sport, musique, projet)', effets: { moral: 12, forme: 8, energie: -6 }, suivant: 'p_transmission', dans: 4,
+        note: 'On n\'est jamais trop vieux. Tu es la preuve vivante, et un peu courbaturée.' },
+      { txt: '🧘 Acceptation : tu aimes la vie que tu as construite', effets: { moral: 10, energie: 8 }, suivant: 'p_transmission', dans: 4,
+        note: 'La paix. La vraie. Celle qui ne se photographie pas.' },
+      { txt: '🏍️ Cliché total : l\'achat impulsif qui fait du bien', effets: { moral: 8, argent: -300 }, suivant: 'p_transmission', dans: 4,
+        note: 'Oui, c\'est un cliché. Oui, ça fait un bien fou. Non, tu ne regrettes rien.' },
+    ] },
+  p_transmission: { chapitre: 14, qui: 'Un·e jeune de {ville}', emoji: '🌱', decor: 'decor-rue',
+    texte: 'Au {cafe}, un·e jeune de {ville} te demande conseil — même regard, mêmes doutes que toi à 16 ans. Tu donnes quoi à la génération d\'après ?',
+    options: [
+      { txt: '🎓 Devenir mentor — du temps, chaque semaine', effets: { social: 8, moral: 10, energie: -4 }, suivant: 'p_finale', dans: 3,
+        note: 'Le jour où « ton » jeune réussit, tu pleures plus fort que sa propre famille.' },
+      { txt: '💶 Financer : une bourse, un club, un local', effets: { argent: -200, moral: 8, social: 4 }, suivant: 'p_finale', dans: 3,
+        note: 'Une plaque discrète porte ton nom quelque part dans {ville}. Tu passes devant sans t\'arrêter. Enfin, presque.' },
+      { txt: '📖 Raconter : ton histoire, sans filtre', effets: { moral: 8, abonnes: 800 }, suivant: 'p_finale', dans: 3,
+        note: '« Et surtout : réponds aux questions avec le cœur. » Le/la jeune a souri. Toi aussi.' },
+    ] },
+  p_finale: { chapitre: 15, qui: 'La veille de tes 50 ans', emoji: '🕯️', decor: 'decor-hiver',
+    texte: 'Demain, 50 ans. Une moitié de vie derrière toi, écrite question après question. Ce soir, une dernière chose à faire — celle qui te ressemble.',
+    options: [
+      { txt: '📔 Écrire une lettre à ton toi de 16 ans', effets: { moral: 10 }, suivant: null,
+        note: '« Tu ne vas pas me croire, mais… » Trois pages plus tard, tu souris.' },
+      { txt: '🍽️ Réunir tout le monde au {resto}', effets: { social: 8, relation: 8, argent: -60 }, suivant: null,
+        note: 'Toutes tes époques autour d\'une table. Le patron a offert le dessert.' },
+      { txt: '🌃 Marcher seul·e dans {ville}, écouteurs vissés', effets: { moral: 6, energie: 6 }, suivant: null,
+        note: 'Chaque rue a une histoire. Les tiennes. Demain, la suite.' },
     ] },
 };

@@ -1,6 +1,10 @@
-# 🎒 Big City Life — Une vie en 40 questions
+# 🎒 Big City Life — Une vie en 50 questions
 
-Un jeu de vie **100 % questions**, façon Destiny Eleven : tu choisis la ville de France où tu grandis, ta famille, tes amis, ta filière — puis **chaque question écrit une saison de ta vie**, de 15 à 25 ans. Pas de carte, pas de menus : le jeu EST la question. **Une partie complète dure 20 à 25 minutes.**
+Un jeu de vie **100 % questions avec un vrai scénario à embranchements**, façon Destiny Eleven : tu choisis ta ville de France, ta famille, tes amis — puis **un parcours prédéfini de 15 chapitres bifurque selon tes réponses**, de 16 ans (juste après le brevet) à 50 ans. Le but : décrocher ton travail et construire ta vie de famille (ou pas — c'est un choix qui compte autant). **Le temps s'accélère avec la vie** : saisons au lycée, semestres pendant les études, années à l'âge adulte — ~49 questions, 20-25 minutes.
+
+## Le parcours (le cœur du jeu)
+
+Dès la première question — quelle table à la cantine ? — l'histoire bifurque : voie studieuse, bande du fond, sportifs du club ou créatifs. Chaque chapitre (épreuve de ta voie, amour, été post-bac, la vingtaine, le grand saut à l'étranger, **fonder une famille ou une vie sans enfants assumée**, la quarantaine, la transmission) propose des choix qui déterminent le chapitre suivant, avec des retrouvailles aux grands carrefours de la vie. Ton enfant a un prénom, ta voie a des conséquences, et le bilan à 50 ans pèse ta carrière ET ta vie de famille.
 
 > 🏛️ L'ancien jeu « deviens maire » reste jouable sur `maire.html`.
 
@@ -33,7 +37,7 @@ Aucune dépendance, aucun build : ouvre `index.html`. Sauvegarde automatique dan
 - **Des choix qui laissent des traces** : le permis débloque l'achat de la voiture du pote, le chiot « de race » acheté sur Snap s'appelle Biscotte et revient dans tes bilans.
 - **La vie, pas que les cours** : vacances en famille, premier départ entre potes (destination à choisir !), rencontres au camping, premier rendez-vous au resto, festival, plans business…
 - **Après le bac, 5 voies** : études longues, BTS/BUT, travailler direct, **année sabbatique** ou **voyage sac à dos** (une année off, puis on re-choisit).
-- **Une question par saison, ~40 questions pour une vie.** Deux types de cartes :
+- **Une question par saison, ~49 questions pour une vie.** Deux types de cartes :
   - **Scènes de vie** (~18) : contrôle surprise, rumeur sur un pote, crush qui t'écrit, plan douteux de Marco, collègue qui s'attribue ton travail… Le prof, ta famille, tes potes ou le taf t'interpellent.
   - **Ta saison** : comment tu passes ces trois mois — réviser, sortir, t'entraîner au foot, répéter ton chant, bosser un petit job… Chaque option affiche ses effets.
 - **5 stats** (⚡ énergie, 😊 moral, 🧠 savoir, 🫂 social, 💪 forme) + 💰 ton argent + l'amitié de chaque pote. Trop de fêtes et le bac s'éloigne, trop de révisions et le moral craque.
