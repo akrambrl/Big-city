@@ -691,6 +691,47 @@ hr { border: none; border-top: 3px solid var(--bord); border-radius: 2px; margin
   border-radius: 999px; padding: 1px 10px; font-size: .74rem; font-weight: 700;
 }
 
+/* ---------- Big City Life : stats, lieux, avatar ---------- */
+.strip-stats {
+  display: flex; gap: 8px; justify-content: space-between;
+  background: var(--creme-2); border-bottom: 2px solid var(--bord);
+  padding: 6px 12px;
+}
+.chip-stat { display: flex; align-items: center; gap: 4px; flex: 1; font-size: .9rem; }
+.chip-stat-barre {
+  flex: 1; height: 7px; background: #EADFC4; border-radius: 4px; overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(82, 64, 42, .25); display: block;
+}
+.chip-stat-barre span {
+  display: block; height: 100%; border-radius: 4px;
+  background: linear-gradient(180deg, #6FC9F2 0%, var(--eau) 60%);
+}
+.chip-stat.basse .chip-stat-barre span { background: linear-gradient(180deg, #F08A7A, var(--rouge) 60%); }
+
+.marqueur-lieu {
+  position: absolute; z-index: 3; transform: translate(-50%, -50%);
+  width: 44px; height: 44px; border-radius: 14px; cursor: pointer;
+  background: #FBF8EE; border: 2.5px solid #C9A45E;
+  font-size: 21px; line-height: 1;
+  box-shadow: 0 3px 0 rgba(138, 93, 51, .4), 0 6px 14px rgba(30, 60, 90, .25);
+  transition: transform .14s cubic-bezier(.34, 1.56, .64, 1);
+}
+.marqueur-lieu:hover { transform: translate(-50%, -50%) scale(1.18); border-color: var(--soleil); }
+.marqueur-lieu:active { transform: translate(-50%, -50%) scale(.95); }
+
+.marqueur-moi {
+  position: absolute; z-index: 4; transform: translate(-50%, -50%);
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(180deg, #FFF, #E8F4FD);
+  border: 2.5px solid var(--eau);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; pointer-events: none;
+  box-shadow: 0 3px 8px rgba(30, 60, 90, .35);
+  animation: flotte 2.2s ease-in-out infinite;
+}
+@keyframes flotte { 0%, 100% { margin-top: 0; } 50% { margin-top: -5px; } }
+@media (prefers-reduced-motion: reduce) { .marqueur-moi { animation: none; } }
+
 /* ---------- Gaston, l'adjoint ---------- */
 .adjoint { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 1em; }
 .adjoint-avatar {
