@@ -288,4 +288,73 @@ export const audio = {
       [[1, 0.1], [2.4, 0.04], [4.1, 0.02]].forEach(([k, g]) => tone(t + d, (1760 + i * 40) * k, 0.6, { gain: g }));
     });
   },
+
+  // --- Boucles génériques (mélange, versage, vapeur…) ---
+  loopSet(name, gain, freq, opts) {
+    if (!ok()) return;
+    const l = loop(name, opts);
+    l.g.gain.setTargetAtTime(gain, now(), 0.05);
+    if (freq) l.filt.frequency.setTargetAtTime(freq, now(), 0.06);
+  },
+  humSet(name, gain, freq = 50, lp = 240, type = 'sawtooth') {
+    if (!ok()) return;
+    if (!loops[name]) {
+      const osc = ac.createOscillator();
+      osc.type = type;
+      osc.frequency.value = freq;
+      const f = ac.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.value = lp;
+      const g = ac.createGain();
+      g.gain.value = 0;
+      osc.connect(f).connect(g).connect(master);
+      osc.start();
+      loops[name] = { s: osc, filt: f, g };
+    }
+    loops[name].g.gain.setTargetAtTime(gain, now(), 0.06);
+  },
+  stopLoops() {
+    if (!ac) return;
+    for (const k in loops) loops[k].g.gain.setTargetAtTime(0, now(), 0.06);
+  },
+  glop() {
+    if (!ok()) return;
+    const t = now();
+    tone(t, rand(160, 220), 0.12, { fEnd: 80, gain: 0.22 });
+    noise(t, 0.1, { type: 'lowpass', f: 700, fEnd: 200, q: 3, gain: 0.25 });
+  },
+  splat() {
+    if (!ok()) return;
+    const t = now();
+    const p = rand(0.85, 1.2);
+    noise(t, 0.14, { type: 'lowpass', f: 1300 * p, fEnd: 260, q: 3, gain: 0.5 });
+    noise(t + 0.02, 0.06, { type: 'bandpass', f: 2400 * p, q: 5, gain: 0.12 });
+    tone(t, 200 * p, 0.1, { fEnd: 80, gain: 0.25 });
+  },
+  knife() {
+    if (!ok()) return;
+    const t = now();
+    noise(t, 0.22, { type: 'bandpass', f: 3200, fEnd: 900, q: 1.5, gain: 0.2, a: 0.02 });
+    this.crackle(0.7, 0.2);
+    tone(t + 0.2, 110, 0.1, { fEnd: 60, gain: 0.3 });
+  },
+  clink() {
+    if (!ok()) return;
+    const t = now();
+    [[2350, 0.09], [3720, 0.05], [5480, 0.03]].forEach(([f, g]) => tone(t, f * rand(0.97, 1.03), 0.35, { gain: g, a: 0.001 }));
+  },
+  register() {
+    if (!ok()) return;
+    const t = now();
+    noise(t, 0.05, { type: 'highpass', f: 2000, gain: 0.15 });
+    tone(t + 0.05, 2093, 0.5, { type: 'triangle', gain: 0.1 });
+    tone(t + 0.12, 2637, 0.6, { type: 'triangle', gain: 0.1 });
+    tone(t + 0.12, 5274, 0.3, { gain: 0.03 });
+  },
+  clunk() {
+    if (!ok()) return;
+    const t = now();
+    tone(t, 160, 0.08, { type: 'square', fEnd: 90, gain: 0.12, lp: 900 });
+    noise(t, 0.05, { type: 'bandpass', f: 1800, q: 3, gain: 0.2 });
+  },
 };

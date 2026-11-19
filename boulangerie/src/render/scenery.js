@@ -146,7 +146,7 @@ export function drawShop(ctx, counterY) {
     x.fillStyle = '#fff6e8';
     x.font = '600 18px Fredoka, ui-rounded, system-ui';
     x.textAlign = 'center';
-    x.fillText('Croissant 1,20 €', W / 2, stage.top - 61);
+    x.fillText('Fournil · Café', W / 2, stage.top - 61);
 
     // comptoir
     const cg = x.createLinearGradient(0, counterY, 0, H);

@@ -1,4 +1,4 @@
-// Résultat : étoiles, réaction du client, récompenses.
+// Fin d'une fournée du matin : étoiles, stock ajouté en vitrine, réaction du live.
 import { stage } from '../core/stage.js';
 import { audio } from '../core/audio.js';
 import { haptics } from '../core/haptics.js';
@@ -8,25 +8,30 @@ import { tween, ease, wait, randi, rand } from '../core/util.js';
 import { ui } from '../ui.js';
 import { live } from '../live/live.js';
 import { drawTable } from '../render/scenery.js';
-import { updateCustomer } from '../render/customer.js';
+import { weightedScore } from '../recipes/index.js';
 
+export function starsFor(score, prod) {
+  if ((prod.bake ?? 0) > 0.9) return 1;
+  return score >= 0.85 ? 3 : score >= 0.62 ? 2 : 1;
+}
+
+/**
+ * opts: { product, onNext, nextLabel }
+ */
 export class ResultScene {
-  constructor(game, recipe, customer, prod, results) {
+  constructor(game, recipe, prod, results, opts) {
     this.game = game;
     this.recipe = recipe;
-    this.customer = customer;
     this.prod = prod;
     this.results = results;
+    this.opts = opts;
     this.t = 0;
-    this.score = results.reduce((s, r) => s + r.score * r.weight, 0) / results.reduce((s, r) => s + r.weight, 0);
-    let stars = this.score >= 0.85 ? 3 : this.score >= 0.62 ? 2 : 1;
+    this.score = weightedScore(results);
     this.burnt = (prod.bake ?? 0) > 0.9;
-    if (this.burnt) stars = 1;
-    this.stars = stars;
+    this.stars = starsFor(this.score, prod);
     this.starAnim = [0, 0, 0].map(() => ({ s: 0 }));
     this.plate = { s: 0 };
     this.steamT = 0;
-    this.custY = 0;
   }
 
   get starsY() {
@@ -47,49 +52,37 @@ export class ResultScene {
     ui.clear();
     ui.hideBanner();
     const { stars } = this;
-    const customer = this.customer;
+    const p = this.opts.product;
 
-    // récompenses
-    const tip = stars === 3 ? randi(4, 10) : 0;
-    const coins = Math.round(6 + stars * 10 + this.score * 8) + tip;
     const likes = Math.round(live.viewers * (0.3 + this.score) * (stars === 3 ? 1.8 : 1));
-    const followers = stars === 3 ? randi(4, 9) : stars === 2 ? randi(1, 4) : randi(0, 1);
+    const followers = stars === 3 ? randi(3, 7) : stars === 2 ? randi(1, 3) : randi(0, 1);
     const d = save.data;
-    d.coins += coins;
     d.likes += likes;
     d.followers += followers;
-    d.served += 1;
     d.best[this.recipe.id] = Math.max(d.best[this.recipe.id] || 0, stars);
     save.write();
+    this.game.addStock(p.id, this.prod, this.score);
+    this.game.dayStats.likes += likes;
+    this.game.dayStats.followers += followers;
 
-    const quote = this.burnt
-      ? 'C\'est… un peu cramé, non ? 😬'
-      : stars === 3
-        ? pickQuote(['Magnifique ! Je reviendrai 😍', 'Le meilleur croissant du quartier !', 'Il est parfait, merci !'])
-        : stars === 2
-          ? pickQuote(['Merci, il a l\'air délicieux !', 'Très joli, merci beaucoup !'])
-          : pickQuote(['Hmm… merci quand même.', 'Il est… original. Merci !']);
-
+    const title = this.burnt ? 'Fournée un peu cramée… 😬' : stars === 3 ? 'Fournée parfaite ! ✨' : stars === 2 ? 'Belle fournée !' : 'Fournée correcte';
     const rows = this.results
       .map((r) => `<span>${r.label}</span><div class="bar"><i style="width:${Math.round(r.score * 100)}%"></i></div><span class="lbl">${Math.round(r.score * 100)}%</span>`)
       .join('');
     const panel = ui.el(`
-      <div class="client-quote">${customer.name} : « ${quote} »</div>
+      <div class="client-quote">${title}</div>
       <div class="rewards">
-        <div class="reward">+${coins}<small>🪙 pièces</small></div>
+        <div class="reward">+${p.batch}<small>${p.emoji} en vitrine</small></div>
         <div class="reward">+${likes}<small>❤ likes</small></div>
         <div class="reward">+${followers}<small>👤 abonnés</small></div>
       </div>
       <div class="breakdown">${rows}</div>
     `, 'result-panel pending');
-    this.panelEl = panel;
     this.panelTopPx = panel.getBoundingClientRect().top;
-
 
     audio.whoosh();
     await tween(this.plate, { s: 1 }, 0.5, ease.outBack);
     audio.crackle(0.9, 0.8);
-
     for (let i = 0; i < 3; i++) {
       await wait(0.38);
       if (i < stars) {
@@ -102,8 +95,6 @@ export class ResultScene {
         tween(this.starAnim[i], { s: 0.7 }, 0.3, ease.outBack);
       }
     }
-
-    customer.mood = this.burnt ? 'sad' : stars === 3 ? 'love' : stars === 2 ? 'happy' : 'meh';
     if (stars === 3) {
       audio.chime();
       haptics.pattern([30, 50, 30, 50, 60]);
@@ -115,18 +106,18 @@ export class ResultScene {
 
     panel.classList.remove('pending');
     ui.syncLift();
-    const keys = ['coins', 'likes', 'followers'];
+    const keys = [null, 'likes', 'followers'];
     const rewards = panel.querySelectorAll('.reward');
     for (let i = 0; i < rewards.length; i++) {
       await wait(0.3);
       rewards[i].classList.add('in');
-      if (i === 0) for (let k = 0; k < 5; k++) audio.coin(k);
+      if (i === 0) audio.clink();
       else audio.pop(1.2 + i * 0.2);
       haptics.tap(12);
-      live.refreshStats(keys[i]);
+      if (keys[i]) live.refreshStats(keys[i]);
     }
     await wait(0.4);
-    ui.button('Client suivant →', () => this.game.nextCustomer());
+    ui.button(this.opts.nextLabel, () => this.opts.onNext());
   }
 
   exit() {}
@@ -137,7 +128,6 @@ export class ResultScene {
 
   update(dt) {
     this.t += dt;
-    updateCustomer(this.customer, dt);
     this.steamT -= dt;
     if (this.steamT <= 0 && this.plate.s > 0.5) {
       this.steamT = 0.18;
@@ -149,7 +139,6 @@ export class ResultScene {
   }
 
   down(p) {
-    // tapoter le croissant : il croustille
     if (Math.hypot(p.x - stage.W / 2, p.y - this.plateY) < 120) {
       audio.crackle(1, 0.3);
       haptics.tap(12);
@@ -162,7 +151,6 @@ export class ResultScene {
     drawTable(ctx);
     const cx = stage.W / 2, py = this.plateY;
     const s = this.plate.s;
-    // assiette
     ctx.save();
     ctx.translate(cx, py + this.size * 0.12);
     ctx.scale(s * this.size / 250, s * this.size / 250);
@@ -183,7 +171,6 @@ export class ResultScene {
     this.recipe.drawFinal(ctx, 0, 0, this.size, this.prod, { shine: 0.05 + Math.max(0, Math.sin(this.t * 2.5)) * 0.08 });
     ctx.restore();
 
-    // étoiles
     for (let i = 0; i < 3; i++) {
       const a = this.starAnim[i];
       if (a.s <= 0.01) continue;
@@ -203,10 +190,5 @@ export class ResultScene {
       }
       ctx.restore();
     }
-
   }
-}
-
-function pickQuote(a) {
-  return a[Math.floor(Math.random() * a.length)];
 }

@@ -14,8 +14,12 @@ const PERFECT = 0.7;
 const RATE = 1 / 5.2; // cuisson par seconde d'appui
 
 export class Bake extends Step {
-  constructor(prod, ui) {
+  constructor(prod, ui, opt = {}) {
     super(prod, ui);
+    // dessin du produit : par défaut le croissant (avec sa dorure)
+    this.drawFn = opt.draw || ((ctx, x, y, s, o) => drawCroissant(ctx, x, y, s, { ...o, glaze: prod.glaze, glazeBox: 0.7 }));
+    this.outSize = opt.outSize || 250;
+    this.inSize = opt.inSize || 150;
     this.title = 'Cuisson';
     this.hintText = 'Maintiens appuyé pour cuire, relâche quand c\'est doré';
     this.live = 'bake';
@@ -31,7 +35,7 @@ export class Bake extends Step {
     this.ovenW = 340;
     this.ovenH = Math.min(310, this.areaH * 0.62);
     this.ovenY = this.cy - 20;
-    this.c = { x: this.cx, y: this.ovenY + 10, s: 150, fade: 1 };
+    this.c = { x: this.cx, y: this.ovenY + 10, s: this.inSize, fade: 1 };
     this.steamT = 0;
   }
 
@@ -76,7 +80,7 @@ export class Bake extends Step {
     haptics.pattern([10, 30, 10, 30, 10, 30, 10]);
     for (let i = 0; i < 14; i++) particles.steam(this.c.x, this.c.y - 20, 120);
     tween(this.c, { fade: 0 }, 0.4);
-    await tween(this.c, { y: this.cy, s: 250 }, 0.65, ease.outBack);
+    await tween(this.c, { y: this.cy, s: this.outSize }, 0.65, ease.outBack);
     shake(4);
     audio.thud(0.5);
     particles.crumbs(this.cx, this.cy + 30, 10, '#d9963c');
@@ -199,12 +203,12 @@ export class Bake extends Step {
 
     // croissant (dessiné hors du fondu du four)
     const puff = clamp(this.bake / 0.55);
-    const cOpt = { bake: this.bake, puff, glaze: this.prod.glaze, glazeBox: 0.7, shine: this.phase === 'out' ? 0.08 : 0 };
+    const cOpt = { bake: this.bake, puff, shine: this.phase === 'out' ? 0.08 : 0 };
     if (this.phase === 'ready') {
       ctx.save();
       roundRect(ctx, ix, iy, iw, ih, 14);
       ctx.clip();
-      drawCroissant(ctx, this.c.x, this.c.y, this.c.s, cOpt);
+      this.drawFn(ctx, this.c.x, this.c.y, this.c.s, cOpt);
       ctx.restore();
     }
 
@@ -244,7 +248,7 @@ export class Bake extends Step {
     ctx.fill();
     ctx.restore();
 
-    if (this.phase === 'out') drawCroissant(ctx, this.c.x, this.c.y, this.c.s, cOpt);
+    if (this.phase === 'out') this.drawFn(ctx, this.c.x, this.c.y, this.c.s, cOpt);
 
     // bouton d'appui long
     if (this.phase === 'ready') this.drawHold(ctx, cx, Math.min(oy + h / 2 + 62, this.cy + this.areaH / 2 + 10));

@@ -2,7 +2,13 @@
 
 Jeu mobile ASMR « satisfaisant » : tu tiens une petite boulangerie et tu filmes ta production en live. Web, mobile-first, en portrait.
 
-**Statut : MVP en cours.** Le croissant est jouable de bout en bout. Le pain au chocolat, la baguette et la boutique arrivent ensuite.
+**Statut : MVP en cours.** Une journée complète est jouable : fournées du matin (croissant, banana bread), service (latte, tranches de banana bread, croissants), bilan. Carrot cake, matcha et boutique arrivent ensuite.
+
+## Une journée
+
+1. **Le matin** : on choisit 1 ou 2 fournées. Chaque fournée remplit la vitrine (6 croissants, 8 tranches de banana bread) et sa note suit toute la journée.
+2. **Le service** (cosy) : 6 clients. On sert les gâteaux de la vitrine et on prépare les lattes à la minute. La patience ne change que le pourboire. Un gâteau en rupture ne peut pas être servi.
+3. **Le bilan** : pièces, pourboires, likes, abonnés ; les invendus sont donnés aux voisins.
 
 ## Lancer
 
@@ -13,7 +19,7 @@ npm run dev      # http://localhost:5173 (et sur le réseau local pour tester au
 npm run build    # sortie dans dist/
 ```
 
-Pour tester une étape directement : `?step=knead`, `laminate`, `shape`, `glaze` ou `bake`.
+Raccourcis de test : `?mission=bananabread`, `?service` (vitrine pleine), `?step=latte:1` (produit:numéro d'étape).
 
 ## Déployer sur Vercel
 
@@ -21,7 +27,13 @@ Pour tester une étape directement : `?step=knead`, `laminate`, `shape`, `glaze`
 2. **Root Directory** : `boulangerie`.
 3. Vite est détecté automatiquement (build `npm run build`, sortie `dist`).
 
-## Le croissant, étape par étape
+## Les gestes
+
+- **Banana bread** : écraser les bananes (taps), mélanger (cercles), verser (appui long jusqu'à la ligne), poser la banane (glisser), cuire.
+- **Latte** : espresso (appui long), mousser le lait (garder la buse juste sous la surface en glissant le pichet), latte art (verser un rond, swipe pour le cœur).
+- **Service** : couper une tranche sur le repère (swipe), glisser un croissant dans l'assiette.
+
+### Le croissant, étape par étape
 
 | Étape | Geste | Ce qui compte pour la note |
 |---|---|---|

@@ -11,10 +11,11 @@ import { drawTable } from '../render/scenery.js';
 const RATING = (s) => (s >= 0.9 ? 'Parfait !' : s >= 0.75 ? 'Super !' : s >= 0.5 ? 'Pas mal' : 'Oups…');
 
 export class WorkbenchScene {
-  constructor(game, recipe, customer) {
+  // onDone(prod, results) est appelé quand toutes les étapes sont finies
+  constructor(game, recipe, onDone) {
     this.game = game;
     this.recipe = recipe;
-    this.customer = customer;
+    this.onDone = onDone;
     this.prod = {};
     this.results = [];
     this.idx = -1;
@@ -38,13 +39,14 @@ export class WorkbenchScene {
     audio.rollSet && audio.rollSet(0);
     audio.brushSet && audio.brushSet(0);
     audio.ovenStop();
+    audio.stopLoops();
   }
 
   async next() {
     this.idx++;
     const defs = this.recipe.steps;
     if (this.idx >= defs.length) {
-      this.game.showResult(this.recipe, this.customer, this.prod, this.results);
+      this.onDone(this.prod, this.results);
       return;
     }
     const def = defs[this.idx];

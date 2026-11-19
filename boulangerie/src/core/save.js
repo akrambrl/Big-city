@@ -6,6 +6,7 @@ const DEFAULT = {
   likes: 0,
   followers: 0,
   served: 0,
+  day: 1,
   unlocked: ['croissant'],
   best: {},
   settings: { sound: true, haptics: true },

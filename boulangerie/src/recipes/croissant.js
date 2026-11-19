@@ -32,4 +32,3 @@ export const croissant = {
   },
 };
 
-export const RECIPES = { croissant };

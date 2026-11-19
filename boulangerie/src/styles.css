@@ -145,6 +145,7 @@ body, #app, #app * {
 #likes.bump .heart-icon { animation: bump .45s cubic-bezier(.3, 1.8, .5, 1); }
 
 #app.lift #comments, #app.lift #likes { bottom: calc(var(--safe-bottom) + 100px); }
+#app:has(.order-cards) #comments, #app:has(.order-cards) #likes { bottom: calc(var(--safe-bottom) + 112px); }
 #app.lift #hearts { bottom: calc(var(--safe-bottom) + 156px); }
 #app.cover #comments { opacity: 0; }
 
@@ -264,3 +265,71 @@ body, #app, #app * {
 .breakdown .bar i { display: block; height: 100%; border-radius: 9px; background: linear-gradient(90deg, #f2b04f, #e0892b); }
 .breakdown .lbl { font-weight: 600; font-size: 13px; text-align: right; color: var(--crust-dark); }
 .client-quote { text-align: center; font-size: 15px; font-weight: 600; color: var(--choco); margin-bottom: 10px; }
+
+/* ---------- Matin : choix des fournées ---------- */
+.morning-sheet, .day-sheet {
+  position: absolute; left: 14px; right: 14px;
+  top: calc(var(--safe-top) + 60px);
+  background: rgba(255, 248, 238, .95);
+  border-radius: 24px; padding: 18px 16px;
+  box-shadow: 0 10px 30px rgba(120, 70, 30, .22);
+  animation: panelIn .5s cubic-bezier(.2, 1.4, .4, 1);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sheet-title { font-size: 22px; font-weight: 700; color: var(--choco); }
+.sheet-sub { font-size: 15px; color: #8a6450; line-height: 1.35; }
+.missions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.mission {
+  font-family: var(--font); color: var(--choco);
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  min-height: 72px; padding: 10px 14px;
+  border-radius: 18px; border: 3px solid #efdcc2; background: #fff;
+  transition: transform .1s, border-color .15s, background .15s;
+}
+.mission:active { transform: scale(.97); }
+.mission.on { border-color: var(--crust); background: #fff3e2; }
+.mission.soon { opacity: .5; }
+.m-emoji { font-size: 34px; width: 44px; text-align: center; }
+.m-body { flex: 1; display: flex; flex-direction: column; }
+.m-body b { font-size: 19px; }
+.m-body small { font-size: 14px; color: #9a7562; }
+.m-check {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center; font-weight: 700; color: #fff;
+  background: #efdcc2;
+}
+.mission.on .m-check { background: var(--crust); animation: bump .35s cubic-bezier(.3, 1.8, .5, 1); }
+.morning-sheet .btn { margin-top: 6px; }
+.btn:disabled { filter: grayscale(.6); opacity: .6; }
+
+/* ---------- Service : cartes de commande ---------- */
+.order-cards {
+  position: absolute; left: 12px; right: 12px;
+  bottom: calc(var(--safe-bottom) + 16px);
+  display: flex; gap: 10px;
+  animation: btnIn2 .45s cubic-bezier(.2, 1.5, .4, 1);
+}
+@keyframes btnIn2 { from { transform: translateY(40px); opacity: 0; } }
+.ocard {
+  flex: 1; min-width: 0;
+  font-family: var(--font); color: #fff; text-align: left;
+  display: flex; align-items: center; gap: 8px;
+  min-height: 70px; padding: 8px 12px;
+  border: 0; border-radius: 20px;
+  background: linear-gradient(180deg, #f0a24a, #d97f24);
+  box-shadow: 0 6px 0 #a95a16, 0 10px 20px rgba(150, 80, 20, .3);
+  transition: transform .08s, box-shadow .08s;
+}
+.ocard:active { transform: translateY(5px); box-shadow: 0 1px 0 #a95a16; }
+.ocard.done { background: linear-gradient(180deg, #7fd08f, #4fae63); box-shadow: 0 6px 0 #3a8a4b; }
+.ocard.out { background: linear-gradient(180deg, #d9cfc6, #bfb2a6); box-shadow: 0 6px 0 #9d9086; }
+.o-emoji { font-size: 30px; }
+.o-body { display: flex; flex-direction: column; min-width: 0; }
+.o-body b { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.o-body small { font-size: 13px; opacity: .92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Bilan ---------- */
+.day-rows { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; font-size: 17px; color: #7a5644; }
+.day-rows b { color: var(--choco); text-align: right; font-variant-numeric: tabular-nums; }
+
+#app.service #comments { max-height: 13%; }

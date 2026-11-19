@@ -13,7 +13,7 @@ export const ui = {
   // les commentaires remontent quand un gros bouton occupe le bas de l'écran
   syncLift() {
     const app = $('app');
-    app.classList.toggle('lift', !!$('ui').querySelector('.btn-bottom'));
+    app.classList.toggle('lift', !!$('ui').querySelector('.btn-bottom, .order-cards'));
     app.classList.toggle('cover', !!$('ui').querySelector('.result-panel'));
   },
 
