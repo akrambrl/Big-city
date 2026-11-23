@@ -1,10 +1,8 @@
-// La tête : visage, cheveux, yeux, sourcils, bouche et accessoires.
-// Tout est dessiné dans le repère 400 x 800 du personnage (tête centrée en 200, 175).
+// La tête, style illustration de jeu : proportions réalistes, contours noirs, ombres en aplats.
+// Repère : tête centrée en x = 200, yeux à y ≈ 97, bouche à y ≈ 140.
 import React, { useId } from 'react';
 import type { Apparence, Expression } from './types';
-import { CONTOUR, nuance } from './variantes';
-
-const TRAIT = 4; // épaisseur du contour
+import { CONTOUR, TRAIT, TRAIT_FIN } from './variantes';
 
 type Props = {
   apparence: Apparence;
@@ -13,208 +11,253 @@ type Props = {
   clignement: number;
   /** 0 = bouche fermée, 1 = grande ouverte (parole) */
   ouverture: number;
+  lunettesSoleil?: boolean;
 };
 
-// Sourcils : hauteur côté intérieur / extérieur pour chaque expression (y SVG, plus petit = plus haut)
-const SOURCILS: Record<Expression, { d: [number, number]; g: [number, number] }> = {
-  neutre: { d: [136, 138], g: [136, 138] },
-  choque: { d: [118, 116], g: [118, 116] },
-  content: { d: [128, 130], g: [128, 130] },
-  colere: { d: [152, 132], g: [152, 132] },
-  triste: { d: [128, 145], g: [128, 145] },
-  malin: { d: [142, 140], g: [126, 118] },
+// Identifiant unique : plusieurs personnages peuvent être affichés en même temps
+const useIdUnique = (prefixe: string) => `${prefixe}${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+
+const TETE = {
+  homme: 'M 200 38 C 234 38 248 62 248 92 L 246 114 C 244 130 238 142 228 151 L 214 161 Q 200 168 186 161 L 172 151 C 162 142 156 130 154 114 L 152 92 C 152 62 166 38 200 38 Z',
+  femme: 'M 200 40 C 232 40 246 62 246 92 L 244 112 C 241 132 230 148 216 158 Q 200 168 184 158 C 170 148 159 132 156 112 L 154 92 C 154 62 168 40 200 40 Z',
 };
 
-// Ouverture des yeux : taille, pupille, paupière supérieure (0 = aucune, 1 = fermée)
-const YEUX: Record<Expression, { echelle: number; pupille: number; paupiere: number }> = {
-  neutre: { echelle: 1, pupille: 10, paupiere: 0.08 },
-  choque: { echelle: 1.18, pupille: 7, paupiere: 0 },
-  content: { echelle: 1, pupille: 10, paupiere: 0.12 },
-  colere: { echelle: 0.95, pupille: 9, paupiere: 0.35 },
-  triste: { echelle: 1, pupille: 10, paupiere: 0.3 },
-  malin: { echelle: 1, pupille: 9, paupiere: 0.45 },
+// Réglages par expression : ouverture des yeux, décalage des sourcils (intérieur, extérieur),
+// inclinaison des paupières (> 0 : coin intérieur plus bas = colère)
+const REGLAGES: Record<Expression, { yeux: number; oeilG?: number; sourcilD: [number, number]; sourcilG: [number, number]; pente: number }> = {
+  neutre: { yeux: 1, sourcilD: [0, 0], sourcilG: [0, 0], pente: 0 },
+  choque: { yeux: 1.5, sourcilD: [-10, -8], sourcilG: [-10, -8], pente: 0 },
+  content: { yeux: 0.72, sourcilD: [-3, -2], sourcilG: [-3, -2], pente: 0 },
+  colere: { yeux: 0.78, sourcilD: [7, -3], sourcilG: [7, -3], pente: 2.5 },
+  triste: { yeux: 0.8, sourcilD: [-7, 3], sourcilG: [-7, 3], pente: -2.5 },
+  malin: { yeux: 0.62, oeilG: 0.42, sourcilD: [0, 0], sourcilG: [-7, -10], pente: 0 },
 };
 
-const Oeil: React.FC<{ cx: number; cy: number; expression: Expression; clignement: number; peau: string; cote: 1 | -1 }> = ({
-  cx, cy, expression, clignement, peau, cote,
+const Oeil: React.FC<{ cx: number; cote: -1 | 1; ouvert: number; pente: number; femme: boolean; peauOmbre: string }> = ({
+  cx, cote, ouvert, pente, femme, peauOmbre,
 }) => {
-  const y = YEUX[expression];
-  const rx = 21 * y.echelle;
-  const ry = 25 * y.echelle;
-  // paupière : la plus fermée entre l'expression et le clignement
-  const ferme = Math.max(y.paupiere, clignement);
-  // identifiant unique : plusieurs personnages peuvent être affichés en même temps
-  const clipId = `oeil-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
-  // le malin ferme un peu plus l'œil gauche (côté droit de l'écran)
-  const fermeture = expression === 'malin' && cote === 1 ? Math.max(ferme, 0.55) : ferme;
+  const cy = 97;
+  const clip = useIdUnique('oeil');
+  // cote -1 = œil à gauche de l'écran ; le coin intérieur est vers le centre du visage
+  const xInt = cx - cote * 10.5, xExt = cx + cote * 11.5;
+  const yInt = cy + pente, yExt = cy - 1;
+  const h = 7.5 * ouvert;
+  const pli = (
+    <path d={`M ${xInt} ${yInt - 6 - h * 0.6} Q ${cx} ${cy - 10 - h} ${xExt} ${yExt - 5 - h * 0.5}`} fill="none" stroke={peauOmbre} strokeWidth={2} strokeLinecap="round" />
+  );
+  if (ouvert < 0.14) {
+    // œil fermé : une simple ligne de paupière
+    return (
+      <g>
+        {pli}
+        <path d={`M ${xInt} ${yInt} Q ${cx} ${cy + 3} ${xExt} ${yExt}`} fill="none" stroke={CONTOUR} strokeWidth={3.2} strokeLinecap="round" />
+      </g>
+    );
+  }
+  const forme = `M ${xExt} ${yExt} Q ${cx} ${cy - h * 1.35} ${xInt} ${yInt} Q ${cx} ${cy + h * 0.95} ${xExt} ${yExt} Z`;
   return (
     <g>
-      <defs>
-        <clipPath id={clipId}>
-          <ellipse cx={cx} cy={cy} rx={rx} ry={ry} />
-        </clipPath>
-      </defs>
-      <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#FFFFFF" />
-      <g clipPath={`url(#${clipId})`}>
-        <circle cx={cx + 2 * cote * -1 + 1} cy={cy + 4} r={y.pupille} fill="#2A1C14" />
-        <circle cx={cx - 2} cy={cy - 1} r={y.pupille * 0.35} fill="#FFFFFF" />
-        {/* paupière supérieure (couleur peau) qui descend */}
-        <rect x={cx - rx - 2} y={cy - ry - 2} width={rx * 2 + 4} height={(ry * 2 + 4) * fermeture} fill={peau} />
-        {fermeture > 0.02 && (
-          <line
-            x1={cx - rx} x2={cx + rx}
-            y1={cy - ry - 2 + (ry * 2 + 4) * fermeture} y2={cy - ry - 2 + (ry * 2 + 4) * fermeture}
-            stroke={CONTOUR} strokeWidth={3} strokeLinecap="round"
-          />
-        )}
+      {pli}
+      <clipPath id={clip}><path d={forme} /></clipPath>
+      <path d={forme} fill="#F3EEE7" />
+      <g clipPath={`url(#${clip})`}>
+        <circle cx={cx - cote} cy={cy + 0.5} r={5} fill="#4E3221" />
+        <circle cx={cx - cote} cy={cy + 0.5} r={2.4} fill="#0B0807" />
+        <circle cx={cx - cote - 1.6} cy={cy - 1.4} r={1.3} fill="#FFFFFF" />
+        {/* ombre portée de la paupière sur le blanc de l'œil */}
+        <path d={`M ${xExt - cote * 2} ${yExt - 1} Q ${cx} ${cy - h * 1.1} ${xInt + cote * 2} ${yInt - 1}`} fill="none" stroke="#000000" strokeOpacity={0.18} strokeWidth={3} />
       </g>
-      <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="none" stroke={CONTOUR} strokeWidth={3} />
+      {/* paupière supérieure épaisse (prolongée en trait de cils pour les femmes) */}
+      <path d={`M ${xExt + cote * (femme ? 3 : 1)} ${yExt - (femme ? 2 : 0)} Q ${cx} ${cy - h * 1.35} ${xInt} ${yInt}`} fill="none" stroke={CONTOUR} strokeWidth={femme ? 3.6 : 3.2} strokeLinecap="round" />
+      <path d={`M ${xInt} ${yInt} Q ${cx} ${cy + h * 0.95} ${xExt} ${yExt}`} fill="none" stroke={CONTOUR} strokeOpacity={0.55} strokeWidth={1.4} />
     </g>
   );
 };
 
-const Bouche: React.FC<{ expression: Expression; ouverture: number }> = ({ expression, ouverture }) => {
-  const cx = 200, cy = 234;
-  const clipId = `bouche-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
-  // Quand le personnage parle, la bouche s'ouvre ; la largeur dépend de l'expression
-  if (ouverture > 0.06 || expression === 'choque') {
-    const o = expression === 'choque' ? Math.max(ouverture, 0.75) : ouverture;
-    const w = expression === 'content' ? 26 : expression === 'choque' ? 14 : 19;
-    const h = 5 + o * 15;
-    const sourire = expression === 'content' ? 6 : expression === 'triste' || expression === 'colere' ? -4 : 2;
-    const d = `M ${cx - w} ${cy - sourire / 2}
-      Q ${cx} ${cy + sourire - h * 0.4} ${cx + w} ${cy - sourire / 2}
-      Q ${cx + w * 0.9} ${cy + h * 1.6} ${cx} ${cy + h * 1.7}
-      Q ${cx - w * 0.9} ${cy + h * 1.6} ${cx - w} ${cy - sourire / 2} Z`;
-    return (
-      <g>
-        <clipPath id={clipId}><path d={d} /></clipPath>
-        <path d={d} fill="#7A2323" />
-        <g clipPath={`url(#${clipId})`}>
-          <ellipse cx={cx} cy={cy + h * 1.6} rx={w * 0.7} ry={h * 0.7} fill="#E86F6F" />
-          {expression !== 'choque' && <rect x={cx - w} y={cy - 12} width={w * 2} height={10} fill="#FFFFFF" />}
-        </g>
-        <path d={d} fill="none" stroke={CONTOUR} strokeWidth={3.5} strokeLinejoin="round" />
-      </g>
-    );
-  }
-  const traits: Record<Expression, string> = {
-    neutre: `M 182 232 Q 200 242 218 232`,
-    choque: '',
-    content: `M 174 226 Q 200 256 226 226 Z`,
-    colere: `M 180 242 Q 200 228 220 242`,
-    triste: `M 182 244 Q 200 230 218 244`,
-    malin: `M 182 236 Q 206 244 226 224`,
-  };
-  if (expression === 'content') {
-    return (
-      <g>
-        <path d={traits.content} fill="#7A2323" stroke={CONTOUR} strokeWidth={3.5} strokeLinejoin="round" />
-        <path d="M 180 230 Q 200 236 220 230 L 219 226 L 181 226 Z" fill="#FFFFFF" />
-        <ellipse cx={200} cy={244} rx={10} ry={5} fill="#E86F6F" />
-      </g>
-    );
-  }
-  return <path d={traits[expression]} fill="none" stroke={CONTOUR} strokeWidth={4.5} strokeLinecap="round" />;
+const Sourcil: React.FC<{ cote: -1 | 1; decalage: [number, number]; femme: boolean; couleur: string }> = ({ cote, decalage, femme, couleur }) => {
+  const xi = 200 + cote * 8, xo = 200 + cote * 35;
+  const yi = 84 + decalage[0], yo = 86 + decalage[1];
+  const ei = femme ? 4 : 7, eo = femme ? 2.4 : 4;
+  const xm = (xi + xo) / 2, ym = (yi + yo) / 2 - 3;
+  const d = `M ${xi} ${yi - ei / 2} Q ${xm} ${ym - ei / 2 - 1} ${xo} ${yo - eo / 2} L ${xo} ${yo + eo / 2} Q ${xm} ${ym + ei / 2} ${xi} ${yi + ei / 2} Z`;
+  return <path d={d} fill={couleur} stroke={CONTOUR} strokeWidth={1.2} strokeLinejoin="round" />;
 };
 
-const Cheveux: React.FC<{ apparence: Apparence; devant: boolean }> = ({ apparence, devant }) => {
-  const { couleur, style } = apparence.cheveux;
-  const p = { fill: couleur, stroke: CONTOUR, strokeWidth: TRAIT, strokeLinejoin: 'round' as const };
-  if (style === 'chignon' && !devant) return <circle cx={200} cy={78} r={34} {...p} />;
-  if (!devant) return null;
-  switch (style) {
-    case 'court':
-      return (
-        <path
-          {...p}
-          d="M 112 176 C 104 96 156 64 206 66 C 262 68 300 104 290 176
-             C 282 146 270 126 252 116 C 230 128 186 130 150 116 C 132 128 118 148 112 176 Z"
-        />
-      );
-    case 'degarni':
+const Bouche: React.FC<{ expression: Expression; ouverture: number; femme: boolean; ombre: string }> = ({ expression, ouverture, femme, ombre }) => {
+  const clip = useIdUnique('bouche');
+  const levre = femme ? '#A6474E' : CONTOUR;
+  // Parole : bouche ouverte dont la hauteur suit `ouverture`
+  if (ouverture > 0.06 && expression !== 'choque') {
+    const w = expression === 'content' ? 13 : 11;
+    const h = 2 + ouverture * 11;
+    const coin = expression === 'content' ? -2 : expression === 'triste' || expression === 'colere' ? 2 : 0;
+    const d = `M ${200 - w} ${139 + coin} Q 200 137.5 ${200 + w} ${139 + coin} Q ${200 + w * 0.85} ${139 + h} 200 ${140 + h * 1.2} Q ${200 - w * 0.85} ${139 + h} ${200 - w} ${139 + coin} Z`;
+    return (
+      <g>
+        <clipPath id={clip}><path d={d} /></clipPath>
+        <path d={d} fill="#3A1214" />
+        <g clipPath={`url(#${clip})`}>
+          <rect x={200 - w} y={136} width={w * 2} height={4.5} fill="#F2EEE8" />
+          <ellipse cx={200} cy={141 + h * 1.2} rx={w * 0.6} ry={h * 0.5} fill="#B5545A" />
+        </g>
+        <path d={d} fill="none" stroke={levre} strokeWidth={2.6} strokeLinejoin="round" />
+        <path d={`M 194 ${144 + h * 1.3} Q 200 ${146 + h * 1.3} 206 ${144 + h * 1.3}`} fill="none" stroke={ombre} strokeWidth={2.4} strokeLinecap="round" />
+      </g>
+    );
+  }
+  switch (expression) {
+    case 'choque':
       return (
         <g>
-          <path {...p} d="M 113 190 C 106 150 114 122 138 110 L 146 150 C 130 158 124 172 122 192 Z" />
-          <path {...p} d="M 287 190 C 294 150 286 122 262 110 L 254 150 C 270 158 276 172 278 192 Z" />
+          <ellipse cx={200} cy={145} rx={7} ry={9.5} fill="#3A1214" stroke={levre} strokeWidth={2.6} />
+          <ellipse cx={200} cy={150} rx={4} ry={3} fill="#B5545A" />
         </g>
       );
-    case 'chignon':
-      return (
-        <path
-          {...p}
-          d="M 112 180 C 106 102 152 76 202 76 C 254 76 298 104 289 180
-             C 280 140 262 118 236 112 C 214 120 186 120 164 112 C 136 120 118 144 112 180 Z"
-        />
-      );
-    case 'boucle': {
-      // boucles : une couronne de petits cercles
-      const cercles = [];
-      for (let i = 0; i <= 12; i++) {
-        const a = Math.PI * (1.02 + (i / 12) * 0.96);
-        cercles.push(<circle key={i} cx={200 + Math.cos(a) * 88} cy={168 + Math.sin(a) * 92} r={24} {...p} />);
-      }
+    case 'content':
       return (
         <g>
-          {cercles}
-          <path d="M 120 160 C 130 110 270 110 280 160 L 280 120 L 120 120 Z" fill={couleur} />
+          <path d="M 184 135 Q 200 153 216 135 Q 200 141 184 135 Z" fill="#F2EEE8" stroke={levre} strokeWidth={2.6} strokeLinejoin="round" />
+          <path d="M 186 137 Q 200 149 214 137" fill="none" stroke="#000" strokeOpacity={0.15} strokeWidth={2} />
+          <path d="M 180 131 Q 178 136 182 140 M 220 131 Q 222 136 218 140" fill="none" stroke={ombre} strokeWidth={2} strokeLinecap="round" />
+        </g>
+      );
+    default: {
+      const traits: Record<string, string> = {
+        neutre: 'M 188 140 Q 200 142 212 140',
+        colere: 'M 187 144 Q 200 136 213 144',
+        triste: 'M 189 144 Q 200 138 211 144',
+        malin: 'M 189 141 Q 203 144 214 134',
+      };
+      return (
+        <g>
+          {femme && <path d="M 190 141 Q 200 149 210 141 Q 200 143 190 141 Z" fill="#B85A60" />}
+          <path d={traits[expression]} fill="none" stroke={levre} strokeWidth={femme ? 3.4 : 3} strokeLinecap="round" />
+          <path d="M 194 146 Q 200 149 206 146" fill="none" stroke={ombre} strokeWidth={2.4} strokeLinecap="round" />
         </g>
       );
     }
   }
 };
 
-export const Visage: React.FC<Props> = ({ apparence, expression, clignement, ouverture }) => {
-  const peau = apparence.peau;
-  const s = SOURCILS[expression];
-  const sourcil = apparence.cheveux.style === 'degarni' ? '#6E6E6E' : nuance(apparence.cheveux.couleur, -0.2);
+/** Cheveux : partie arrière (derrière la tête) et partie avant. */
+const Cheveux: React.FC<{ apparence: Apparence; devant: boolean }> = ({ apparence, devant }) => {
+  const { teinte, style } = apparence.cheveux;
+  const p = { stroke: CONTOUR, strokeWidth: TRAIT - 1, strokeLinejoin: 'round' as const };
+  if (!devant) {
+    if (style === 'chignon') return <circle cx={200} cy={26} r={22} fill={teinte.base} {...p} />;
+    if (style === 'boucle') {
+      const boucles = [];
+      for (let i = 0; i <= 14; i++) {
+        const a = Math.PI * (0.92 + (i / 14) * 1.16);
+        const x = 200 + Math.cos(a) * 60, y = 92 + Math.sin(a) * 64;
+        boucles.push(<circle key={i} cx={x} cy={y} r={21} fill={x > 205 ? teinte.ombre : teinte.base} {...p} />);
+      }
+      return <g>{boucles}</g>;
+    }
+    return null;
+  }
+  switch (style) {
+    case 'court':
+      return (
+        <g>
+          {/* dégradé court sur les côtés */}
+          <path d="M 153 96 L 154 116 L 160 114 L 161 86 Z M 247 96 L 246 116 L 240 114 L 239 86 Z" fill={teinte.base} opacity={0.75} />
+          <path {...p} fill={teinte.base} d="M 152 100 C 145 60 164 24 206 24 C 242 24 260 48 251 98 L 247 80 C 243 66 232 58 218 60 C 206 53 184 53 170 63 C 161 70 156 84 155 100 Z" />
+          <path d="M 214 28 C 244 32 256 54 251 98 L 247 80 C 243 66 232 58 218 60 Z" fill={teinte.ombre} />
+          <path d="M 176 40 Q 198 30 228 36 M 168 52 Q 194 40 234 48 M 186 30 Q 206 26 222 30" fill="none" stroke={teinte.clair} strokeWidth={3} strokeLinecap="round" />
+        </g>
+      );
+    case 'degarni':
+      return (
+        <g>
+          <path {...p} fill={teinte.base} d="M 151 108 C 149 82 155 66 168 58 L 170 84 C 163 90 158 98 157 112 Z" />
+          <path {...p} fill={teinte.ombre} d="M 249 108 C 251 82 245 66 232 58 L 230 84 C 237 90 242 98 243 112 Z" />
+          <ellipse cx={184} cy={52} rx={18} ry={6} fill="#FFFFFF" opacity={0.35} transform="rotate(-12 184 52)" />
+        </g>
+      );
+    case 'chignon':
+      return (
+        <g>
+          <path {...p} fill={teinte.base} d="M 150 104 C 142 56 170 32 200 32 C 232 32 258 56 250 104 C 246 82 238 66 222 60 C 208 66 192 66 178 60 C 164 66 155 82 150 104 Z" />
+          <path d="M 224 36 C 246 46 256 70 250 104 C 246 82 238 66 222 60 Z" fill={teinte.ombre} />
+          <path d="M 172 50 Q 196 38 226 44 M 164 66 Q 176 52 196 50" fill="none" stroke={teinte.clair} strokeWidth={2.5} strokeLinecap="round" />
+        </g>
+      );
+    case 'boucle':
+      return (
+        <g>
+          {[160, 176, 192, 208, 224, 240].map((x, i) => (
+            <circle key={x} cx={x} cy={52 + Math.abs(i - 2.5) * 4} r={14} fill={x > 205 ? teinte.ombre : teinte.base} {...p} />
+          ))}
+          <circle cx={170} cy={44} r={4} fill={teinte.clair} opacity={0.7} />
+          <circle cx={194} cy={40} r={4} fill={teinte.clair} opacity={0.7} />
+        </g>
+      );
+  }
+};
+
+export const Visage: React.FC<Props> = ({ apparence, expression, clignement, ouverture, lunettesSoleil }) => {
+  const { peau } = apparence;
+  const femme = apparence.visage === 'femme';
+  const r = REGLAGES[expression];
+  const clipTete = useIdUnique('tete');
+  const sourcil = apparence.cheveux.style === 'degarni' ? '#7A7A7A' : apparence.cheveux.style === 'chignon' ? '#9A9088' : apparence.cheveux.teinte.base;
+  const tete = TETE[apparence.visage];
   return (
     <g>
       <Cheveux apparence={apparence} devant={false} />
       {/* oreilles */}
-      <circle cx={114} cy={188} r={15} fill={peau} stroke={CONTOUR} strokeWidth={TRAIT} />
-      <circle cx={286} cy={188} r={15} fill={peau} stroke={CONTOUR} strokeWidth={TRAIT} />
-      {/* visage */}
-      <ellipse cx={200} cy={176} rx={88} ry={96} fill={peau} stroke={CONTOUR} strokeWidth={TRAIT} />
-      {/* ombre douce sous le menton côté droit */}
-      <path d="M 250 240 Q 230 268 200 270 Q 250 262 270 230 Z" fill={nuance(peau, -0.12)} opacity={0.6} />
-      {apparence.barbe && (
-        <path d="M 124 214 Q 140 268 200 272 Q 260 268 276 214 Q 262 250 200 254 Q 138 250 124 214 Z" fill="#3B2A20" opacity={0.16} />
-      )}
-      {/* joues */}
-      {(expression === 'content' || expression === 'malin' || expression === 'choque') && (
-        <g opacity={0.35} fill="#FF7B7B">
-          <ellipse cx={146} cy={214} rx={15} ry={9} />
-          <ellipse cx={254} cy={214} rx={15} ry={9} />
-        </g>
-      )}
-      {expression === 'colere' && <ellipse cx={200} cy={150} rx={80} ry={60} fill="#FF3B30" opacity={0.12} />}
-      <Cheveux apparence={apparence} devant />
-      {/* yeux */}
-      <Oeil cx={164} cy={180} expression={expression} clignement={clignement} peau={peau} cote={-1} />
-      <Oeil cx={236} cy={180} expression={expression} clignement={clignement} peau={peau} cote={1} />
-      {/* sourcils */}
-      <g stroke={sourcil} strokeWidth={9} strokeLinecap="round" fill="none">
-        <path d={`M 182 ${s.d[0]} Q 164 ${(s.d[0] + s.d[1]) / 2 - 7} 146 ${s.d[1]}`} />
-        <path d={`M 218 ${s.g[0]} Q 236 ${(s.g[0] + s.g[1]) / 2 - 7} 254 ${s.g[1]}`} />
+      <path d="M 155 94 C 140 88 138 118 153 126 Z" fill={peau.base} stroke={CONTOUR} strokeWidth={TRAIT - 1} strokeLinejoin="round" />
+      <path d="M 245 94 C 260 88 262 118 247 126 Z" fill={peau.ombre} stroke={CONTOUR} strokeWidth={TRAIT - 1} strokeLinejoin="round" />
+      <path d="M 151 100 Q 146 108 151 118" fill="none" stroke={peau.ombre} strokeWidth={2} />
+      {/* tête et ombrage en aplats (lumière en haut à gauche) */}
+      <clipPath id={clipTete}><path d={tete} /></clipPath>
+      <path d={tete} fill={peau.base} />
+      <g clipPath={`url(#${clipTete})`}>
+        <path d="M 226 40 C 244 52 252 72 250 94 L 248 116 C 246 134 238 146 226 156 L 210 166 L 198 166 Q 218 152 226 132 Q 234 110 230 86 Q 228 62 226 40 Z" fill={peau.ombre} />
+        <path d="M 168 56 Q 184 46 204 46 Q 186 54 176 70 Z" fill={peau.clair} />
+        <path d="M 164 108 Q 170 118 180 120 Q 170 124 162 118 Z" fill={peau.clair} />
+        <path d="M 166 90 Q 181 84 194 92 M 206 92 Q 219 84 234 90" fill="none" stroke={peau.ombre} strokeWidth={3} opacity={0.6} />
+        {apparence.barbe && (
+          <g fill="#2A1E18" opacity={0.22}>
+            <path d="M 152 116 C 158 140 176 160 200 168 C 224 160 242 140 248 116 C 238 130 226 136 214 134 Q 200 130 186 134 C 174 136 162 130 152 116 Z" />
+            <path d="M 185 130 Q 200 125 215 130 L 214 135 Q 200 131 186 135 Z" />
+          </g>
+        )}
       </g>
+      <path d={tete} fill="none" stroke={CONTOUR} strokeWidth={TRAIT} strokeLinejoin="round" />
       {/* nez */}
-      <path d="M 198 196 Q 188 214 202 216" fill="none" stroke={nuance(peau, -0.35)} strokeWidth={4} strokeLinecap="round" />
+      <path d="M 203 100 Q 211 114 209 124 L 202 125 Z" fill={peau.ombre} />
+      <path d="M 196 100 L 194 116" fill="none" stroke={peau.ombre} strokeWidth={2} strokeLinecap="round" />
+      <path d="M 190 122 Q 193 128 200 127 Q 207 128 210 122" fill="none" stroke={CONTOUR} strokeWidth={TRAIT_FIN} strokeLinecap="round" />
+      {!femme && <path d="M 186 124 Q 181 132 184 140 M 214 124 Q 219 132 216 140" fill="none" stroke={peau.ombre} strokeWidth={1.8} strokeLinecap="round" opacity={0.8} />}
+      <Cheveux apparence={apparence} devant />
+      <Oeil cx={181} cote={-1} ouvert={r.yeux * (1 - clignement)} pente={r.pente} femme={femme} peauOmbre={peau.ombre} />
+      <Oeil cx={219} cote={1} ouvert={(r.oeilG ?? r.yeux) * (1 - clignement)} pente={r.pente} femme={femme} peauOmbre={peau.ombre} />
+      <Sourcil cote={-1} decalage={r.sourcilD} femme={femme} couleur={sourcil} />
+      <Sourcil cote={1} decalage={r.sourcilG} femme={femme} couleur={sourcil} />
       {apparence.moustache && (
-        <path d="M 172 226 Q 186 212 200 222 Q 214 212 228 226 Q 214 230 200 226 Q 186 230 172 226 Z" fill="#8A8A8A" stroke={CONTOUR} strokeWidth={2.5} />
+        <path d="M 180 134 Q 190 124 200 130 Q 210 124 220 134 Q 212 136 200 133 Q 188 136 180 134 Z" fill="#8E8E8E" stroke={CONTOUR} strokeWidth={2} />
       )}
-      <Bouche expression={expression} ouverture={ouverture} />
-      {apparence.lunettes && (
-        <g fill="none" stroke="#3A3A44" strokeWidth={4.5}>
-          <circle cx={164} cy={180} r={32} />
-          <circle cx={236} cy={180} r={32} />
-          <path d="M 196 176 Q 200 170 204 176" />
-          <path d="M 132 176 L 116 172 M 268 176 L 284 172" />
+      <Bouche expression={expression} ouverture={ouverture} femme={femme} ombre={peau.ombre} />
+      {expression === 'colere' && <path d="M 194 72 L 198 80 M 206 72 L 202 80" stroke={peau.ombre} strokeWidth={2.2} strokeLinecap="round" />}
+      {apparence.lunettes && !lunettesSoleil && (
+        <g fill="none" stroke="#2A2A30" strokeWidth={3}>
+          <rect x={164} y={86} width={33} height={23} rx={9} fill="#FFFFFF" fillOpacity={0.08} />
+          <rect x={203} y={86} width={33} height={23} rx={9} fill="#FFFFFF" fillOpacity={0.08} />
+          <path d="M 197 95 Q 200 92 203 95 M 164 94 L 153 92 M 236 94 L 247 92" />
+          <path d="M 170 90 L 176 90 M 209 90 L 215 90" stroke="#FFFFFF" strokeOpacity={0.6} strokeWidth={2} />
         </g>
       )}
-      {/* goutte de sueur pour le choc */}
+      {lunettesSoleil && (
+        <g>
+          <path d="M 162 88 L 197 88 Q 198 104 186 110 Q 170 112 164 102 Z M 203 88 L 238 88 L 236 102 Q 230 112 214 110 Q 202 104 203 88 Z" fill="#141418" stroke={CONTOUR} strokeWidth={3} strokeLinejoin="round" />
+          <path d="M 197 91 Q 200 88 203 91 M 162 90 L 152 92 M 238 90 L 248 92" stroke={CONTOUR} strokeWidth={3} fill="none" />
+          <path d="M 168 92 L 182 92 L 170 104 Z M 208 92 L 222 92 L 210 104 Z" fill="#7FB3FF" opacity={0.35} />
+        </g>
+      )}
       {expression === 'choque' && (
-        <path d="M 288 120 Q 300 142 294 152 Q 284 158 280 146 Q 280 136 288 120 Z" fill="#7CC8FF" stroke={CONTOUR} strokeWidth={2.5} />
+        <path d="M 250 60 Q 260 78 255 86 Q 247 91 243 81 Q 243 72 250 60 Z" fill="#8FD0FF" stroke={CONTOUR} strokeWidth={2.5} />
       )}
     </g>
   );

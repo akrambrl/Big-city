@@ -1,31 +1,31 @@
-// Squelette des bras pour chaque pose (repère SVG 400 x 800).
+// Squelette des bras pour chaque pose (repère SVG 400 x 800, proportions réalistes).
 // « droit » = bras droit du personnage = côté gauche de l'écran.
 import type { Bras, Point, Pose } from './types';
 
-export const EPAULE_DROITE: Point = { x: 140, y: 318 };
-export const EPAULE_GAUCHE: Point = { x: 260, y: 318 };
+export const EPAULE_DROITE: Point = { x: 128, y: 212 };
+export const EPAULE_GAUCHE: Point = { x: 272, y: 212 };
 
-const BAISSE_D: Bras = { coude: { x: 122, y: 415 }, main: { x: 128, y: 505 } };
-const BAISSE_G: Bras = { coude: { x: 278, y: 415 }, main: { x: 272, y: 505 } };
+const BAISSE_D: Bras = { coude: { x: 112, y: 312 }, main: { x: 118, y: 402 } };
+const BAISSE_G: Bras = { coude: { x: 288, y: 312 }, main: { x: 282, y: 402 } };
 
 export const POSES_BRAS: Record<Pose, { droit: Bras; gauche: Bras }> = {
   debout: { droit: BAISSE_D, gauche: BAISSE_G },
   bras_leves: {
-    droit: { coude: { x: 88, y: 252 }, main: { x: 66, y: 150 } },
-    gauche: { coude: { x: 312, y: 252 }, main: { x: 334, y: 150 } },
+    droit: { coude: { x: 76, y: 150 }, main: { x: 66, y: 58 } },
+    gauche: { coude: { x: 324, y: 150 }, main: { x: 334, y: 58 } },
   },
   // pointe vers la droite de l'écran (là où s'affichent montants et documents)
   pointe_doigt: {
     droit: BAISSE_D,
-    gauche: { coude: { x: 322, y: 302 }, main: { x: 378, y: 262 } },
+    gauche: { coude: { x: 336, y: 204 }, main: { x: 392, y: 168 } },
   },
   mains_hanches: {
-    droit: { coude: { x: 74, y: 402 }, main: { x: 134, y: 486 } },
-    gauche: { coude: { x: 326, y: 402 }, main: { x: 266, y: 486 } },
+    droit: { coude: { x: 62, y: 300 }, main: { x: 122, y: 386 } },
+    gauche: { coude: { x: 338, y: 300 }, main: { x: 278, y: 386 } },
   },
   // téléphone collé à l'oreille droite
   telephone: {
-    droit: { coude: { x: 92, y: 345 }, main: { x: 116, y: 226 } },
+    droit: { coude: { x: 84, y: 246 }, main: { x: 146, y: 126 } },
     gauche: BAISSE_G,
   },
 };

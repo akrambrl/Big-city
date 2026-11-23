@@ -22,7 +22,7 @@ Dans le dossier **Etape1-Personnage** :
 
 ## Le personnage
 
-Composant React `src/personnage/Personnage.tsx`, entièrement en SVG :
+Composant React `src/personnage/Personnage.tsx`, entièrement en SVG, dans un style d'illustration de jeu vidéo : proportions réalistes, contours noirs épais et ombres en aplats (lumière en haut à gauche). Chaque couleur existe en trois tons (lumière, base, ombre) dans `variantes.ts`.
 
 ```tsx
 <Personnage
@@ -33,6 +33,7 @@ Composant React `src/personnage/Personnage.tsx`, entièrement en SVG :
   transition={0.5}           // …avec son avancement (0 -> 1)
   parle                      // bouche automatique (à l'étape 3, calée sur la voix avec `ouverture`)
   hauteur={1400}             // hauteur en pixels
+  lunettesSoleil             // facultatif
 />
 ```
 
@@ -42,11 +43,16 @@ Le clignement des yeux, la respiration et un léger balancement des bras sont au
 |---|---|
 | `personnage/types.ts` | Listes des expressions, poses et variantes. |
 | `personnage/variantes.ts` | Apparence de chaque personnage (peau, cheveux, vêtements, accessoires). |
+| `personnage/geometrie.ts` | Membres effilés et bande d'ombre calculés à partir du squelette. |
 | `personnage/poses.ts` | Position des épaules, coudes et mains pour chaque pose. |
 | `personnage/Visage.tsx` | Yeux, sourcils et bouche selon l'expression. |
 | `personnage/Personnage.tsx` | Corps, bras, jambes et micro-animations. |
 
 Pour ajouter un personnage, ajoute une entrée dans `APPARENCES` (`variantes.ts`) et son nom dans `VARIANTES` (`types.ts`).
+
+## Police
+
+Les titres utilisent **Anton** (Google Fonts, licence OFL : gratuite, usage commercial autorisé), chargée avec `@remotion/google-fonts`.
 
 ## Licence de Remotion
 

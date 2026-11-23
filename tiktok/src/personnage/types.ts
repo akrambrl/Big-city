@@ -14,20 +14,24 @@ export type Point = { x: number; y: number };
 /** Position des articulations d'un bras : épaule -> coude -> main. */
 export type Bras = { coude: Point; main: Point };
 
+/** Une couleur en trois tons pour l'ombrage en aplats (cel shading) : lumière, base, ombre. */
+export type Teinte = { clair: string; base: string; ombre: string };
+
 /** Ce qui change d'un personnage à l'autre (même squelette, autre « costume »). */
 export type Apparence = {
   nom: string;
-  peau: string;
-  cheveux: { couleur: string; style: 'court' | 'degarni' | 'chignon' | 'boucle' };
+  visage: 'homme' | 'femme';
+  peau: Teinte;
+  cheveux: { teinte: Teinte; style: 'court' | 'degarni' | 'chignon' | 'boucle' };
   haut: {
     type: 'pull' | 'costume' | 'gilet' | 'blazer';
-    couleur: string;
+    teinte: Teinte;
     dessous: string; // t-shirt ou chemise visible au col
     cravate?: string;
   };
-  bas: string;
-  chaussures: string;
-  barbe?: boolean; // barbe de quelques jours
+  bas: Teinte;
+  chaussures: { dessus: string; semelle: string };
+  barbe?: boolean; // barbe de trois jours
   moustache?: boolean;
   lunettes?: boolean;
   collier?: boolean;

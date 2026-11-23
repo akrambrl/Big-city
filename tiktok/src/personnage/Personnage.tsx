@@ -1,13 +1,13 @@
-// Personnage SVG réutilisable : même squelette pour tous, apparence selon la variante.
+// Personnage SVG réutilisable, style illustration de jeu (cel shading, contours noirs).
+// Même squelette pour tous ; l'apparence dépend de la variante.
 // Micro-animations automatiques : clignement des yeux, respiration, bouche qui parle.
 import React from 'react';
 import { useCurrentFrame, useVideoConfig } from 'remotion';
+import { angle, membre, versPoint } from './geometrie';
 import { EPAULE_DROITE, EPAULE_GAUCHE, POSES_BRAS, mixBras } from './poses';
-import type { Apparence, Bras, Expression, Point, Pose, Variante } from './types';
-import { APPARENCES, CONTOUR, nuance } from './variantes';
+import type { Apparence, Bras, Expression, Point, Pose, Teinte, Variante } from './types';
+import { APPARENCES, CONTOUR, TRAIT, TRAIT_FIN } from './variantes';
 import { Visage } from './Visage';
-
-const TRAIT = 4;
 
 export type PersonnageProps = {
   variante?: Variante;
@@ -25,11 +25,13 @@ export type PersonnageProps = {
   hauteur?: number;
   /** Retourne le personnage horizontalement (pour qu'il regarde vers la gauche). */
   miroir?: boolean;
+  /** Lunettes de soleil. */
+  lunettesSoleil?: boolean;
   /** Décale les clignements et la respiration entre plusieurs personnages. */
   graine?: number;
 };
 
-// --- Micro-animations (fonctions pures du temps : rendu déterministe image par image) ---
+// --- Micro-animations (fonctions pures du temps : rendu identique à chaque fois) ---
 
 const hasard = (a: number, b: number) => {
   const x = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
@@ -57,92 +59,142 @@ export function boucheAuto(t: number): number {
 
 // --- Éléments du corps ---
 
-const chemin = (pts: Point[]) => pts.map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.y}`).join(' ');
-
-/** Membre « tube » : un trait épais avec un contour (dessiné deux fois). */
-const Tube: React.FC<{ pts: Point[]; couleur: string; largeur: number }> = ({ pts, couleur, largeur }) => (
-  <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-    <path d={chemin(pts)} stroke={CONTOUR} strokeWidth={largeur + TRAIT * 2} />
-    <path d={chemin(pts)} stroke={couleur} strokeWidth={largeur} />
+/** Forme pleine ombrée : aplat de base + bande d'ombre + contour noir. */
+const Forme: React.FC<{ d: string; ombre?: string; teinte: Teinte; trait?: number }> = ({ d, ombre, teinte, trait = TRAIT }) => (
+  <g>
+    <path d={d} fill={teinte.base} />
+    {ombre && <path d={ombre} fill={teinte.ombre} />}
+    <path d={d} fill="none" stroke={CONTOUR} strokeWidth={trait} strokeLinejoin="round" />
   </g>
 );
 
-const Main: React.FC<{ bras: Bras; peau: string; pointe?: boolean }> = ({ bras, peau, pointe }) => {
-  const { coude, main } = bras;
-  const dx = main.x - coude.x, dy = main.y - coude.y;
-  const n = Math.hypot(dx, dy) || 1;
-  const ux = dx / n, uy = dy / n;
+/** Main orientée selon l'avant-bras : poing, index tendu, ou main ouverte (bras levés). */
+const Main: React.FC<{ bras: Bras; peau: Teinte; geste: 'poing' | 'index' | 'ouverte'; cote: 1 | -1 }> = ({ bras, peau, geste, cote }) => {
+  const a = angle(bras.coude, bras.main);
+  const pouce = cote; // le pouce est tourné vers le corps
   return (
-    <g>
-      {pointe && (
-        <Tube
-          pts={[{ x: main.x + ux * 8, y: main.y + uy * 8 }, { x: main.x + ux * 36, y: main.y + uy * 36 }]}
-          couleur={peau}
-          largeur={11}
-        />
+    <g transform={`translate(${bras.main.x} ${bras.main.y}) rotate(${a})`}>
+      {geste === 'index' && (
+        <path d="M 14 -9 L 44 -9 Q 50 -5 44 -1 L 16 -1 Z" fill={peau.base} stroke={CONTOUR} strokeWidth={3} strokeLinejoin="round" />
       )}
-      <circle cx={main.x} cy={main.y} r={17} fill={peau} stroke={CONTOUR} strokeWidth={TRAIT} />
+      {geste === 'ouverte' ? (
+        <g>
+          <path d="M -6 -13 L 18 -15 L 34 -12 Q 38 -9 34 -6 L 22 -6 L 36 -3 Q 40 0 36 3 L 22 3 L 34 7 Q 37 10 33 12 L 18 12 L -6 13 Z" fill={peau.base} stroke={CONTOUR} strokeWidth={3} strokeLinejoin="round" />
+          <path d={`M 4 ${-13 * pouce} Q 16 ${-24 * pouce} 24 ${-20 * pouce}`} fill="none" stroke={CONTOUR} strokeWidth={3} />
+        </g>
+      ) : (
+        <g>
+          <path d="M -6 -14 Q 14 -18 26 -12 Q 33 0 26 12 Q 14 18 -6 14 Z" fill={peau.base} stroke={CONTOUR} strokeWidth={3} strokeLinejoin="round" />
+          <path d="M 4 4 Q 16 14 26 6 L 26 12 Q 14 18 -6 14 Z" fill={peau.ombre} />
+          <path d="M 18 -11 Q 23 -6 19 -2 M 20 -2 Q 25 3 20 7" fill="none" stroke={CONTOUR} strokeWidth={1.8} strokeLinecap="round" />
+          <ellipse cx={10} cy={-14 * pouce} rx={10} ry={5.5} fill={peau.base} stroke={CONTOUR} strokeWidth={2.5} />
+        </g>
+      )}
     </g>
   );
 };
 
-const BrasSvg: React.FC<{ epaule: Point; bras: Bras; apparence: Apparence; pointe?: boolean }> = ({ epaule, bras, apparence, pointe }) => {
-  const manche = apparence.haut.couleur;
-  // poignet : la manche s'arrête un peu avant la main
-  const dx = bras.main.x - bras.coude.x, dy = bras.main.y - bras.coude.y;
-  const n = Math.hypot(dx, dy) || 1;
-  const poignet = { x: bras.main.x - (dx / n) * 14, y: bras.main.y - (dy / n) * 14 };
+const cercle = (c: Point, r: number) => `M ${c.x - r} ${c.y} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0 Z`;
+
+/**
+ * Bras en deux segments (bras + avant-bras) avec épaule et coude arrondis.
+ * Dessin en trois passes pour un contour unique, sans couture aux articulations :
+ * 1) silhouette noire épaissie, 2) aplats de couleur, 3) ombres.
+ */
+const BrasSvg: React.FC<{ epaule: Point; bras: Bras; apparence: Apparence; geste: 'poing' | 'index' | 'ouverte'; cote: 1 | -1 }> = ({
+  epaule, bras, apparence, geste, cote,
+}) => {
+  const { haut, peau } = apparence;
+  const teinte = haut.teinte;
+  const poignet = versPoint(bras.coude, bras.main, 12);
+  const haut1 = membre([epaule, bras.coude], [46, 38]);
+  const bas1 = membre([bras.coude, poignet], [38, 31]);
+  const formes = [cercle(epaule, 23), haut1.contour, cercle(bras.coude, 19), bas1.contour];
+  // revers de manche (pull) ou poignet de chemise (veste)
+  const debutRevers = versPoint(bras.coude, poignet, 14);
+  const revers = membre([debutRevers, poignet], [33, 32]);
+  const poignetChemise = membre([poignet, versPoint(bras.coude, bras.main, 4)], [27, 26]);
   return (
     <g>
-      <Tube pts={[epaule, bras.coude, poignet]} couleur={manche} largeur={40} />
-      {/* revers de manche */}
-      <Tube pts={[{ x: poignet.x - (dx / n) * 4, y: poignet.y - (dy / n) * 4 }, poignet]} couleur={nuance(manche, -0.18)} largeur={40} />
-      <Main bras={bras} peau={apparence.peau} pointe={pointe} />
+      {formes.map((d, i) => <path key={`c${i}`} d={d} fill={CONTOUR} stroke={CONTOUR} strokeWidth={TRAIT * 2} strokeLinejoin="round" />)}
+      {formes.map((d, i) => <path key={`f${i}`} d={d} fill={teinte.base} />)}
+      <path d={haut1.ombre} fill={teinte.ombre} />
+      <path d={bas1.ombre} fill={teinte.ombre} />
+      {/* pli au coude */}
+      <path d={`M ${bras.coude.x - 9} ${bras.coude.y - 4} Q ${bras.coude.x} ${bras.coude.y + 4} ${bras.coude.x + 9} ${bras.coude.y - 2}`} fill="none" stroke={teinte.ombre} strokeWidth={TRAIT_FIN + 0.5} strokeLinecap="round" />
+      {haut.type !== 'pull' ? (
+        <Forme d={poignetChemise.contour} teinte={{ clair: haut.dessous, base: haut.dessous, ombre: haut.dessous }} trait={3} />
+      ) : (
+        <Forme d={revers.contour} teinte={{ ...teinte, base: teinte.ombre }} trait={3} />
+      )}
+      <Main bras={bras} peau={peau} geste={geste} cote={cote} />
     </g>
   );
 };
 
-const TORSE = 'M 122 330 Q 122 296 164 291 L 236 291 Q 278 296 278 330 L 272 522 Q 200 534 128 522 Z';
+const TORSE = 'M 150 184 Q 200 196 250 184 L 280 198 Q 298 208 296 240 L 286 408 Q 200 422 114 408 L 104 240 Q 102 208 120 198 Z';
+const OMBRE_TORSE = 'M 236 188 L 280 198 Q 298 208 296 240 L 286 408 Q 266 412 244 414 Q 256 330 250 262 Q 246 222 236 188 Z';
 
 const Torse: React.FC<{ apparence: Apparence }> = ({ apparence }) => {
   const { haut } = apparence;
-  const fonce = nuance(haut.couleur, -0.2);
+  const teinte = haut.teinte;
+  const clip = `torse-${apparence.nom.replace(/[^a-z]/gi, '')}`;
   return (
     <g>
-      <path d={TORSE} fill={haut.couleur} stroke={CONTOUR} strokeWidth={TRAIT} strokeLinejoin="round" />
-      {/* ombre côté droit pour le volume */}
-      <path d="M 246 296 Q 278 300 278 330 L 272 522 Q 260 525 248 526 Z" fill="#000000" opacity={0.08} />
+      <clipPath id={clip}><path d={TORSE} /></clipPath>
+      <path d={TORSE} fill={teinte.base} />
+      <g clipPath={`url(#${clip})`}>
+        <path d={OMBRE_TORSE} fill={teinte.ombre} />
+        {/* reflet de lumière sur le côté gauche */}
+        <path d="M 116 214 Q 128 260 122 330 L 112 330 Q 114 260 110 214 Z" fill={teinte.clair} />
+        {haut.type === 'pull' && (
+          <g>
+            {/* bord-côte en bas du pull */}
+            <path d="M 100 392 Q 200 406 300 392 L 300 430 L 100 430 Z" fill={teinte.ombre} />
+            <path d="M 100 392 Q 200 406 300 392" fill="none" stroke={CONTOUR} strokeWidth={TRAIT_FIN} />
+            {[130, 150, 170, 190, 210, 230, 250, 270].map((x) => (
+              <line key={x} x1={x} y1={398 + Math.abs(x - 200) * -0.02} x2={x} y2={416} stroke={CONTOUR} strokeOpacity={0.35} strokeWidth={1.5} />
+            ))}
+            {/* plis du tricot */}
+            <path d="M 146 300 Q 168 312 188 304 M 214 334 Q 236 342 254 330 M 136 360 Q 160 372 184 366" fill="none" stroke={teinte.ombre} strokeWidth={TRAIT_FIN + 0.5} strokeLinecap="round" />
+          </g>
+        )}
+        {haut.type !== 'pull' && (
+          <g>
+            {/* chemise visible dans l'ouverture en V */}
+            <path d={`M 174 184 L 226 184 L 200 ${haut.type === 'gilet' ? 262 : 292} Z`} fill={haut.dessous} stroke={CONTOUR} strokeWidth={3} strokeLinejoin="round" />
+            <path d="M 176 186 L 194 206 L 184 214 Z M 224 186 L 206 206 L 216 214 Z" fill={haut.dessous} stroke={CONTOUR} strokeWidth={2.5} strokeLinejoin="round" />
+            {haut.cravate && (
+              <g>
+                <path d="M 194 204 L 206 204 L 209 214 L 206 282 L 200 292 L 194 282 L 191 214 Z" fill={haut.cravate} stroke={CONTOUR} strokeWidth={2.5} strokeLinejoin="round" />
+                <path d="M 201 214 L 205 282 L 200 292 Z" fill="#000" opacity={0.25} />
+              </g>
+            )}
+            {haut.type !== 'gilet' && (
+              <path d="M 174 184 L 158 194 L 196 296 L 200 292 Z M 226 184 L 242 194 L 204 296 L 200 292 Z" fill={teinte.ombre} stroke={CONTOUR} strokeWidth={2.5} strokeLinejoin="round" />
+            )}
+            <line x1={200} y1={haut.type === 'gilet' ? 262 : 292} x2={200} y2={420} stroke={CONTOUR} strokeWidth={TRAIT_FIN} />
+            {(haut.type === 'gilet' ? [282, 316, 350, 384] : [326, 364]).map((y) => (
+              <circle key={y} cx={206} cy={y} r={4.5} fill={teinte.ombre} stroke={CONTOUR} strokeWidth={1.5} />
+            ))}
+            {haut.type !== 'gilet' && <path d="M 236 330 L 268 330" stroke={CONTOUR} strokeWidth={TRAIT_FIN} />}
+          </g>
+        )}
+      </g>
+      <path d={TORSE} fill="none" stroke={CONTOUR} strokeWidth={TRAIT} strokeLinejoin="round" />
       {haut.type === 'pull' && (
         <g>
-          <ellipse cx={200} cy={294} rx={30} ry={12} fill={haut.dessous} stroke={CONTOUR} strokeWidth={3} />
-          <path d="M 166 292 Q 200 318 234 292" fill="none" stroke={fonce} strokeWidth={8} strokeLinecap="round" />
-          <path d="M 130 506 Q 200 518 270 506" fill="none" stroke={fonce} strokeWidth={10} />
-        </g>
-      )}
-      {(haut.type === 'costume' || haut.type === 'blazer' || haut.type === 'gilet') && (
-        <g>
-          {/* chemise visible dans l'ouverture en V */}
-          <path d={`M 172 291 L 228 291 L 200 ${haut.type === 'gilet' ? 372 : 402} Z`} fill={haut.dessous} stroke={CONTOUR} strokeWidth={3} strokeLinejoin="round" />
-          {/* col de chemise */}
-          <path d="M 176 291 L 196 312 L 186 322 Z M 224 291 L 204 312 L 214 322 Z" fill={haut.dessous} stroke={CONTOUR} strokeWidth={2.5} strokeLinejoin="round" />
-          {haut.cravate && (
-            <path d="M 194 312 L 206 312 L 210 322 L 206 392 L 200 402 L 194 392 L 190 322 Z" fill={haut.cravate} stroke={CONTOUR} strokeWidth={2.5} strokeLinejoin="round" />
-          )}
-          {haut.type !== 'gilet' && (
-            /* revers de veste */
-            <path d="M 172 291 L 160 300 L 196 404 L 200 402 Z M 228 291 L 240 300 L 204 404 L 200 402 Z" fill={fonce} stroke={CONTOUR} strokeWidth={2.5} strokeLinejoin="round" />
-          )}
-          {(haut.type === 'gilet' ? [392, 432, 472, 506] : [432, 474]).map((y) => (
-            <circle key={y} cx={200} cy={y} r={5} fill={fonce} stroke={CONTOUR} strokeWidth={1.5} />
-          ))}
-          <line x1={200} y1={haut.type === 'gilet' ? 372 : 402} x2={200} y2={526} stroke={fonce} strokeWidth={2.5} />
+          {/* col rond : t-shirt qui dépasse + côte du col */}
+          <path d="M 170 186 Q 200 204 230 186 Q 200 196 170 186 Z" fill={haut.dessous} stroke={CONTOUR} strokeWidth={2.5} />
+          <path d="M 166 185 Q 200 212 234 185" fill="none" stroke={teinte.ombre} strokeWidth={8} strokeLinecap="round" />
+          <path d="M 166 185 Q 200 212 234 185" fill="none" stroke={CONTOUR} strokeWidth={2} strokeLinecap="round" strokeOpacity={0.6} />
         </g>
       )}
       {apparence.collier && (
         <g fill="#FFFDF5" stroke={CONTOUR} strokeWidth={1.2}>
           {Array.from({ length: 9 }, (_, i) => {
-            const a = Math.PI * (0.18 + (i / 8) * 0.64);
-            return <circle key={i} cx={200 + Math.cos(a) * 30} cy={290 + Math.sin(a) * 24} r={4.5} />;
+            const a = Math.PI * (0.15 + (i / 8) * 0.7);
+            return <circle key={i} cx={200 + Math.cos(a) * 28} cy={186 + Math.sin(a) * 22} r={4} />;
           })}
         </g>
       )}
@@ -152,24 +204,57 @@ const Torse: React.FC<{ apparence: Apparence }> = ({ apparence }) => {
 
 const Jambes: React.FC<{ apparence: Apparence }> = ({ apparence }) => {
   const bas = apparence.bas;
+  const jd = membre([{ x: 160, y: 430 }, { x: 158, y: 600 }, { x: 156, y: 752 }], [76, 60, 50]);
+  const jg = membre([{ x: 240, y: 430 }, { x: 242, y: 600 }, { x: 244, y: 752 }], [76, 60, 50]);
+  const { dessus, semelle } = apparence.chaussures;
+  const Basket: React.FC<{ x: number; sens: 1 | -1 }> = ({ x, sens }) => (
+    <g transform={`translate(${x} 0) scale(${sens} 1)`}>
+      <path d="M -30 778 Q -32 752 -10 748 L 18 750 Q 32 756 32 772 L 32 780 L -30 780 Z" fill={dessus} stroke={CONTOUR} strokeWidth={TRAIT - 1} strokeLinejoin="round" />
+      <path d="M 10 750 Q 30 756 32 772 L 32 780 L 8 780 Z" fill="#000" opacity={0.18} />
+      <path d="M -14 756 L 6 754 M -16 762 L 8 760" stroke={CONTOUR} strokeWidth={2} strokeLinecap="round" />
+      <path d="M -33 778 L 35 778 Q 36 790 26 790 L -26 790 Q -35 790 -33 778 Z" fill={semelle} stroke={CONTOUR} strokeWidth={3} strokeLinejoin="round" />
+    </g>
+  );
   return (
     <g>
-      <path d="M 132 508 L 268 508 L 266 572 L 134 572 Z" fill={bas} stroke={CONTOUR} strokeWidth={TRAIT} strokeLinejoin="round" />
-      <Tube pts={[{ x: 164, y: 552 }, { x: 160, y: 752 }]} couleur={bas} largeur={54} />
-      <Tube pts={[{ x: 236, y: 552 }, { x: 240, y: 752 }]} couleur={bas} largeur={54} />
-      {/* couture du jean */}
-      <path d="M 200 520 L 200 580" stroke={nuance(bas, -0.25)} strokeWidth={3} />
-      <path d="M 176 600 L 172 740 M 224 600 L 228 740" stroke={nuance(bas, 0.15)} strokeWidth={2} strokeDasharray="6 6" />
-      <ellipse cx={148} cy={770} rx={36} ry={15} fill={apparence.chaussures} stroke={CONTOUR} strokeWidth={TRAIT} />
-      <ellipse cx={252} cy={770} rx={36} ry={15} fill={apparence.chaussures} stroke={CONTOUR} strokeWidth={TRAIT} />
+      <Forme d={jd.contour} ombre={jd.ombre} teinte={bas} />
+      <Forme d={jg.contour} ombre={jg.ombre} teinte={bas} />
+      {/* bassin (couvre le haut des jambes) */}
+      <path d="M 116 398 L 284 398 L 280 468 Q 240 474 222 470 L 200 520 L 178 470 Q 160 474 120 468 Z" fill={bas.base} />
+      <path d="M 222 400 L 284 398 L 280 468 Q 250 472 222 470 Z" fill={bas.ombre} />
+      <path d="M 120 468 L 116 398 L 284 398 L 280 468" fill="none" stroke={CONTOUR} strokeWidth={TRAIT} strokeLinejoin="round" />
+      {/* poches, couture, plis aux genoux et aux chevilles */}
+      <g fill="none" stroke={bas.clair} strokeWidth={TRAIT_FIN} strokeLinecap="round">
+        <path d="M 126 410 Q 150 434 170 410 M 274 410 Q 250 434 230 410" strokeDasharray="5 4" />
+        <path d="M 200 404 L 200 470" stroke={CONTOUR} strokeWidth={2} />
+      </g>
+      <g fill="none" stroke={bas.ombre} strokeWidth={TRAIT_FIN + 0.5} strokeLinecap="round">
+        <path d="M 140 590 Q 156 598 170 588 M 146 606 L 166 602 M 230 592 Q 244 600 258 590" />
+        <path d="M 136 726 Q 156 734 176 724 M 140 738 Q 158 744 172 736 M 224 728 Q 244 736 264 726 M 228 740 Q 246 746 260 738" />
+      </g>
+      <Basket x={152} sens={-1} />
+      <Basket x={248} sens={1} />
+    </g>
+  );
+};
+
+const Cou: React.FC<{ apparence: Apparence }> = ({ apparence }) => {
+  const { peau } = apparence;
+  return (
+    <g>
+      <path d="M 178 146 L 176 194 L 224 194 L 222 146 Z" fill={peau.base} stroke={CONTOUR} strokeWidth={TRAIT} strokeLinejoin="round" />
+      <path d="M 178 150 L 222 150 L 222 172 Q 200 182 178 172 Z" fill={peau.ombre} />
+      <path d="M 210 150 L 222 150 L 224 194 L 212 194 Z" fill={peau.ombre} />
+      {apparence.visage === 'homme' && <path d="M 198 178 Q 201 183 198 188" fill="none" stroke={peau.ombre} strokeWidth={2} />}
     </g>
   );
 };
 
 const Telephone: React.FC<{ main: Point }> = ({ main }) => (
-  <g transform={`translate(${main.x - 6} ${main.y - 28}) rotate(-14)`}>
-    <rect x={-13} y={-26} width={26} height={52} rx={6} fill="#22252B" stroke={CONTOUR} strokeWidth={3} />
-    <rect x={-9} y={-20} width={18} height={38} rx={3} fill="#5AC8FA" />
+  <g transform={`translate(${main.x + 4} ${main.y - 22}) rotate(-12)`}>
+    <rect x={-12} y={-26} width={24} height={52} rx={5} fill="#1A1C21" stroke={CONTOUR} strokeWidth={3} />
+    <rect x={-8} y={-21} width={16} height={40} rx={2} fill="#2C3E66" />
+    <path d="M -6 -18 L 2 -18 L -6 -6 Z" fill="#FFFFFF" opacity={0.3} />
   </g>
 );
 
@@ -185,6 +270,7 @@ export const Personnage: React.FC<PersonnageProps> = ({
   parle = false,
   hauteur = 800,
   miroir = false,
+  lunettesSoleil = false,
   graine = 1,
 }) => {
   const frame = useCurrentFrame();
@@ -207,39 +293,33 @@ export const Personnage: React.FC<PersonnageProps> = ({
   });
   const brasD = balance(mixBras(depart.droit, cible.droit, k), graine);
   const brasG = balance(mixBras(depart.gauche, cible.gauche, k), graine + 2);
+  const gesteBras = (p: Pose) => (p === 'bras_leves' ? 'ouverte' : 'poing') as 'poing' | 'ouverte';
 
-  // Inclinaison de la tête selon l'expression
-  const inclinaison = { neutre: 0, choque: 0, content: 2, colere: -2, triste: 6, malin: -5 }[expression];
+  const inclinaison = { neutre: 0, choque: -1, content: 2, colere: -2, triste: 5, malin: -4 }[expression];
 
   return (
-    <svg
-      viewBox="0 0 400 800"
-      width={hauteur / 2}
-      height={hauteur}
-      overflow="visible"
-      style={{ transform: miroir ? 'scaleX(-1)' : undefined }}
-    >
+    <svg viewBox="0 0 400 800" width={hauteur / 2} height={hauteur} overflow="visible" style={{ transform: miroir ? 'scaleX(-1)' : undefined }}>
       {/* ombre au sol */}
-      <ellipse cx={200} cy={782} rx={130} ry={14} fill="#000000" opacity={0.15} />
+      <ellipse cx={200} cy={790} rx={120} ry={13} fill="#000000" opacity={0.25} />
       <Jambes apparence={apparence} />
       <g transform={`translate(0 ${-2.5 * souffle})`}>
-        {/* cou */}
-        <rect x={182} y={246} width={36} height={56} fill={apparence.peau} stroke={CONTOUR} strokeWidth={TRAIT} />
-        <g transform={`translate(0 520) scale(1 ${1 + 0.012 * souffle}) translate(0 -520)`}>
+        <Cou apparence={apparence} />
+        <g transform={`translate(0 410) scale(1 ${1 + 0.01 * souffle}) translate(0 -410)`}>
           <Torse apparence={apparence} />
         </g>
-        <BrasSvg epaule={EPAULE_DROITE} bras={brasD} apparence={apparence} />
-        <BrasSvg epaule={EPAULE_GAUCHE} bras={brasG} apparence={apparence} pointe={pose === 'pointe_doigt'} />
-        <g transform={`translate(0 ${-1.2 * souffle}) rotate(${inclinaison} 200 270)`}>
-          <Visage apparence={apparence} expression={expression} clignement={cligne} ouverture={bouche} />
+        <BrasSvg epaule={EPAULE_DROITE} bras={brasD} apparence={apparence} geste={gesteBras(pose)} cote={-1} />
+        <BrasSvg epaule={EPAULE_GAUCHE} bras={brasG} apparence={apparence} geste={pose === 'pointe_doigt' ? 'index' : gesteBras(pose)} cote={1} />
+        <g transform={`translate(0 ${-1.2 * souffle}) rotate(${inclinaison} 200 170)`}>
+          <Visage apparence={apparence} expression={expression} clignement={cligne} ouverture={bouche} lunettesSoleil={lunettesSoleil} />
         </g>
         {pose === 'telephone' && (
           <g opacity={k}>
             <Telephone main={brasD.main} />
-            <Main bras={brasD} peau={apparence.peau} />
+            <Main bras={brasD} peau={apparence.peau} geste="poing" cote={-1} />
           </g>
         )}
       </g>
     </svg>
   );
 };
+

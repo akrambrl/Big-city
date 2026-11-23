@@ -2,21 +2,32 @@
 // et une démo animée. Visibles dans `npx remotion studio`.
 import React from 'react';
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
+import { loadFont } from '@remotion/google-fonts/Anton';
 import { Personnage } from '../personnage/Personnage';
 import { APPARENCES } from '../personnage/variantes';
 import { EXPRESSIONS, POSES, VARIANTES, type Expression, type Pose } from '../personnage/types';
 
-const FOND = 'linear-gradient(180deg, #FFF3DC 0%, #FFE0B8 100%)';
-const POLICE = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+
+// Police d'affiche (Google Fonts, licence OFL : gratuite, usage commercial autorisé)
+const { fontFamily: ANTON } = loadFont();
+
+// Ambiance « affiche de jeu » : ciel de coucher de soleil + trame de points
+export const FOND = 'linear-gradient(180deg, #1B1035 0%, #5B1E5E 30%, #D6336C 62%, #FF9A3C 88%, #FFD36B 100%)';
+const TRAME = 'radial-gradient(rgba(0,0,0,0.18) 1.6px, transparent 1.8px)';
 
 const Etiquette: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ fontFamily: POLICE, fontSize: 38, fontWeight: 800, color: '#4A2F22', marginTop: 4 }}>{children}</div>
+  <div style={{ fontFamily: ANTON, fontSize: 44, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 1, WebkitTextStroke: '2px #121014', textShadow: '4px 4px 0 #121014', marginTop: 2 }}>
+    {children}
+  </div>
 );
 
 const Grille: React.FC<{ titre: string; children: React.ReactNode; colonnes: number }> = ({ titre, children, colonnes }) => (
   <AbsoluteFill style={{ background: FOND, padding: 40 }}>
-    <div style={{ fontFamily: POLICE, fontSize: 60, fontWeight: 900, color: '#2B1D16', textAlign: 'center', marginBottom: 20 }}>{titre}</div>
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${colonnes}, 1fr)`, rowGap: 10, justifyItems: 'center' }}>{children}</div>
+    <AbsoluteFill style={{ backgroundImage: TRAME, backgroundSize: '14px 14px', opacity: 0.5 }} />
+    <div style={{ position: 'relative', fontFamily: ANTON, fontSize: 96, color: '#FFE600', textAlign: 'center', textTransform: 'uppercase', WebkitTextStroke: '4px #121014', textShadow: '7px 7px 0 #121014', marginBottom: 10, transform: 'rotate(-2deg)' }}>
+      {titre}
+    </div>
+    <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${colonnes}, 1fr)`, rowGap: 6, justifyItems: 'center' }}>{children}</div>
   </AbsoluteFill>
 );
 
@@ -75,8 +86,9 @@ export const DemoPersonnage: React.FC = () => {
   const sursaut = interpolate(local, [0, 4, 10], [1, 1.04, 1], { extrapolateRight: 'clamp' });
   return (
     <AbsoluteFill style={{ background: FOND, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 140 }}>
-      <div style={{ position: 'absolute', top: 120, fontFamily: POLICE, fontSize: 64, fontWeight: 900, color: '#2B1D16' }}>
-        {plan.expression} · {plan.pose}
+      <AbsoluteFill style={{ backgroundImage: TRAME, backgroundSize: '14px 14px', opacity: 0.5 }} />
+      <div style={{ position: 'absolute', top: 120 }}>
+        <Etiquette>{plan.expression} · {plan.pose}</Etiquette>
       </div>
       <div style={{ transform: `scale(${sursaut})`, transformOrigin: 'bottom center' }}>
         <Personnage expression={plan.expression} pose={plan.pose} posePrecedente={precedent.pose} transition={transition} parle={plan.parle} hauteur={1500} />
