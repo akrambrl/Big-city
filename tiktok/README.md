@@ -4,7 +4,7 @@ Générateur de vidéos animées verticales (1080 × 1920, 30 i/s) avec [Remotio
 
 > **En cours de construction, étape par étape.**
 > - [x] Étape 1 : personnage et expressions
-> - [ ] Étape 2 : scènes et décors
+> - [x] Étape 2 : scènes et décors
 > - [ ] Étape 3 : voix et synchro (module `../voix-off`)
 > - [ ] Étape 4 : commande finale `npm run make -- videos/001.json`
 
@@ -19,6 +19,20 @@ npx remotion studio
 Dans le dossier **Etape1-Personnage** :
 - **Demo-Personnage** (Thomas) et **Demo-Lea** : animations de 9 s qui enchaînent expressions et poses ;
 - **Galerie-Expressions**, **Galerie-Poses** (et leurs versions **-Lea**), **Galerie-Personnages** : planches fixes.
+
+## Les scènes (étape 2)
+
+Dossier **Etape2-Scenes** du Studio : **Demo-Scenes** (les 5 scènes enchaînées, 20 s), chaque scène seule (**Scene-accroche**, **Scene-montant**…) et **Galerie-Decors**.
+
+| Type | Ce qu'on voit | Animation au déclencheur |
+|---|---|---|
+| `accroche` | Bandeau jaune en haut (`titre`), sous-titre (`texte`), personnage en réaction | Bandeau qui s'écrase en place, flash, secousse, lignes de vitesse |
+| `montant` | Carte avec `montant.ancien` barré en rouge → flèche → `montant.nouveau` en vert | Le nouveau montant « pop », pluie de pièces |
+| `document` | Papier (`courrier`, `bail`, `fiche_paie`, `facture`) avec `titre` et `lignes` | La ligne `surligne` est surlignée au marqueur jaune, zoom dessus |
+| `explication` | Personnage (et un `secondaire` éventuel) + texte clé | Les mots apparaissent un à un, les passages entre `**…**` en jaune |
+| `cta` | « Abonne-toi » + « pour ne plus te faire avoir » + bouton | Un curseur clique sur « S'abonner », qui devient « Abonné ✓ », pluie de cœurs |
+
+Décors : `rue`, `magasin`, `bureau`, `appartement` (`src/decors/Decors.tsx`). Le personnage peut changer d'expression et de pose au déclencheur (`expressionApres`, `poseApres`). Le format d'une scène est décrit dans `src/scenes/types.ts`.
 
 ## Le personnage
 
