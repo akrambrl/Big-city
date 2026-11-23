@@ -1,0 +1,6 @@
+.venv/
+models/
+cache/
+build/
+*.wav
+*.mp4

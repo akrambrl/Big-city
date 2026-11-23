@@ -1,0 +1,4 @@
+piper-tts>=1.5        # GPL-3.0 (le moteur ; l'audio produit n'est pas concerné)
+faster-whisper>=1.1   # MIT
+num2words>=0.5.13     # LGPL-2.1 (nombres écrits en toutes lettres pour l'alignement)
+numpy

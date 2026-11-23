@@ -1,0 +1,31 @@
+{
+  "voix": { "moteur": "piper", "voix": "fr_FR-siwis-medium", "vitesse": 1.0 },
+  "video": { "largeur": 1080, "hauteur": 1920, "fps": 30 },
+  "marges": { "avant": 0.25, "apres": 0.5 },
+  "prononciation": { "PEA": "pé eu a" },
+  "scenes": [
+    {
+      "id": "accroche",
+      "texte": "Julie a 27 ans et elle économise 650 euros par mois.",
+      "declencheurs": [
+        { "mot": "650 euros", "animation": "montant", "donnees": { "valeur": 650 } }
+      ]
+    },
+    {
+      "id": "astuce",
+      "texte": "Son secret ? Elle place tout sur un PEA, dès le jour de sa paie.",
+      "declencheurs": [
+        { "mot": "PEA", "animation": "logo-pea" },
+        { "mot": "jour de sa paie", "animation": "calendrier", "decalage": -0.1 }
+      ]
+    },
+    {
+      "id": "resultat",
+      "texte": "En dix ans, ça fait plus de 1 200 euros d'intérêts. Pas mal, non ?",
+      "marge_apres": 1.0,
+      "declencheurs": [
+        { "mot": "1 200 euros", "animation": "compteur", "moment": "debut" }
+      ]
+    }
+  ]
+}

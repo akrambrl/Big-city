@@ -1,0 +1,659 @@
+{
+  "version": 1,
+  "fps": 30,
+  "video": {
+    "largeur": 1080,
+    "hauteur": 1920,
+    "fps": 30
+  },
+  "duree": 13.29,
+  "frames": 399,
+  "audio": "voix_off.wav",
+  "voix": {
+    "moteur": "kokoro",
+    "voix": null,
+    "vitesse": 1.0
+  },
+  "sous_titres_style": {
+    "mots_min": 2,
+    "mots_max": 4,
+    "caracteres_max": 26,
+    "police": "Arial",
+    "taille": 0,
+    "marge_bas": 0,
+    "couleur": "#FFFFFF",
+    "couleur_active": "#FFE600"
+  },
+  "scenes": [
+    {
+      "id": "accroche",
+      "texte": "Julie a 27 ans et elle économise 650 euros par mois.",
+      "debut": 0.0,
+      "fin": 4.41,
+      "duree": 4.41,
+      "frames": 132,
+      "frame_debut": 0,
+      "voix": {
+        "fichier": "audio/accroche.wav",
+        "debut": 0.25,
+        "duree": 3.66
+      },
+      "mots": [
+        {
+          "texte": "Julie",
+          "debut": 0.25,
+          "fin": 0.55,
+          "frame": 8
+        },
+        {
+          "texte": "a",
+          "debut": 0.55,
+          "fin": 0.73,
+          "frame": 16
+        },
+        {
+          "texte": "27",
+          "debut": 0.73,
+          "fin": 1.01,
+          "frame": 22
+        },
+        {
+          "texte": "ans",
+          "debut": 1.01,
+          "fin": 1.41,
+          "frame": 30
+        },
+        {
+          "texte": "et",
+          "debut": 1.41,
+          "fin": 1.79,
+          "frame": 42
+        },
+        {
+          "texte": "elle",
+          "debut": 1.79,
+          "fin": 1.91,
+          "frame": 54
+        },
+        {
+          "texte": "économise",
+          "debut": 1.91,
+          "fin": 2.43,
+          "frame": 57
+        },
+        {
+          "texte": "650",
+          "debut": 2.43,
+          "fin": 2.75,
+          "frame": 73
+        },
+        {
+          "texte": "euros",
+          "debut": 2.75,
+          "fin": 3.37,
+          "frame": 82
+        },
+        {
+          "texte": "par",
+          "debut": 3.37,
+          "fin": 3.57,
+          "frame": 101
+        },
+        {
+          "texte": "mois.",
+          "debut": 3.57,
+          "fin": 3.79,
+          "frame": 107
+        }
+      ],
+      "declencheurs": [
+        {
+          "animation": "montant",
+          "mot": "650 euros",
+          "debut": 2.43,
+          "fin_mot": 3.37,
+          "debut_dans_scene": 2.43,
+          "frame": 73,
+          "frame_dans_scene": 73,
+          "donnees": {
+            "valeur": 650
+          }
+        }
+      ],
+      "sous_titres": [
+        {
+          "debut": 0.25,
+          "fin": 1.41,
+          "mots": [
+            {
+              "texte": "Julie",
+              "debut": 0.25,
+              "fin": 0.55,
+              "frame": 8
+            },
+            {
+              "texte": "a",
+              "debut": 0.55,
+              "fin": 0.73,
+              "frame": 16
+            },
+            {
+              "texte": "27",
+              "debut": 0.73,
+              "fin": 1.01,
+              "frame": 22
+            },
+            {
+              "texte": "ans",
+              "debut": 1.01,
+              "fin": 1.41,
+              "frame": 30
+            }
+          ]
+        },
+        {
+          "debut": 1.41,
+          "fin": 2.43,
+          "mots": [
+            {
+              "texte": "et",
+              "debut": 1.41,
+              "fin": 1.79,
+              "frame": 42
+            },
+            {
+              "texte": "elle",
+              "debut": 1.79,
+              "fin": 1.91,
+              "frame": 54
+            },
+            {
+              "texte": "économise",
+              "debut": 1.91,
+              "fin": 2.43,
+              "frame": 57
+            }
+          ]
+        },
+        {
+          "debut": 2.43,
+          "fin": 4.09,
+          "mots": [
+            {
+              "texte": "650",
+              "debut": 2.43,
+              "fin": 2.75,
+              "frame": 73
+            },
+            {
+              "texte": "euros",
+              "debut": 2.75,
+              "fin": 3.37,
+              "frame": 82
+            },
+            {
+              "texte": "par",
+              "debut": 3.37,
+              "fin": 3.57,
+              "frame": 101
+            },
+            {
+              "texte": "mois.",
+              "debut": 3.57,
+              "fin": 3.79,
+              "frame": 107
+            }
+          ]
+        }
+      ],
+      "reconnus": 1.0
+    },
+    {
+      "id": "astuce",
+      "texte": "Son secret ? Elle place tout sur un PEA, dès le jour de sa paie.",
+      "debut": 4.41,
+      "fin": 8.48,
+      "duree": 4.07,
+      "frames": 122,
+      "frame_debut": 132,
+      "voix": {
+        "fichier": "audio/astuce.wav",
+        "debut": 4.66,
+        "duree": 3.32
+      },
+      "mots": [
+        {
+          "texte": "Son",
+          "debut": 4.66,
+          "fin": 4.84,
+          "frame": 140
+        },
+        {
+          "texte": "secret ?",
+          "debut": 4.84,
+          "fin": 5.24,
+          "frame": 145
+        },
+        {
+          "texte": "Elle",
+          "debut": 5.5,
+          "fin": 5.54,
+          "frame": 165
+        },
+        {
+          "texte": "place",
+          "debut": 5.54,
+          "fin": 5.78,
+          "frame": 166
+        },
+        {
+          "texte": "tout",
+          "debut": 5.78,
+          "fin": 6.02,
+          "frame": 173
+        },
+        {
+          "texte": "sur",
+          "debut": 6.02,
+          "fin": 6.18,
+          "frame": 181
+        },
+        {
+          "texte": "un",
+          "debut": 6.18,
+          "fin": 6.34,
+          "frame": 185
+        },
+        {
+          "texte": "PEA,",
+          "debut": 6.34,
+          "fin": 6.76,
+          "frame": 190
+        },
+        {
+          "texte": "dès",
+          "debut": 6.88,
+          "fin": 7.04,
+          "frame": 206
+        },
+        {
+          "texte": "le",
+          "debut": 7.04,
+          "fin": 7.16,
+          "frame": 211
+        },
+        {
+          "texte": "jour",
+          "debut": 7.16,
+          "fin": 7.36,
+          "frame": 215
+        },
+        {
+          "texte": "de",
+          "debut": 7.36,
+          "fin": 7.5,
+          "frame": 221
+        },
+        {
+          "texte": "sa",
+          "debut": 7.5,
+          "fin": 7.66,
+          "frame": 225
+        },
+        {
+          "texte": "paie.",
+          "debut": 7.66,
+          "fin": 7.92,
+          "frame": 230
+        }
+      ],
+      "declencheurs": [
+        {
+          "animation": "logo-pea",
+          "mot": "PEA",
+          "debut": 6.34,
+          "fin_mot": 6.76,
+          "debut_dans_scene": 1.93,
+          "frame": 190,
+          "frame_dans_scene": 58
+        },
+        {
+          "animation": "calendrier",
+          "mot": "jour de sa paie",
+          "debut": 7.06,
+          "fin_mot": 7.92,
+          "debut_dans_scene": 2.65,
+          "frame": 212,
+          "frame_dans_scene": 79
+        }
+      ],
+      "sous_titres": [
+        {
+          "debut": 4.66,
+          "fin": 5.5,
+          "mots": [
+            {
+              "texte": "Son",
+              "debut": 4.66,
+              "fin": 4.84,
+              "frame": 140
+            },
+            {
+              "texte": "secret ?",
+              "debut": 4.84,
+              "fin": 5.24,
+              "frame": 145
+            }
+          ]
+        },
+        {
+          "debut": 5.5,
+          "fin": 6.18,
+          "mots": [
+            {
+              "texte": "Elle",
+              "debut": 5.5,
+              "fin": 5.54,
+              "frame": 165
+            },
+            {
+              "texte": "place",
+              "debut": 5.54,
+              "fin": 5.78,
+              "frame": 166
+            },
+            {
+              "texte": "tout",
+              "debut": 5.78,
+              "fin": 6.02,
+              "frame": 173
+            },
+            {
+              "texte": "sur",
+              "debut": 6.02,
+              "fin": 6.18,
+              "frame": 181
+            }
+          ]
+        },
+        {
+          "debut": 6.18,
+          "fin": 6.88,
+          "mots": [
+            {
+              "texte": "un",
+              "debut": 6.18,
+              "fin": 6.34,
+              "frame": 185
+            },
+            {
+              "texte": "PEA,",
+              "debut": 6.34,
+              "fin": 6.76,
+              "frame": 190
+            }
+          ]
+        },
+        {
+          "debut": 6.88,
+          "fin": 7.5,
+          "mots": [
+            {
+              "texte": "dès",
+              "debut": 6.88,
+              "fin": 7.04,
+              "frame": 206
+            },
+            {
+              "texte": "le",
+              "debut": 7.04,
+              "fin": 7.16,
+              "frame": 211
+            },
+            {
+              "texte": "jour",
+              "debut": 7.16,
+              "fin": 7.36,
+              "frame": 215
+            },
+            {
+              "texte": "de",
+              "debut": 7.36,
+              "fin": 7.5,
+              "frame": 221
+            }
+          ]
+        },
+        {
+          "debut": 7.5,
+          "fin": 8.22,
+          "mots": [
+            {
+              "texte": "sa",
+              "debut": 7.5,
+              "fin": 7.66,
+              "frame": 225
+            },
+            {
+              "texte": "paie.",
+              "debut": 7.66,
+              "fin": 7.92,
+              "frame": 230
+            }
+          ]
+        }
+      ],
+      "reconnus": 1.0
+    },
+    {
+      "id": "resultat",
+      "texte": "En dix ans, ça fait plus de 1 200 euros d'intérêts. Pas mal, non ?",
+      "debut": 8.48,
+      "fin": 13.29,
+      "duree": 4.81,
+      "frames": 144,
+      "frame_debut": 254,
+      "voix": {
+        "fichier": "audio/resultat.wav",
+        "debut": 8.73,
+        "duree": 3.56
+      },
+      "mots": [
+        {
+          "texte": "En",
+          "debut": 8.73,
+          "fin": 8.87,
+          "frame": 262
+        },
+        {
+          "texte": "dix",
+          "debut": 8.87,
+          "fin": 9.13,
+          "frame": 266
+        },
+        {
+          "texte": "ans,",
+          "debut": 9.13,
+          "fin": 9.27,
+          "frame": 274
+        },
+        {
+          "texte": "ça",
+          "debut": 9.37,
+          "fin": 9.49,
+          "frame": 281
+        },
+        {
+          "texte": "fait",
+          "debut": 9.49,
+          "fin": 9.63,
+          "frame": 285
+        },
+        {
+          "texte": "plus",
+          "debut": 9.63,
+          "fin": 9.83,
+          "frame": 289
+        },
+        {
+          "texte": "de",
+          "debut": 9.83,
+          "fin": 9.99,
+          "frame": 295
+        },
+        {
+          "texte": "1 200",
+          "debut": 9.99,
+          "fin": 10.35,
+          "frame": 300
+        },
+        {
+          "texte": "euros",
+          "debut": 10.35,
+          "fin": 10.71,
+          "frame": 310
+        },
+        {
+          "texte": "d'intérêts.",
+          "debut": 10.71,
+          "fin": 11.27,
+          "frame": 321
+        },
+        {
+          "texte": "Pas",
+          "debut": 11.45,
+          "fin": 11.63,
+          "frame": 344
+        },
+        {
+          "texte": "mal,",
+          "debut": 11.63,
+          "fin": 11.91,
+          "frame": 349
+        },
+        {
+          "texte": "non ?",
+          "debut": 12.01,
+          "fin": 12.17,
+          "frame": 360
+        }
+      ],
+      "declencheurs": [
+        {
+          "animation": "compteur",
+          "mot": "1 200 euros",
+          "debut": 9.99,
+          "fin_mot": 10.71,
+          "debut_dans_scene": 1.51,
+          "frame": 300,
+          "frame_dans_scene": 45
+        }
+      ],
+      "sous_titres": [
+        {
+          "debut": 8.73,
+          "fin": 9.37,
+          "mots": [
+            {
+              "texte": "En",
+              "debut": 8.73,
+              "fin": 8.87,
+              "frame": 262
+            },
+            {
+              "texte": "dix",
+              "debut": 8.87,
+              "fin": 9.13,
+              "frame": 266
+            },
+            {
+              "texte": "ans,",
+              "debut": 9.13,
+              "fin": 9.27,
+              "frame": 274
+            }
+          ]
+        },
+        {
+          "debut": 9.37,
+          "fin": 9.99,
+          "mots": [
+            {
+              "texte": "ça",
+              "debut": 9.37,
+              "fin": 9.49,
+              "frame": 281
+            },
+            {
+              "texte": "fait",
+              "debut": 9.49,
+              "fin": 9.63,
+              "frame": 285
+            },
+            {
+              "texte": "plus",
+              "debut": 9.63,
+              "fin": 9.83,
+              "frame": 289
+            },
+            {
+              "texte": "de",
+              "debut": 9.83,
+              "fin": 9.99,
+              "frame": 295
+            }
+          ]
+        },
+        {
+          "debut": 9.99,
+          "fin": 11.45,
+          "mots": [
+            {
+              "texte": "1 200",
+              "debut": 9.99,
+              "fin": 10.35,
+              "frame": 300
+            },
+            {
+              "texte": "euros",
+              "debut": 10.35,
+              "fin": 10.71,
+              "frame": 310
+            },
+            {
+              "texte": "d'intérêts.",
+              "debut": 10.71,
+              "fin": 11.27,
+              "frame": 321
+            }
+          ]
+        },
+        {
+          "debut": 11.45,
+          "fin": 12.47,
+          "mots": [
+            {
+              "texte": "Pas",
+              "debut": 11.45,
+              "fin": 11.63,
+              "frame": 344
+            },
+            {
+              "texte": "mal,",
+              "debut": 11.63,
+              "fin": 11.91,
+              "frame": 349
+            },
+            {
+              "texte": "non ?",
+              "debut": 12.01,
+              "fin": 12.17,
+              "frame": 360
+            }
+          ]
+        }
+      ],
+      "reconnus": 1.0
+    }
+  ]
+}
