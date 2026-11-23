@@ -7,9 +7,9 @@
     "https://news.instant-gaming.com/en/articles/20394-upd-gta-vi-will-indeed-cost-eur79-99-and-the-online-will-not-be-available-at-launch"
   ],
   "voix": {
-    "moteur": "piper",
-    "voix": "fr_FR-siwis-medium",
-    "vitesse": 1.1
+    "moteur": "pocket",
+    "voix": "javert",
+    "vitesse": 1.15
   },
   "prononciation": {
     "GTA VI": "gé té a six",

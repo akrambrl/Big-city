@@ -4,17 +4,21 @@
 #   - faster-whisper + le modèle Whisper (MIT) pour le timing mot par mot
 #   - en option (--kokoro) : Kokoro-82M (Apache 2.0) avec la voix ff_siwis
 #
-# Usage : ./install.sh [--kokoro] [--whisper small|medium|large-v3]
+#   - en option (--pocket) : Pocket TTS (Kyutai, poids CC BY 4.0), voix d'homme plus naturelle
+#
+# Usage : ./install.sh [--pocket] [--kokoro] [--whisper small|medium|large-v3]
 set -euo pipefail
 
 cd "$(dirname "$0")"
 WHISPER_MODELE="small"
 AVEC_KOKORO=0
+AVEC_POCKET=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --kokoro) AVEC_KOKORO=1 ;;
+    --pocket) AVEC_POCKET=1 ;;
     --whisper) WHISPER_MODELE="$2"; shift ;;
-    -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
     *) echo "Option inconnue : $1"; exit 1 ;;
   esac
   shift
@@ -81,6 +85,14 @@ if [ "$AVEC_KOKORO" = 1 ]; then
   mkdir -p models/kokoro
   telecharger "$KOKORO_URL/kokoro-v1.0.onnx" "models/kokoro/kokoro-v1.0.onnx"
   telecharger "$KOKORO_URL/voices-v1.0.bin" "models/kokoro/voices-v1.0.bin"
+fi
+
+if [ "$AVEC_POCKET" = 1 ]; then
+  etape "Pocket TTS (voix naturelle, CPU)"
+  # version CPU de PyTorch : évite plusieurs Go de bibliothèques CUDA inutiles
+  .venv/bin/pip install -q pocket-tts --extra-index-url https://download.pytorch.org/whl/cpu
+  # premier lancement : télécharge le modèle français depuis Hugging Face
+  .venv/bin/python -m voixoff dire "Test de la voix." --moteur pocket --voix javert -o models/test-pocket.wav
 fi
 
 etape "Test rapide"

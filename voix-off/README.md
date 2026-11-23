@@ -2,7 +2,10 @@
 
 Génère la voix off d'une vidéo à partir d'un script, **100 % en local et gratuitement** : aucun service payant, aucune clé API.
 
-- **Synthèse vocale** : [Piper](https://github.com/OHF-Voice/piper1-gpl), voix française `fr_FR-siwis-medium`. Alternative : [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M), voix `ff_siwis`.
+- **Synthèse vocale**, trois moteurs au choix :
+  - [Pocket TTS](https://github.com/kyutai-labs/pocket-tts) (Kyutai) : voix neuronale **la plus naturelle**, voix d'homme `javert` ; tourne sur CPU ;
+  - [Piper](https://github.com/OHF-Voice/piper1-gpl) : très rapide, voix `fr_FR-siwis-medium` (femme) ;
+  - [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) : voix `ff_siwis` (femme).
 - **Timing mot par mot** : [faster-whisper](https://github.com/SYSTRAN/faster-whisper) avec `word_timestamps`.
 - **Cache** : l'audio et la transcription ne sont recalculés que si le texte (ou la voix) d'une scène change.
 
@@ -15,6 +18,7 @@ Génère la voix off d'une vidéo à partir d'un script, **100 % en local et gra
 
 ```bash
 ./install.sh                 # Piper + voix siwis + Whisper « small »
+./install.sh --pocket        # ajoute Pocket TTS (voix d'homme naturelle, ≈ 1 Go)
 ./install.sh --kokoro        # ajoute Kokoro (≈ 340 Mo)
 ./install.sh --whisper medium  # Whisper plus précis (plus lent)
 ```
@@ -32,6 +36,16 @@ Le script crée `.venv/`, installe les paquets Python et télécharge la voix Pi
 ```
 
 Ouvre `build/apercu.html` dans un navigateur pour vérifier le calage : la voix, les sous-titres et les déclencheurs défilent ensemble.
+
+## Choisir la voix
+
+```json
+"voix": { "moteur": "pocket", "voix": "javert", "vitesse": 1.15 }
+```
+
+- **Pocket TTS** : voix d'homme du catalogue `javert`, `peter_yearsley` ou `george`. Les nombres sont écrits en toutes lettres avant la lecture (« 64,89 € » devient « soixante-quatre euros quatre-vingt-neuf »). Les silences trop longs sont raccourcis et le volume est normalisé. `vitesse` accélère le débit sans changer la hauteur de la voix (nécessite ffmpeg). Compte environ 3 minutes de calcul pour 80 s de voix, avec mise en cache.
+- **Cloner une voix française native** avec Pocket TTS : il faut accepter gratuitement les conditions du modèle sur [huggingface.co/kyutai/pocket-tts](https://huggingface.co/kyutai/pocket-tts), puis se connecter avec `hf auth login`. Ensuite, indique un fichier `.wav` comme `voix` : par exemple une voix du corpus CML-TTS (CC BY 4.0) de [kyutai/tts-voices](https://huggingface.co/kyutai/tts-voices/tree/main/cml-tts/fr), ou un enregistrement de ta propre voix.
+- **Piper** lit « en plus » comme « en plu ». Ajoute une règle `"en plus": "en plusse"` dans `prononciation`.
 
 ## Le script (`exemple/script.json`)
 
@@ -91,15 +105,24 @@ Les sous-titres ne séparent jamais un nombre de son unité (« 650 euros », «
 | Élément | Licence | Usage commercial |
 |---|---|---|
 | Voix **`fr_FR-siwis-medium`** (Piper) | Corpus SIWIS : **CC BY 4.0** | **Oui, avec attribution** |
+| Modèle **Pocket TTS** (Kyutai) | Poids **CC BY 4.0** | **Oui, avec attribution** |
+| Voix **`javert`** (Pocket TTS) | Don de voix Unmute : **CC0** | **Oui**, sans condition |
+| Voix **`peter_yearsley`** (Pocket TTS) | Voice-Zero / LibriVox : **CC0** | **Oui** |
+| Voix **`george`** (Pocket TTS) | VCTK : **CC BY 4.0** | **Oui, avec attribution** |
 | Voix **`ff_siwis`** (Kokoro) | Poids Kokoro : Apache 2.0 ; corpus SIWIS : CC BY 4.0 | **Oui, avec attribution** |
 | Piper (`piper-tts`) | GPL-3.0 | Oui. La GPL s'applique au logiciel, pas à l'audio qu'il produit. |
 | `kokoro-onnx` | MIT | Oui |
+| `pocket-tts` (code) | MIT | Oui |
 | faster-whisper et modèles Whisper | MIT | Oui |
 | num2words | LGPL-2.1 | Oui (utilisé comme bibliothèque) |
 
 **Attribution à mettre dans la description de tes vidéos** (exigée par CC BY 4.0) :
 
 > Voix de synthèse : Piper (fr_FR-siwis-medium), entraînée sur le corpus SIWIS, University of Edinburgh, licence CC BY 4.0.
+
+Avec Pocket TTS :
+
+> Voix de synthèse : Pocket TTS de Kyutai (licence CC BY 4.0).
 
 **Voix écartées pour un usage commercial :**
 - `fr_FR-tom-medium` est sous AGPLv3 : la licence est mal adaptée à un modèle de voix et son application à l'audio produit est incertaine.

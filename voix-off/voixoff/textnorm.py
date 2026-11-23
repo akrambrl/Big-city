@@ -85,3 +85,35 @@ def decouper_mots(texte: str) -> list[str]:
 
 def finit_phrase(mot: str) -> bool:
     return bool(re.search(r"[.,;:!?…]$", mot))
+
+
+_PRIX = re.compile(r"(\d+),(\d{2})\s*(?:€|euros?)\b|(\d+),(\d{2})\s*€")
+
+
+def en_toutes_lettres(texte: str) -> str:
+    """Prépare un texte pour une voix neuronale qui lit mal les chiffres (Pocket TTS) :
+    « 64,89 € » -> « soixante-quatre euros quatre-vingt-neuf », « 50 % » -> « cinquante pour cent »,
+    « 14 jours » -> « quatorze jours ». La ponctuation est conservée (elle règle les pauses)."""
+    if num2words is None:
+        return texte
+    t = joindre_milliers(texte)
+
+    def prix(m: re.Match) -> str:
+        e, c = (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(4))
+        mots = f"{num2words(int(e), lang='fr')} euros"
+        if int(c):
+            mots += f" {num2words(int(c), lang='fr')}"
+        return mots
+
+    t = _PRIX.sub(prix, t)
+    t = re.sub(r"(\d)\s*%", r"\1 pour cent", t)
+    t = re.sub(r"(\d)\s*€", r"\1 euros", t)
+
+    def nombre(m: re.Match) -> str:
+        s = m.group(0)
+        if "," in s:
+            e, d = s.split(",")
+            return f"{num2words(int(e), lang='fr')} virgule {num2words(int(d), lang='fr')}"
+        return num2words(int(s), lang="fr")
+
+    return re.sub(r"\d+(?:,\d+)?", nombre, t)

@@ -5,7 +5,7 @@ MODELES = RACINE / "models"
 CACHE = RACINE / "cache"
 
 # Version du format de cache : à incrémenter si la façon de générer change
-VERSION_CACHE = 2
+VERSION_CACHE = 4
 
 DEFAUTS = {
     "voix": {"moteur": "piper", "voix": "fr_FR-siwis-medium", "vitesse": 1.0},

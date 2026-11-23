@@ -16,7 +16,7 @@ export type VideoJson = {
   titre: string;
   /** Sources des informations juridiques (non affichées, pour vérification). */
   sources?: string[];
-  voix?: { moteur?: 'piper' | 'kokoro'; voix?: string; vitesse?: number };
+  voix?: { moteur?: 'piper' | 'kokoro' | 'pocket'; voix?: string; vitesse?: number; langue?: string };
   prononciation?: Record<string, string>;
   marges?: { avant: number; apres: number };
   scenes: SceneJson[];
