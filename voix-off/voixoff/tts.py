@@ -102,6 +102,55 @@ class MoteurPocket:
             accelerer(chemin, self.vitesse)
 
 
+class MoteurKyutai:
+    """Kyutai TTS 1.6B (poids CC BY 4.0, sans compte à créer) avec des voix de Français natifs
+    du corpus CML-TTS (CC BY 4.0). Le plus naturel, mais lent sur CPU (≈ 6 à 8 x le temps réel) :
+    l'audio est mis en cache, seules les scènes modifiées sont recalculées.
+
+    `voix` : identifiant CML-TTS (ex. « 9834_9697_000150-0003 ») ou chemin dans le dépôt
+    kyutai/tts-voices (ex. « cml-tts/fr/2216_1745_000007-0001_enhanced.wav »).
+    """
+
+    nom = "kyutai"
+    _modele = None  # chargé une seule fois par processus (≈ 1 minute)
+
+    def __init__(self, voix: str = "9834_9697_000150-0003", vitesse: float = 1.0, **_):
+        import torch
+        from moshi.models.loaders import CheckpointInfo
+        from moshi.models.tts import DEFAULT_DSM_TTS_REPO, TTSModel
+
+        if MoteurKyutai._modele is None:
+            MoteurKyutai._modele = TTSModel.from_checkpoint_info(
+                CheckpointInfo.from_hf_repo(DEFAULT_DSM_TTS_REPO), n_q=32, temp=0.6, device="cpu", dtype=torch.float32
+            )
+        self._m = MoteurKyutai._modele
+        chemin = voix if "/" in voix else f"cml-tts/fr/{voix}_enhanced.wav"
+        self._voix = self._m.get_voice_path(chemin)
+        self.voix, self.vitesse = voix, vitesse
+        self.sample_rate = self._m.mimi.sample_rate
+
+    def synthetiser(self, texte: str, chemin: Path) -> None:
+        from .textnorm import en_toutes_lettres
+
+        m = self._m
+        entrees = m.prepare_script([en_toutes_lettres(texte)], padding_between=1)
+        attributs = m.make_condition_attributes([self._voix], cfg_coef=2.0)
+        morceaux = []
+
+        def sur_trame(trame):
+            if (trame != -1).all():
+                pcm = m.mimi.decode(trame[:, 1:, :]).cpu().numpy()
+                morceaux.append(np.clip(pcm[0, 0], -1, 1))
+
+        with m.mimi.streaming(1):
+            m.generate([entrees], [attributs], on_frame=sur_trame)
+        audio = np.concatenate(morceaux).astype(np.float32) if morceaux else np.zeros(1, dtype=np.float32)
+        audio = normaliser_volume(raccourcir_silences(audio, self.sample_rate))
+        ecrire_wav(chemin, (np.clip(audio, -1, 1) * 32767).astype("<i2"), self.sample_rate)
+        if abs(self.vitesse - 1.0) > 0.01:
+            accelerer(chemin, self.vitesse)
+
+
 def normaliser_volume(audio: np.ndarray, cible_db: float = -18.0, crete: float = 0.95) -> np.ndarray:
     """Volume constant d'une scène à l'autre : niveau moyen visé, sans dépasser la crête."""
     actif = audio[np.abs(audio) > 0.01]
@@ -157,7 +206,9 @@ def creer_moteur(cfg: dict):
         return MoteurKokoro(cfg.get("voix") or "ff_siwis", float(cfg.get("vitesse", 1.0)))
     if moteur == "pocket":
         return MoteurPocket(cfg.get("voix") or "javert", float(cfg.get("vitesse", 1.0)), cfg.get("langue") or "french_24l")
-    raise ValueError(f"Moteur inconnu : {moteur} (piper, kokoro ou pocket)")
+    if moteur == "kyutai":
+        return MoteurKyutai(cfg.get("voix") or "9834_9697_000150-0003", float(cfg.get("vitesse", 1.0)))
+    raise ValueError(f"Moteur inconnu : {moteur} (piper, kokoro, pocket ou kyutai)")
 
 
 def appliquer_prononciation(texte: str, regles: dict) -> str:
@@ -215,6 +266,8 @@ def fichier_modele(cfg: dict) -> Path:
     moteur = (cfg.get("moteur") or "piper").lower()
     if moteur == "kokoro":
         return MODELES / "kokoro" / "kokoro-v1.0.onnx"
+    if moteur == "kyutai":
+        return MODELES / "kyutai"  # modèle et voix téléchargés depuis Hugging Face (cache HF)
     if moteur == "pocket":
         v = cfg.get("voix") or "javert"
         return Path(v) if v.endswith(".wav") else MODELES / "pocket"  # catalogue : modèle téléchargé à part

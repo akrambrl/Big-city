@@ -4,21 +4,24 @@
 #   - faster-whisper + le modèle Whisper (MIT) pour le timing mot par mot
 #   - en option (--kokoro) : Kokoro-82M (Apache 2.0) avec la voix ff_siwis
 #
-#   - en option (--pocket) : Pocket TTS (Kyutai, poids CC BY 4.0), voix d'homme plus naturelle
+#   - en option (--kyutai) : Kyutai TTS 1.6B (CC BY 4.0), voix d'hommes français natifs, la plus naturelle
+#   - en option (--pocket) : Pocket TTS (Kyutai, CC BY 4.0), voix neuronale rapide (léger accent)
 #
-# Usage : ./install.sh [--pocket] [--kokoro] [--whisper small|medium|large-v3]
+# Usage : ./install.sh [--kyutai] [--pocket] [--kokoro] [--whisper small|medium|large-v3]
 set -euo pipefail
 
 cd "$(dirname "$0")"
 WHISPER_MODELE="small"
 AVEC_KOKORO=0
 AVEC_POCKET=0
+AVEC_KYUTAI=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --kokoro) AVEC_KOKORO=1 ;;
     --pocket) AVEC_POCKET=1 ;;
+    --kyutai) AVEC_KYUTAI=1 ;;
     --whisper) WHISPER_MODELE="$2"; shift ;;
-    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
     *) echo "Option inconnue : $1"; exit 1 ;;
   esac
   shift
@@ -93,6 +96,13 @@ if [ "$AVEC_POCKET" = 1 ]; then
   .venv/bin/pip install -q pocket-tts --extra-index-url https://download.pytorch.org/whl/cpu
   # premier lancement : télécharge le modèle français depuis Hugging Face
   .venv/bin/python -m voixoff dire "Test de la voix." --moteur pocket --voix javert -o models/test-pocket.wav
+fi
+
+if [ "$AVEC_KYUTAI" = 1 ]; then
+  etape "Kyutai TTS 1.6B (voix française native)"
+  .venv/bin/pip install -q moshi --extra-index-url https://download.pytorch.org/whl/cpu
+  # premier lancement : télécharge le modèle (≈ 4 Go) et la voix depuis Hugging Face (sans compte)
+  .venv/bin/python -m voixoff dire "Test de la voix." --moteur kyutai -o models/test-kyutai.wav
 fi
 
 etape "Test rapide"

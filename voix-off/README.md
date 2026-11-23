@@ -2,8 +2,9 @@
 
 Génère la voix off d'une vidéo à partir d'un script, **100 % en local et gratuitement** : aucun service payant, aucune clé API.
 
-- **Synthèse vocale**, trois moteurs au choix :
-  - [Pocket TTS](https://github.com/kyutai-labs/pocket-tts) (Kyutai) : voix neuronale **la plus naturelle**, voix d'homme `javert` ; tourne sur CPU ;
+- **Synthèse vocale**, quatre moteurs au choix :
+  - [Kyutai TTS 1.6B](https://huggingface.co/kyutai/tts-1.6b-en_fr) : **le plus naturel**, voix d'hommes français natifs (corpus CML-TTS) ; lent sur CPU, mais mis en cache ;
+  - [Pocket TTS](https://github.com/kyutai-labs/pocket-tts) (Kyutai) : voix neuronale rapide, voix d'homme `javert` (léger accent) ;
   - [Piper](https://github.com/OHF-Voice/piper1-gpl) : très rapide, voix `fr_FR-siwis-medium` (femme) ;
   - [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) : voix `ff_siwis` (femme).
 - **Timing mot par mot** : [faster-whisper](https://github.com/SYSTRAN/faster-whisper) avec `word_timestamps`.
@@ -18,7 +19,8 @@ Génère la voix off d'une vidéo à partir d'un script, **100 % en local et gra
 
 ```bash
 ./install.sh                 # Piper + voix siwis + Whisper « small »
-./install.sh --pocket        # ajoute Pocket TTS (voix d'homme naturelle, ≈ 1 Go)
+./install.sh --kyutai        # ajoute Kyutai TTS 1.6B (voix d'homme française native, ≈ 4 Go)
+./install.sh --pocket        # ajoute Pocket TTS (≈ 1 Go)
 ./install.sh --kokoro        # ajoute Kokoro (≈ 340 Mo)
 ./install.sh --whisper medium  # Whisper plus précis (plus lent)
 ```
@@ -40,8 +42,13 @@ Ouvre `build/apercu.html` dans un navigateur pour vérifier le calage : la voix,
 ## Choisir la voix
 
 ```json
-"voix": { "moteur": "pocket", "voix": "javert", "vitesse": 1.15 }
+"voix": { "moteur": "kyutai", "voix": "9834_9697_000150-0003", "vitesse": 1.1 }
 ```
+
+- **Kyutai TTS 1.6B** (recommandé) : voix d'hommes **français natifs** du corpus CML-TTS, sans compte à créer.
+  - Voix testées : `9834_9697_000150-0003` (grave, par défaut) et `2216_1745_000007-0001` (un peu plus claire). Les autres voix sont listées dans [kyutai/tts-voices/cml-tts/fr](https://huggingface.co/kyutai/tts-voices/tree/main/cml-tts/fr).
+  - Il prononce naturellement les nombres, les sigles (« GTA », « 50 % ») et « en plus ».
+  - Il est lent sur CPU : environ 6 à 8 fois la durée de la voix, soit une dizaine de minutes pour une vidéo de 80 s. Seules les scènes modifiées sont recalculées.
 
 - **Pocket TTS** : voix d'homme du catalogue `javert`, `peter_yearsley` ou `george`. Les nombres sont écrits en toutes lettres avant la lecture (« 64,89 € » devient « soixante-quatre euros quatre-vingt-neuf »). Les silences trop longs sont raccourcis et le volume est normalisé. `vitesse` accélère le débit sans changer la hauteur de la voix (nécessite ffmpeg). Compte environ 3 minutes de calcul pour 80 s de voix, avec mise en cache.
 - **Cloner une voix française native** avec Pocket TTS : il faut accepter gratuitement les conditions du modèle sur [huggingface.co/kyutai/pocket-tts](https://huggingface.co/kyutai/pocket-tts), puis se connecter avec `hf auth login`. Ensuite, indique un fichier `.wav` comme `voix` : par exemple une voix du corpus CML-TTS (CC BY 4.0) de [kyutai/tts-voices](https://huggingface.co/kyutai/tts-voices/tree/main/cml-tts/fr), ou un enregistrement de ta propre voix.
@@ -105,6 +112,9 @@ Les sous-titres ne séparent jamais un nombre de son unité (« 650 euros », «
 | Élément | Licence | Usage commercial |
 |---|---|---|
 | Voix **`fr_FR-siwis-medium`** (Piper) | Corpus SIWIS : **CC BY 4.0** | **Oui, avec attribution** |
+| Modèle **Kyutai TTS 1.6B** | Poids **CC BY 4.0** | **Oui, avec attribution** |
+| Voix **CML-TTS** (Kyutai TTS) | Corpus CML-TTS : **CC BY 4.0** | **Oui, avec attribution** |
+| `moshi` (code Kyutai) | MIT | Oui |
 | Modèle **Pocket TTS** (Kyutai) | Poids **CC BY 4.0** | **Oui, avec attribution** |
 | Voix **`javert`** (Pocket TTS) | Don de voix Unmute : **CC0** | **Oui**, sans condition |
 | Voix **`peter_yearsley`** (Pocket TTS) | Voice-Zero / LibriVox : **CC0** | **Oui** |
@@ -119,6 +129,10 @@ Les sous-titres ne séparent jamais un nombre de son unité (« 650 euros », «
 **Attribution à mettre dans la description de tes vidéos** (exigée par CC BY 4.0) :
 
 > Voix de synthèse : Piper (fr_FR-siwis-medium), entraînée sur le corpus SIWIS, University of Edinburgh, licence CC BY 4.0.
+
+Avec Kyutai TTS :
+
+> Voix de synthèse : Kyutai TTS 1.6B (CC BY 4.0), voix issue du corpus CML-TTS (CC BY 4.0).
 
 Avec Pocket TTS :
 
