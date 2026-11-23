@@ -1,0 +1,122 @@
+{
+  "id": "001",
+  "titre": "Colis perdu : le vendeur doit te rembourser",
+  "sources": [
+    "https://www.inc-conso.fr/content/la-livraison-vos-droits-et-recours",
+    "https://www.inc-conso.fr/content/colis-perdu-qui-est-responsable-et-comment-se-faire-rembourser-avec-lalldc"
+  ],
+  "voix": { "moteur": "piper", "voix": "fr_FR-siwis-medium", "vitesse": 1.1 },
+  "prononciation": {
+    "64,89 euros": "soixante-quatre euros quatre-vingt-neuf",
+    "97,34 euros": "quatre-vingt-dix-sept euros trente-quatre",
+    "SignalConso": "Signal Conso"
+  },
+  "scenes": [
+    {
+      "type": "accroche",
+      "decor": "rue",
+      "voix": "Ton colis n'est jamais arrivé, et le vendeur te dit de voir avec le transporteur ? Stop, c'est faux !",
+      "declencheur": "Stop",
+      "titre": "Colis perdu ?",
+      "texte": "Le vendeur doit te rembourser",
+      "personnage": { "variante": "heros", "expression": "colere", "pose": "telephone", "expressionApres": "choque", "poseApres": "bras_leves" }
+    },
+    {
+      "type": "explication",
+      "decor": "magasin",
+      "voix": "La règle est simple : quand tu achètes en ligne, c'est le vendeur qui est responsable de ton colis, jusqu'à ce que tu l'aies entre les mains.",
+      "declencheur": "responsable",
+      "texte": "Achat en ligne : le vendeur est **responsable de ton colis** jusqu'à ce que tu le reçoives.",
+      "personnage": { "variante": "heros", "expression": "neutre", "pose": "pointe_doigt", "expressionApres": "malin" },
+      "secondaire": { "variante": "patron", "expression": "malin", "pose": "mains_hanches", "expressionApres": "choque" }
+    },
+    {
+      "type": "explication",
+      "decor": "rue",
+      "voix": "Même s'il a confié la livraison à un transporteur, c'est son problème, pas le tien. Il ne peut pas te renvoyer vers lui.",
+      "declencheur": "problème",
+      "texte": "Le transporteur ? **C'est son problème**, pas le tien.",
+      "personnage": { "variante": "heros", "expression": "malin", "pose": "mains_hanches" }
+    },
+    {
+      "type": "explication",
+      "decor": "appartement",
+      "voix": "Et si le suivi affiche livré alors que tu n'as rien reçu, c'est au vendeur de prouver la livraison : signature, code ou photo.",
+      "declencheur": "prouver",
+      "texte": "Suivi « livré » mais rien reçu ? C'est au vendeur de **prouver la livraison**.",
+      "personnage": { "variante": "heros", "expression": "choque", "pose": "telephone", "expressionApres": "malin", "poseApres": "pointe_doigt" }
+    },
+    {
+      "type": "explication",
+      "decor": "appartement",
+      "voix": "Étape un : écris au vendeur que tu n'as rien reçu, et garde une trace de tous vos échanges.",
+      "declencheur": "trace",
+      "texte": "**Étape 1** : écris au vendeur et garde une trace écrite.",
+      "personnage": { "variante": "heroine", "expression": "neutre", "pose": "telephone" }
+    },
+    {
+      "type": "document",
+      "decor": "bureau",
+      "voix": "Étape deux : s'il ne fait rien, envoie-lui une mise en demeure en recommandé avec accusé de réception, en lui laissant quinze jours pour livrer.",
+      "declencheur": "quinze jours",
+      "document": {
+        "type": "courrier",
+        "titre": "Mise en demeure",
+        "lignes": ["Madame, Monsieur,", "Ma commande n° 48213", "ne m'a jamais été livrée.", "Livrez-moi sous 15 jours,", "sinon le contrat sera résolu."],
+        "surligne": 3
+      },
+      "personnage": { "variante": "heroine", "expression": "malin", "pose": "pointe_doigt" }
+    },
+    {
+      "type": "montant",
+      "decor": "magasin",
+      "voix": "Étape trois : sans livraison dans ce délai, le contrat est annulé, et le vendeur doit te rembourser tout : 64,89 euros, frais de livraison compris.",
+      "declencheur": "64,89 euros",
+      "montant": { "ancien": "0 €", "nouveau": "64,89 €", "legende": "frais de port inclus" },
+      "personnage": { "variante": "heroine", "expression": "neutre", "pose": "pointe_doigt", "expressionApres": "content" }
+    },
+    {
+      "type": "explication",
+      "decor": "bureau",
+      "voix": "Et il a 14 jours maximum pour te rembourser.",
+      "declencheur": "14 jours",
+      "texte": "Remboursement sous **14 jours** maximum.",
+      "personnage": { "variante": "heros", "expression": "content", "pose": "pointe_doigt" }
+    },
+    {
+      "type": "montant",
+      "decor": "magasin",
+      "voix": "S'il traîne, la somme est majorée automatiquement, jusqu'à 50 % en plus. Tes 64,89 euros deviennent 97,34 euros !",
+      "declencheur": "97,34 euros",
+      "montant": { "ancien": "64,89 €", "nouveau": "97,34 €", "legende": "jusqu'à +50 % de retard" },
+      "personnage": { "variante": "heros", "expression": "malin", "pose": "pointe_doigt", "expressionApres": "content", "lunettesSoleil": true }
+    },
+    {
+      "type": "explication",
+      "decor": "bureau",
+      "voix": "Toujours bloqué ? Saisis le médiateur de la consommation ou un conciliateur de justice, c'est gratuit. Et signale le vendeur sur SignalConso.",
+      "declencheur": "gratuit",
+      "texte": "Toujours bloqué ? **Médiateur**, conciliateur de justice (gratuit) et **SignalConso**.",
+      "personnage": { "variante": "heros", "expression": "triste", "pose": "debout", "expressionApres": "content" },
+      "secondaire": { "variante": "conseiller", "expression": "content", "pose": "pointe_doigt" }
+    },
+    {
+      "type": "explication",
+      "decor": "rue",
+      "voix": "Retiens bien : ton colis, c'est le vendeur qui en répond. Pas le transporteur, et surtout pas toi.",
+      "declencheur": "vendeur",
+      "texte": "Ton colis, c'est **le vendeur** qui en répond. Pas le transporteur, pas toi.",
+      "personnage": { "variante": "heros", "expression": "content", "pose": "mains_hanches" },
+      "secondaire": { "variante": "heroine", "expression": "content", "pose": "pointe_doigt" }
+    },
+    {
+      "type": "cta",
+      "decor": "rue",
+      "voix": "Abonne-toi pour ne plus te faire avoir, et envoie cette vidéo à quelqu'un qui attend encore son colis !",
+      "declencheur": "Abonne-toi",
+      "titre": "Abonne-toi",
+      "texte": "pour ne plus te faire avoir",
+      "personnage": { "variante": "heros", "expression": "content", "pose": "debout", "poseApres": "bras_leves" }
+    }
+  ]
+}

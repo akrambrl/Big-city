@@ -67,22 +67,25 @@ const Gerbe: React.FC<{ x: number; y: number; debut: number; nombre?: number; fo
 // ---------------------------------------------------------------------------
 const Accroche: React.FC<{ s: SceneData; d: number }> = ({ s, d }) => {
   const frame = useCurrentFrame();
-  const secousse = useSecousse(d + 6, 12, 18);
-  const sousTitre = usePop(d + 14);
+  // le bandeau arrive tout de suite ; la réaction (flash, secousse) suit le mot déclencheur
+  const secousse1 = useSecousse(8, 12, 18);
+  const secousse2 = useSecousse(d, 12, 16);
+  const sousTitre = usePop(Math.max(14, d));
   return (
-    <AbsoluteFill style={{ transform: secousse }}>
+    <AbsoluteFill style={{ transform: d > 10 && frame >= d ? secousse2 : secousse1 }}>
       <Decor nom={s.decor} assombrir={0.3} />
-      <LignesVitesse opacite={interpolate(frame, [d, d + 8], [0, 0.22], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} couleur={C.jaune} />
+      <LignesVitesse opacite={interpolate(frame, [2, 10], [0, 0.22], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} couleur={C.jaune} />
       <PersonnageEnScene p={s.personnage} x={540} hauteur={1220} declencheur={d} mots={s.mots} />
       <div style={{ position: 'absolute', top: 210, width: '100%', textAlign: 'center', padding: '0 50px' }}>
-        <Bandeau texte={s.titre ?? ''} taille={170} debut={d} />
+        <Bandeau texte={s.titre ?? ''} taille={170} debut={2} />
       </div>
       {s.texte && (
         <div style={{ position: 'absolute', top: 470, width: '100%', textAlign: 'center', padding: '0 70px', transform: `scale(${sousTitre})` }}>
           <span style={{ ...texteAffiche(78, C.blanc), textTransform: 'none' }}>{s.texte.replace(/\*\*/g, '')}</span>
         </div>
       )}
-      <Flash debut={d + 5} />
+      <Flash debut={7} />
+      {d > 10 && <Flash debut={d} force={0.5} />}
     </AbsoluteFill>
   );
 };

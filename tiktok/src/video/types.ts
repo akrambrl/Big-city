@@ -14,6 +14,8 @@ export type SceneJson = Omit<SceneData, 'declencheur' | 'mots'> & {
 export type VideoJson = {
   id: string;
   titre: string;
+  /** Sources des informations juridiques (non affichées, pour vérification). */
+  sources?: string[];
   voix?: { moteur?: 'piper' | 'kokoro'; voix?: string; vitesse?: number };
   prononciation?: Record<string, string>;
   marges?: { avant: number; apres: number };

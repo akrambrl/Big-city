@@ -6,7 +6,7 @@ Générateur de vidéos animées verticales (1080 × 1920, 30 i/s) avec [Remotio
 > - [x] Étape 1 : personnage et expressions
 > - [x] Étape 2 : scènes et décors
 > - [x] Étape 3 : voix et synchro (module `../voix-off`)
-> - [ ] Étape 4 : commande finale `npm run make -- videos/001.json`
+> - [x] Étape 4 : commande finale `npm run make -- videos/001.json`
 
 ## Lancer le Studio
 
@@ -19,6 +19,55 @@ npx remotion studio
 Dans le dossier **Etape1-Personnage** :
 - **Demo-Personnage** (Thomas) et **Demo-Lea** : animations de 9 s qui enchaînent expressions et poses ;
 - **Galerie-Expressions**, **Galerie-Poses** (et leurs versions **-Lea**), **Galerie-Personnages** : planches fixes.
+
+## Produire une vidéo
+
+```bash
+../voix-off/install.sh            # une seule fois : Piper, voix française, Whisper
+npm install                       # une seule fois
+npm run make -- videos/001.json   # -> out/001.mp4 (1080x1920, 30 i/s)
+```
+
+La commande génère la voix off (ou la reprend en cache), vérifie que la vidéo dure entre **61 et 90 s**, puis lance le rendu. Compte quelques minutes pour une vidéo de 80 s.
+
+## Créer une nouvelle vidéo
+
+1. Copie `videos/001.json` vers `videos/002.json` et change `id` en `"002"`.
+2. Écris les scènes. Pour 61 à 90 s, compte environ **250 mots** de voix off, répartis en 10 à 13 scènes. Chaque scène contient :
+
+```json
+{
+  "type": "montant",                       // accroche | montant | document | explication | cta
+  "decor": "magasin",                      // rue | magasin | bureau | appartement
+  "voix": "Le vendeur doit te rembourser 64,89 euros.",   // texte lu par la voix off
+  "declencheur": "64,89 euros",            // mot de la voix qui lance l'animation
+  "montant": { "ancien": "0 €", "nouveau": "64,89 €", "legende": "remboursés" },
+  "personnage": { "variante": "heros", "expression": "neutre", "pose": "pointe_doigt", "expressionApres": "content" }
+}
+```
+
+| Champ | Pour quelles scènes | Rôle |
+|---|---|---|
+| `voix` | toutes | Texte dit par la voix off. Il règle la durée de la scène et produit les sous-titres. |
+| `declencheur` | toutes | Mot ou expression présent dans `voix`. L'animation part quand la voix le prononce. |
+| `titre` | accroche, cta | Texte du bandeau jaune. |
+| `texte` | accroche, explication, cta | Texte affiché. Les passages entre `**…**` sont surlignés en jaune. |
+| `montant` | montant | `ancien` (barré en rouge), `nouveau` (en vert), `legende`. |
+| `document` | document | `type` (`courrier`, `bail`, `fiche_paie`, `facture`), `titre`, `lignes` (5 lignes courtes), `surligne` (numéro de la ligne à surligner, à partir de 0). |
+| `personnage` | toutes | `variante` (`heros`, `heroine`, `patron`, `proprietaire`, `conseiller`), `expression`, `pose`. Avec `expressionApres` et `poseApres`, il réagit au déclencheur. `lunettesSoleil` est facultatif. |
+| `secondaire` | explication | Deuxième personnage, à droite. |
+| `duree_min` | toutes | Durée minimale de la scène en secondes (facultatif). |
+
+3. Au niveau de la vidéo :
+   - `prononciation` corrige la lecture d'un mot par la voix sans toucher aux sous-titres, par exemple `"64,89 euros": "soixante-quatre euros quatre-vingt-neuf"`. Utilise-le pour les prix avec centimes, les sigles et les noms de marques.
+   - `voix.vitesse` règle le débit de la voix (1.1 par défaut dans 001).
+   - `sources` liste les pages officielles d'où viennent les informations.
+4. Pour vérifier :
+   - `npm run voix -- videos/002.json` affiche la durée et le taux de mots reconnus par Whisper (vise au moins 90 %) ;
+   - `npx remotion studio`, composition **Video**, en remplaçant les props par le contenu de ton JSON.
+5. Pour produire le MP4 : `npm run make -- videos/002.json`.
+
+> Vérifie toujours les règles juridiques sur une source officielle (service-public.fr, economie.gouv.fr, Légifrance, INC) avant de publier.
 
 ## Voix off et synchro (étape 3)
 

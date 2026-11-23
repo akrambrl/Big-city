@@ -6,6 +6,7 @@
   "scripts": {
     "studio": "remotion studio",
     "voix": "node scripts/voix.mjs",
+    "make": "node scripts/make.mjs",
     "still": "remotion still",
     "typecheck": "tsc --noEmit"
   },
