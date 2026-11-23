@@ -114,7 +114,7 @@ class MoteurKyutai:
     nom = "kyutai"
     _modele = None  # chargé une seule fois par processus (≈ 1 minute)
 
-    def __init__(self, voix: str = "9834_9697_000150-0003", vitesse: float = 1.0, **_):
+    def __init__(self, voix: str = "9834_9697_000150-0003", vitesse: float = 1.0, temperature: float = 0.6, cfg_coef: float = 2.0, **_):
         import torch
         from moshi.models.loaders import CheckpointInfo
         from moshi.models.tts import DEFAULT_DSM_TTS_REPO, TTSModel
@@ -124,17 +124,26 @@ class MoteurKyutai:
                 CheckpointInfo.from_hf_repo(DEFAULT_DSM_TTS_REPO), n_q=32, temp=0.6, device="cpu", dtype=torch.float32
             )
         self._m = MoteurKyutai._modele
-        chemin = voix if "/" in voix else f"cml-tts/fr/{voix}_enhanced.wav"
+        # identifiant court : voix CML-TTS (« 9834_… ») ou don de voix Unmute (« 0a67 », CC0)
+        if "/" in voix:
+            chemin = voix
+        elif "_" in voix:
+            chemin = f"cml-tts/fr/{voix}_enhanced.wav"
+        else:
+            chemin = f"voice-donations/{voix}_enhanced.wav"
         self._voix = self._m.get_voice_path(chemin)
         self.voix, self.vitesse = voix, vitesse
+        # température plus haute = intonation plus variée (plus « vivante »), au-delà de 0,9 le débit devient instable
+        self.temperature, self.cfg_coef = temperature, cfg_coef
         self.sample_rate = self._m.mimi.sample_rate
 
     def synthetiser(self, texte: str, chemin: Path) -> None:
         from .textnorm import en_toutes_lettres
 
         m = self._m
+        m.temp = self.temperature
         entrees = m.prepare_script([en_toutes_lettres(texte)], padding_between=1)
-        attributs = m.make_condition_attributes([self._voix], cfg_coef=2.0)
+        attributs = m.make_condition_attributes([self._voix], cfg_coef=self.cfg_coef)
         morceaux = []
 
         def sur_trame(trame):
@@ -207,7 +216,12 @@ def creer_moteur(cfg: dict):
     if moteur == "pocket":
         return MoteurPocket(cfg.get("voix") or "javert", float(cfg.get("vitesse", 1.0)), cfg.get("langue") or "french_24l")
     if moteur == "kyutai":
-        return MoteurKyutai(cfg.get("voix") or "9834_9697_000150-0003", float(cfg.get("vitesse", 1.0)))
+        return MoteurKyutai(
+            cfg.get("voix") or "9834_9697_000150-0003",
+            float(cfg.get("vitesse", 1.0)),
+            float(cfg.get("temperature", 0.6)),
+            float(cfg.get("cfg_coef", 2.0)),
+        )
     raise ValueError(f"Moteur inconnu : {moteur} (piper, kokoro, pocket ou kyutai)")
 
 
@@ -284,5 +298,7 @@ def identite_voix(cfg: dict) -> dict:
         "vitesse": float(cfg.get("vitesse", 1.0)),
         "locuteur": cfg.get("locuteur"),
         "langue": cfg.get("langue"),
+        "temperature": cfg.get("temperature"),
+        "cfg_coef": cfg.get("cfg_coef"),
         "modele": [st.st_size, int(st.st_mtime)] if st else None,
     }
