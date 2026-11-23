@@ -90,7 +90,8 @@ const Accroche: React.FC<{ s: SceneData; d: number }> = ({ s, d }) => {
 // ---------------------------------------------------------------------------
 // MONTANT : ancien montant barré en rouge -> flèche -> nouveau montant en vert (pop)
 // ---------------------------------------------------------------------------
-const Montant: React.FC<{ s: SceneData; d: number }> = ({ s, d }) => {
+const Montant: React.FC<{ s: SceneData; d: number }> = ({ s, d: dVoix }) => {
+  const d = Math.max(dVoix, 22); // le temps de barrer l'ancien montant avant le pop
   const frame = useCurrentFrame();
   const m = s.montant ?? { ancien: '', nouveau: '' };
   const carte = usePop(2);
@@ -216,7 +217,8 @@ const Explication: React.FC<{ s: SceneData; d: number }> = ({ s, d }) => {
 // ---------------------------------------------------------------------------
 // CTA : « Abonne-toi pour ne plus te faire avoir » + bouton qui se fait cliquer
 // ---------------------------------------------------------------------------
-const Cta: React.FC<{ s: SceneData; d: number }> = ({ s, d }) => {
+const Cta: React.FC<{ s: SceneData; d: number }> = ({ s, d: dVoix }) => {
+  const d = Math.max(dVoix, 28); // le curseur doit avoir le temps d'arriver sur le bouton
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const bouton = usePop(10);

@@ -5,6 +5,7 @@
   "description": "Générateur de vidéos TikTok animées (Remotion) : droits et argent du quotidien en France",
   "scripts": {
     "studio": "remotion studio",
+    "voix": "node scripts/voix.mjs",
     "still": "remotion still",
     "typecheck": "tsc --noEmit"
   },

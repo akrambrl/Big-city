@@ -1,6 +1,8 @@
 // Toutes les compositions visibles dans le Studio (npx remotion studio).
 import React from 'react';
 import { Composition, Folder, Still } from 'remotion';
+import demo from '../videos/demo.json';
+import { calculerMetadonnees, Video, type VideoProps } from './video/Video';
 import { DemoScenes, DUREE_SCENE_DEMO, GalerieDecors, SCENES_DEMO, SceneSeule } from './compositions/Etape2';
 import { DemoPersonnage, GalerieDemoDuree, GalerieExpressions, GaleriePersonnages, GaleriePoses } from './compositions/Galeries';
 
@@ -26,5 +28,16 @@ export const RemotionRoot: React.FC = () => (
       ))}
       <Still id="Galerie-Decors" component={GalerieDecors} width={LARGEUR} height={HAUTEUR} />
     </Folder>
+    {/* La vidéo complète : props = contenu de videos/XXX.json (ici la démo) */}
+    <Composition
+      id="Video"
+      component={Video}
+      defaultProps={demo as unknown as VideoProps}
+      calculateMetadata={calculerMetadonnees}
+      durationInFrames={300}
+      fps={FPS}
+      width={LARGEUR}
+      height={HAUTEUR}
+    />
   </>
 );

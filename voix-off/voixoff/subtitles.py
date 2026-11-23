@@ -34,7 +34,8 @@ def decouper(mots: list[dict], mn=2, mx=4, cmax=26, pause=0.35) -> list[list[dic
             groupes.append(cur)
             cur = []
     # un mot seul en fin de phrase rejoint le groupe précédent s'il reste de la place
-    if len(groupes) >= 2 and len(groupes[-1]) == 1 and len(groupes[-2]) < mx:
+    if (len(groupes) >= 2 and len(groupes[-1]) == 1 and len(groupes[-2]) < mx
+            and len(" ".join(w["texte"] for w in groupes[-2] + groupes[-1])) <= cmax):
         groupes[-2].extend(groupes.pop())
     return groupes
 

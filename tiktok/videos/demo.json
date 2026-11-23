@@ -1,0 +1,59 @@
+{
+  "id": "demo",
+  "titre": "Démo des scènes avec voix off",
+  "voix": { "moteur": "piper", "voix": "fr_FR-siwis-medium", "vitesse": 1.1 },
+  "prononciation": {
+    "L216-4": "L deux cent seize quatre",
+    "59,90 euros": "cinquante-neuf euros quatre-vingt-dix"
+  },
+  "scenes": [
+    {
+      "type": "accroche",
+      "decor": "rue",
+      "voix": "Ton colis n'est jamais arrivé ? Bonne nouvelle : le vendeur doit te rembourser.",
+      "declencheur": "colis",
+      "titre": "Colis perdu ?",
+      "texte": "Le vendeur doit te rembourser",
+      "personnage": { "variante": "heros", "expression": "choque", "pose": "bras_leves" }
+    },
+    {
+      "type": "document",
+      "decor": "appartement",
+      "voix": "Envoie-lui une mise en demeure, en citant l'article L216-4 du Code de la consommation.",
+      "declencheur": "L216-4",
+      "document": {
+        "type": "courrier",
+        "titre": "Mise en demeure",
+        "lignes": ["Madame, Monsieur,", "Ma commande n° 48213 ne m'a", "jamais été livrée.", "Article L216-4 du Code de la conso :", "le vendeur est responsable du colis."],
+        "surligne": 3
+      },
+      "personnage": { "variante": "heros", "expression": "malin", "pose": "pointe_doigt" }
+    },
+    {
+      "type": "montant",
+      "decor": "magasin",
+      "voix": "Résultat : tes 59,90 euros te sont remboursés.",
+      "declencheur": "59,90 euros",
+      "montant": { "ancien": "0 €", "nouveau": "59,90 €", "legende": "remboursés" },
+      "personnage": { "variante": "heros", "expression": "neutre", "pose": "pointe_doigt", "expressionApres": "content" }
+    },
+    {
+      "type": "explication",
+      "decor": "bureau",
+      "voix": "Tant que tu n'as pas reçu le colis, il est sous la responsabilité du vendeur, pas du transporteur.",
+      "declencheur": "responsabilité",
+      "texte": "Tant que tu n'as pas reçu le colis, il est **sous la responsabilité** du vendeur, pas du transporteur.",
+      "personnage": { "variante": "heroine", "expression": "malin", "pose": "mains_hanches" },
+      "secondaire": { "variante": "conseiller", "expression": "content", "pose": "debout" }
+    },
+    {
+      "type": "cta",
+      "decor": "rue",
+      "voix": "Abonne-toi pour ne plus te faire avoir !",
+      "declencheur": "Abonne-toi",
+      "titre": "Abonne-toi",
+      "texte": "pour ne plus te faire avoir",
+      "personnage": { "variante": "heros", "expression": "content", "pose": "debout", "poseApres": "bras_leves" }
+    }
+  ]
+}

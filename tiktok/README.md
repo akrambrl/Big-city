@@ -5,7 +5,7 @@ Générateur de vidéos animées verticales (1080 × 1920, 30 i/s) avec [Remotio
 > **En cours de construction, étape par étape.**
 > - [x] Étape 1 : personnage et expressions
 > - [x] Étape 2 : scènes et décors
-> - [ ] Étape 3 : voix et synchro (module `../voix-off`)
+> - [x] Étape 3 : voix et synchro (module `../voix-off`)
 > - [ ] Étape 4 : commande finale `npm run make -- videos/001.json`
 
 ## Lancer le Studio
@@ -19,6 +19,28 @@ npx remotion studio
 Dans le dossier **Etape1-Personnage** :
 - **Demo-Personnage** (Thomas) et **Demo-Lea** : animations de 9 s qui enchaînent expressions et poses ;
 - **Galerie-Expressions**, **Galerie-Poses** (et leurs versions **-Lea**), **Galerie-Personnages** : planches fixes.
+
+## Voix off et synchro (étape 3)
+
+Installation unique du module voix (Piper, voix française, Whisper) :
+
+```bash
+../voix-off/install.sh
+```
+
+Puis, pour une vidéo :
+
+```bash
+npm run voix -- videos/demo.json   # voix off + timings -> public/voix/demo/
+npx remotion studio                # composition « Video »
+```
+
+- Chaque scène dure le temps de sa voix (plus une durée minimale par type, pour laisser les animations se jouer).
+- L'animation principale part quand la voix prononce le mot `declencheur` de la scène (ex. « 59,90 euros »).
+- La bouche des personnages s'ouvre pendant les mots et se ferme dans les silences.
+- Les sous-titres (2 à 4 mots, mot prononcé en jaune) sont en bas au centre.
+- `prononciation` corrige la lecture d'un mot par la voix sans changer les sous-titres (ex. « L216-4 » → « L deux cent seize quatre »).
+- L'audio est en cache : seules les scènes dont le texte change sont regénérées.
 
 ## Les scènes (étape 2)
 

@@ -38,8 +38,13 @@ def _nombre_en_lettres(m: re.Match) -> str:
     if num2words is None:
         return s
     try:
-        val = float(s.replace(",", ".")) if "," in s else int(s)
-        return " " + num2words(val, lang="fr").replace("-", " ") + " "
+        if "," in s:
+            # « 59,90 » -> « cinquante-neuf virgule quatre-vingt-dix » (pas « virgule neuf »)
+            entier, decimales = s.split(",")
+            mots = f"{num2words(int(entier), lang='fr')} virgule {num2words(int(decimales), lang='fr')}"
+        else:
+            mots = num2words(int(s), lang="fr")
+        return " " + mots.replace("-", " ") + " "
     except Exception:
         return s
 
