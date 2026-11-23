@@ -22,7 +22,7 @@
     {
       "type": "accroche",
       "decor": "rue",
-      "voix": "Tu as précommandé GTA VI, et le jour de la sortie, ton colis n'arrive jamais ? Le vendeur te dit de voir avec le transporteur ? Stop, c'est faux !",
+      "voix": "Ton GTA VI précommandé n'est jamais arrivé, et le vendeur te renvoie vers le transporteur ? Stop, c'est faux !",
       "declencheur": "Stop",
       "titre": "GTA VI perdu ?",
       "texte": "Le vendeur doit te rembourser",
@@ -38,7 +38,7 @@
     {
       "type": "explication",
       "decor": "magasin",
-      "voix": "Quand tu achètes en ligne, même un jeu vidéo, c'est le vendeur qui est responsable de ton colis, jusqu'à ce que tu l'aies entre les mains.",
+      "voix": "Quand tu achètes en ligne, le vendeur est responsable de ton colis, jusqu'à ce que tu l'aies entre les mains.",
       "declencheur": "responsable",
       "texte": "Achat en ligne : le vendeur est **responsable de ton colis** jusqu'à ce que tu le reçoives.",
       "personnage": {
@@ -118,7 +118,7 @@
     {
       "type": "montant",
       "decor": "magasin",
-      "voix": "Étape trois : sans livraison dans ce délai, le contrat est annulé, et le vendeur doit te rembourser tout : 84,98 euros, le jeu et les frais de livraison.",
+      "voix": "Étape trois : sans livraison, le contrat est annulé, et le vendeur te rembourse tout, frais de port compris : 84,98 euros.",
       "declencheur": "84,98 euros",
       "montant": {
         "ancien": "0 €",
@@ -147,8 +147,8 @@
     {
       "type": "montant",
       "decor": "magasin",
-      "voix": "S'il traîne, la somme est majorée automatiquement, jusqu'à 50 % en plus. Tes 84,98 euros deviennent 127,47 euros !",
-      "declencheur": "127,47 euros",
+      "voix": "Et s'il traîne pour te rembourser, la somme est majorée automatiquement : jusqu'à 50 % en plus !",
+      "declencheur": "50 %",
       "montant": {
         "ancien": "84,98 €",
         "nouveau": "127,47 €",
@@ -212,5 +212,9 @@
         "lunettesSoleil": true
       }
     }
-  ]
+  ],
+  "marges": {
+    "avant": 0.15,
+    "apres": 0.25
+  }
 }
