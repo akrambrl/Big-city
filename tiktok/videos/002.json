@@ -1,0 +1,217 @@
+{
+  "id": "002",
+  "titre": "GTA VI jamais reçu : le vendeur doit te rembourser",
+  "sources": [
+    "https://www.inc-conso.fr/content/la-livraison-vos-droits-et-recours",
+    "https://www.inc-conso.fr/content/colis-perdu-qui-est-responsable-et-comment-se-faire-rembourser-avec-lalldc",
+    "https://news.instant-gaming.com/en/articles/20394-upd-gta-vi-will-indeed-cost-eur79-99-and-the-online-will-not-be-available-at-launch"
+  ],
+  "voix": {
+    "moteur": "piper",
+    "voix": "fr_FR-siwis-medium",
+    "vitesse": 1.1
+  },
+  "prononciation": {
+    "GTA VI": "gé té a six",
+    "GTA": "gé té a",
+    "PS5": "pé ès cinq",
+    "84,98 euros": "quatre-vingt-quatre euros quatre-vingt-dix-huit",
+    "127,47 euros": "cent vingt-sept euros quarante-sept",
+    "SignalConso": "Signal Conso"
+  },
+  "scenes": [
+    {
+      "type": "accroche",
+      "decor": "rue",
+      "voix": "Tu as précommandé GTA VI, et le jour de la sortie, ton colis n'arrive jamais ? Le vendeur te dit de voir avec le transporteur ? Stop, c'est faux !",
+      "declencheur": "Stop",
+      "titre": "GTA VI perdu ?",
+      "texte": "Le vendeur doit te rembourser",
+      "personnage": {
+        "variante": "heros",
+        "expression": "colere",
+        "pose": "telephone",
+        "expressionApres": "choque",
+        "poseApres": "bras_leves",
+        "lunettesSoleil": false
+      }
+    },
+    {
+      "type": "explication",
+      "decor": "magasin",
+      "voix": "Quand tu achètes en ligne, même un jeu vidéo, c'est le vendeur qui est responsable de ton colis, jusqu'à ce que tu l'aies entre les mains.",
+      "declencheur": "responsable",
+      "texte": "Achat en ligne : le vendeur est **responsable de ton colis** jusqu'à ce que tu le reçoives.",
+      "personnage": {
+        "variante": "heros",
+        "expression": "neutre",
+        "pose": "pointe_doigt",
+        "expressionApres": "malin"
+      },
+      "secondaire": {
+        "variante": "patron",
+        "expression": "malin",
+        "pose": "mains_hanches",
+        "expressionApres": "choque"
+      }
+    },
+    {
+      "type": "explication",
+      "decor": "rue",
+      "voix": "Même s'il a confié la livraison à un transporteur, c'est son problème, pas le tien. Il ne peut pas te renvoyer vers lui.",
+      "declencheur": "problème",
+      "texte": "Le transporteur ? **C'est son problème**, pas le tien.",
+      "personnage": {
+        "variante": "heros",
+        "expression": "malin",
+        "pose": "mains_hanches"
+      }
+    },
+    {
+      "type": "explication",
+      "decor": "appartement",
+      "voix": "Le suivi affiche livré, mais pas de GTA dans ta boîte aux lettres ? C'est au vendeur de prouver la livraison : signature, code ou photo.",
+      "declencheur": "prouver",
+      "texte": "Suivi « livré » mais pas de GTA VI ? C'est au vendeur de **prouver la livraison**.",
+      "personnage": {
+        "variante": "heros",
+        "expression": "choque",
+        "pose": "telephone",
+        "expressionApres": "malin",
+        "poseApres": "pointe_doigt"
+      }
+    },
+    {
+      "type": "explication",
+      "decor": "appartement",
+      "voix": "Étape un : écris au vendeur que tu n'as rien reçu, et garde une trace de tous vos échanges.",
+      "declencheur": "trace",
+      "texte": "**Étape 1** : écris au vendeur et garde une trace écrite.",
+      "personnage": {
+        "variante": "heroine",
+        "expression": "neutre",
+        "pose": "telephone"
+      }
+    },
+    {
+      "type": "document",
+      "decor": "bureau",
+      "voix": "Étape deux : s'il ne fait rien, envoie-lui une mise en demeure en recommandé avec accusé de réception, en lui laissant quinze jours pour livrer.",
+      "declencheur": "quinze jours",
+      "document": {
+        "type": "courrier",
+        "titre": "Mise en demeure",
+        "lignes": [
+          "Madame, Monsieur,",
+          "Ma commande GTA VI (PS5)",
+          "ne m'a jamais été livrée.",
+          "Livrez-moi sous 15 jours,",
+          "sinon le contrat sera résolu."
+        ],
+        "surligne": 3
+      },
+      "personnage": {
+        "variante": "heroine",
+        "expression": "malin",
+        "pose": "pointe_doigt"
+      }
+    },
+    {
+      "type": "montant",
+      "decor": "magasin",
+      "voix": "Étape trois : sans livraison dans ce délai, le contrat est annulé, et le vendeur doit te rembourser tout : 84,98 euros, le jeu et les frais de livraison.",
+      "declencheur": "84,98 euros",
+      "montant": {
+        "ancien": "0 €",
+        "nouveau": "84,98 €",
+        "legende": "jeu + frais de port"
+      },
+      "personnage": {
+        "variante": "heroine",
+        "expression": "neutre",
+        "pose": "pointe_doigt",
+        "expressionApres": "content"
+      }
+    },
+    {
+      "type": "explication",
+      "decor": "bureau",
+      "voix": "Et il a 14 jours maximum pour te rembourser.",
+      "declencheur": "14 jours",
+      "texte": "Remboursement sous **14 jours** maximum.",
+      "personnage": {
+        "variante": "heros",
+        "expression": "content",
+        "pose": "pointe_doigt"
+      }
+    },
+    {
+      "type": "montant",
+      "decor": "magasin",
+      "voix": "S'il traîne, la somme est majorée automatiquement, jusqu'à 50 % en plus. Tes 84,98 euros deviennent 127,47 euros !",
+      "declencheur": "127,47 euros",
+      "montant": {
+        "ancien": "84,98 €",
+        "nouveau": "127,47 €",
+        "legende": "jusqu'à +50 %"
+      },
+      "personnage": {
+        "variante": "heros",
+        "expression": "malin",
+        "pose": "pointe_doigt",
+        "expressionApres": "content",
+        "lunettesSoleil": true
+      }
+    },
+    {
+      "type": "explication",
+      "decor": "bureau",
+      "voix": "Toujours bloqué ? Saisis le médiateur de la consommation ou un conciliateur de justice, c'est gratuit. Et signale le vendeur sur SignalConso.",
+      "declencheur": "gratuit",
+      "texte": "Toujours bloqué ? **Médiateur**, conciliateur de justice (gratuit) et **SignalConso**.",
+      "personnage": {
+        "variante": "heros",
+        "expression": "triste",
+        "pose": "debout",
+        "expressionApres": "content"
+      },
+      "secondaire": {
+        "variante": "conseiller",
+        "expression": "content",
+        "pose": "pointe_doigt"
+      }
+    },
+    {
+      "type": "explication",
+      "decor": "rue",
+      "voix": "Retiens bien : ton GTA VI, c'est le vendeur qui en répond. Pas le transporteur, et surtout pas toi.",
+      "declencheur": "vendeur",
+      "texte": "Ton GTA VI, c'est **le vendeur** qui en répond. Pas le transporteur, pas toi.",
+      "personnage": {
+        "variante": "heros",
+        "expression": "content",
+        "pose": "mains_hanches"
+      },
+      "secondaire": {
+        "variante": "heroine",
+        "expression": "content",
+        "pose": "pointe_doigt"
+      }
+    },
+    {
+      "type": "cta",
+      "decor": "rue",
+      "voix": "Abonne-toi pour ne plus te faire avoir, et envoie cette vidéo à un pote qui attend encore son GTA !",
+      "declencheur": "Abonne-toi",
+      "titre": "Abonne-toi",
+      "texte": "pour ne plus te faire avoir",
+      "personnage": {
+        "variante": "heros",
+        "expression": "content",
+        "pose": "debout",
+        "poseApres": "bras_leves",
+        "lunettesSoleil": true
+      }
+    }
+  ]
+}
