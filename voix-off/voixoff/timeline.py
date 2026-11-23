@@ -62,33 +62,45 @@ def construire(script: Path, sortie: Path, forcer=False, moteur=None, log=print)
         texte_voix = appliquer_prononciation(texte, regles)
 
         # 1) Audio (en cache si le texte et la voix n'ont pas changé)
+        # 2) Timing mot par mot avec Whisper (transcription en cache, appariement refait à chaque fois)
+        # Contrôle qualité : une voix neuronale peut « dérailler » (mots avalés, bruit). Si Whisper
+        # reconnaît moins de 80 % des mots, la scène est regénérée (2 essais de plus, intonation plus sage).
         k_audio = cle("audio", voix_id, texte_voix)
         wav = cache.chemin(k_audio, "wav")
-        if forcer or not cache.a(k_audio, "wav"):
-            if moteur_tts is None:
-                log(f"Chargement de la voix ({cfg['voix']['moteur']})…")
-                moteur_tts = creer_moteur(cfg["voix"])
-            log(f"  [{sid}] synthèse…")
-            with tempfile.TemporaryDirectory() as tmp:
-                brut = Path(tmp) / "brut.wav"
-                moteur_tts.synthetiser(texte_voix, brut)
-                pcm, sr = lire_wav(brut)
-                ecrire_wav(wav, rogner_silences(pcm, sr), sr)
-            stats["audio_genere"] += 1
-        else:
-            stats["audio_cache"] += 1
-        duree_voix = duree_wav(wav)
-
-        # 2) Timing mot par mot : la transcription Whisper est en cache, l'appariement
-        #    avec le texte (instantané) est refait à chaque construction
         k_align = cle("whisper", k_audio, texte, cfg["whisper"].get("modele"))
-        if forcer or not cache.a(k_align, "json"):
-            log(f"  [{sid}] alignement Whisper…")
-            cache.ecrire_json(k_align, {"whisper": transcrire(wav, texte, cfg["whisper"])})
-            stats["align_calcule"] += 1
-        else:
-            stats["align_cache"] += 1
-        mots_scene, reconnus = aligner(texte, cache.lire_json(k_align)["whisper"], duree_voix)
+        refaire = forcer
+        for essai in range(3):
+            if refaire or not cache.a(k_audio, "wav"):
+                if moteur_tts is None:
+                    log(f"Chargement de la voix ({cfg['voix']['moteur']})…")
+                    moteur_tts = creer_moteur(cfg["voix"])
+                temp0 = getattr(moteur_tts, "temperature", None)
+                if temp0 is not None and essai > 0:
+                    moteur_tts.temperature = max(0.5, temp0 - 0.1 * essai)
+                log(f"  [{sid}] synthèse…" + (f" (nouvel essai {essai})" if essai else ""))
+                with tempfile.TemporaryDirectory() as tmp:
+                    brut = Path(tmp) / "brut.wav"
+                    moteur_tts.synthetiser(texte_voix, brut)
+                    pcm, sr = lire_wav(brut)
+                    ecrire_wav(wav, rogner_silences(pcm, sr), sr)
+                if temp0 is not None:
+                    moteur_tts.temperature = temp0
+                stats["audio_genere"] += 1
+                refaire = True  # l'alignement doit suivre le nouvel audio
+            else:
+                stats["audio_cache"] += 1
+            duree_voix = duree_wav(wav)
+            if refaire or not cache.a(k_align, "json"):
+                log(f"  [{sid}] alignement Whisper…")
+                cache.ecrire_json(k_align, {"whisper": transcrire(wav, texte, cfg["whisper"])})
+                stats["align_calcule"] += 1
+            else:
+                stats["align_cache"] += 1
+            mots_scene, reconnus = aligner(texte, cache.lire_json(k_align)["whisper"], duree_voix)
+            if reconnus >= 0.8 or cfg["voix"].get("moteur") not in ("kyutai", "pocket"):
+                break
+            log(f"  ⚠ [{sid}] {round(reconnus * 100)} % des mots reconnus : la voix a mal lu, on recommence.")
+            refaire = True
         al = {"mots": mots_scene, "reconnus": reconnus}
         if reconnus < 0.8:
             log(f"  ⚠ [{sid}] seulement {round(reconnus * 100)} % des mots reconnus par Whisper : "
