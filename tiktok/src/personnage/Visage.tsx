@@ -183,6 +183,18 @@ const Cheveux: React.FC<{ apparence: Apparence; devant: boolean }> = ({ apparenc
           <path d="M 172 50 Q 196 38 226 44 M 164 66 Q 176 52 196 50" fill="none" stroke={teinte.clair} strokeWidth={2.5} strokeLinecap="round" />
         </g>
       );
+    case 'long':
+      return (
+        <g>
+          {/* mèches qui tombent devant les oreilles jusqu'à la mâchoire */}
+          <path {...p} fill={teinte.base} d="M 153 92 C 144 126 146 160 158 196 L 170 192 C 162 160 160 128 164 98 Z" />
+          <path {...p} fill={teinte.ombre} d="M 247 92 C 256 126 254 160 242 196 L 230 192 C 238 160 240 128 236 98 Z" />
+          {/* frange balayée sur le côté, raie à gauche */}
+          <path {...p} fill={teinte.base} d="M 151 106 C 144 58 170 28 204 28 C 240 28 260 56 250 106 C 246 84 238 68 222 60 C 206 70 182 78 162 80 C 157 88 153 96 151 106 Z" />
+          <path d="M 222 34 C 246 44 258 70 250 106 C 246 84 238 68 222 60 Z" fill={teinte.ombre} />
+          <path d="M 176 38 Q 200 30 230 40 M 166 56 Q 188 46 214 52 M 170 70 Q 194 64 220 58" fill="none" stroke={teinte.clair} strokeWidth={3} strokeLinecap="round" />
+        </g>
+      );
     case 'boucle':
       return (
         <g>
@@ -194,6 +206,22 @@ const Cheveux: React.FC<{ apparence: Apparence; devant: boolean }> = ({ apparenc
         </g>
       );
   }
+};
+
+/** Masse arrière des cheveux longs, dessinée derrière le cou et le torse. */
+export const CheveuxDos: React.FC<{ apparence: Apparence }> = ({ apparence }) => {
+  if (apparence.cheveux.style !== 'long') return null;
+  const { teinte } = apparence.cheveux;
+  return (
+    <g>
+      <path
+        d="M 150 92 C 138 40 168 20 200 20 C 238 20 266 44 252 96 C 262 150 272 214 266 268 Q 250 280 236 270 Q 220 284 200 274 Q 180 284 164 270 Q 150 280 134 268 C 128 214 138 150 150 92 Z"
+        fill={teinte.base} stroke={CONTOUR} strokeWidth={TRAIT - 1} strokeLinejoin="round"
+      />
+      <path d="M 226 26 C 254 40 266 66 252 96 C 262 150 272 214 266 268 Q 250 280 236 270 Q 242 200 232 140 Q 226 80 226 26 Z" fill={teinte.ombre} />
+      <path d="M 146 150 Q 142 200 150 250 M 160 170 Q 156 214 166 256" fill="none" stroke={teinte.clair} strokeWidth={3} strokeLinecap="round" />
+    </g>
+  );
 };
 
 export const Visage: React.FC<Props> = ({ apparence, expression, clignement, ouverture, lunettesSoleil }) => {
@@ -210,6 +238,12 @@ export const Visage: React.FC<Props> = ({ apparence, expression, clignement, ouv
       <path d="M 155 94 C 140 88 138 118 153 126 Z" fill={peau.base} stroke={CONTOUR} strokeWidth={TRAIT - 1} strokeLinejoin="round" />
       <path d="M 245 94 C 260 88 262 118 247 126 Z" fill={peau.ombre} stroke={CONTOUR} strokeWidth={TRAIT - 1} strokeLinejoin="round" />
       <path d="M 151 100 Q 146 108 151 118" fill="none" stroke={peau.ombre} strokeWidth={2} />
+      {apparence.bouclesOreilles && (
+        <g fill="none" stroke="#E8B930" strokeWidth={3}>
+          <circle cx={148} cy={132} r={7} />
+          <circle cx={252} cy={132} r={7} />
+        </g>
+      )}
       {/* tête et ombrage en aplats (lumière en haut à gauche) */}
       <clipPath id={clipTete}><path d={tete} /></clipPath>
       <path d={tete} fill={peau.base} />

@@ -6,7 +6,7 @@ export type Expression = (typeof EXPRESSIONS)[number];
 export const POSES = ['debout', 'bras_leves', 'pointe_doigt', 'mains_hanches', 'telephone'] as const;
 export type Pose = (typeof POSES)[number];
 
-export const VARIANTES = ['heros', 'patron', 'proprietaire', 'conseiller'] as const;
+export const VARIANTES = ['heros', 'heroine', 'patron', 'proprietaire', 'conseiller'] as const;
 export type Variante = (typeof VARIANTES)[number];
 
 export type Point = { x: number; y: number };
@@ -22,7 +22,7 @@ export type Apparence = {
   nom: string;
   visage: 'homme' | 'femme';
   peau: Teinte;
-  cheveux: { teinte: Teinte; style: 'court' | 'degarni' | 'chignon' | 'boucle' };
+  cheveux: { teinte: Teinte; style: 'court' | 'degarni' | 'chignon' | 'boucle' | 'long' };
   haut: {
     type: 'pull' | 'costume' | 'gilet' | 'blazer';
     teinte: Teinte;
@@ -35,4 +35,7 @@ export type Apparence = {
   moustache?: boolean;
   lunettes?: boolean;
   collier?: boolean;
+  bouclesOreilles?: boolean;
+  /** Silhouette un peu plus fine (épaules et hanches). */
+  silhouette?: 'large' | 'fine';
 };

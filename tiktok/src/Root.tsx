@@ -11,8 +11,11 @@ export const RemotionRoot: React.FC = () => (
   <>
     <Folder name="Etape1-Personnage">
       <Composition id="Demo-Personnage" component={DemoPersonnage} durationInFrames={GalerieDemoDuree} fps={FPS} width={LARGEUR} height={HAUTEUR} />
+      <Composition id="Demo-Lea" component={DemoPersonnage} defaultProps={{ variante: 'heroine' as const }} durationInFrames={GalerieDemoDuree} fps={FPS} width={LARGEUR} height={HAUTEUR} />
       <Still id="Galerie-Expressions" component={GalerieExpressions} width={LARGEUR} height={HAUTEUR} />
+      <Still id="Galerie-Expressions-Lea" component={GalerieExpressions} defaultProps={{ variante: 'heroine' as const }} width={LARGEUR} height={HAUTEUR} />
       <Still id="Galerie-Poses" component={GaleriePoses} width={LARGEUR} height={HAUTEUR} />
+      <Still id="Galerie-Poses-Lea" component={GaleriePoses} defaultProps={{ variante: 'heroine' as const }} width={LARGEUR} height={HAUTEUR} />
       <Still id="Galerie-Personnages" component={GaleriePersonnages} width={LARGEUR} height={HAUTEUR} />
     </Folder>
   </>

@@ -5,7 +5,7 @@ import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } fr
 import { loadFont } from '@remotion/google-fonts/Anton';
 import { Personnage } from '../personnage/Personnage';
 import { APPARENCES } from '../personnage/variantes';
-import { EXPRESSIONS, POSES, VARIANTES, type Expression, type Pose } from '../personnage/types';
+import { EXPRESSIONS, POSES, VARIANTES, type Expression, type Pose, type Variante } from '../personnage/types';
 
 
 // Police d'affiche (Google Fonts, licence OFL : gratuite, usage commercial autorisé)
@@ -31,22 +31,22 @@ const Grille: React.FC<{ titre: string; children: React.ReactNode; colonnes: num
   </AbsoluteFill>
 );
 
-export const GalerieExpressions: React.FC = () => (
-  <Grille titre="Expressions" colonnes={3}>
+export const GalerieExpressions: React.FC<{ variante?: Variante }> = ({ variante = 'heros' }) => (
+  <Grille titre={`Expressions · ${APPARENCES[variante].nom}`} colonnes={3}>
     {EXPRESSIONS.map((e, i) => (
       <div key={e} style={{ textAlign: 'center' }}>
-        <Personnage expression={e} hauteur={700} graine={i + 1} />
+        <Personnage variante={variante} expression={e} hauteur={700} graine={i + 1} />
         <Etiquette>{e}</Etiquette>
       </div>
     ))}
   </Grille>
 );
 
-export const GaleriePoses: React.FC = () => (
-  <Grille titre="Poses" colonnes={3}>
+export const GaleriePoses: React.FC<{ variante?: Variante }> = ({ variante = 'heros' }) => (
+  <Grille titre={`Poses · ${APPARENCES[variante].nom}`} colonnes={3}>
     {POSES.map((p, i) => (
       <div key={p} style={{ textAlign: 'center' }}>
-        <Personnage pose={p} expression={p === 'bras_leves' ? 'content' : p === 'mains_hanches' ? 'colere' : p === 'pointe_doigt' ? 'malin' : 'neutre'} hauteur={700} graine={i + 3} />
+        <Personnage variante={variante} pose={p} expression={p === 'bras_leves' ? 'content' : p === 'mains_hanches' ? 'colere' : p === 'pointe_doigt' ? 'malin' : 'neutre'} hauteur={700} graine={i + 3} />
         <Etiquette>{p}</Etiquette>
       </div>
     ))}
@@ -54,10 +54,10 @@ export const GaleriePoses: React.FC = () => (
 );
 
 export const GaleriePersonnages: React.FC = () => (
-  <Grille titre="Personnages" colonnes={2}>
+  <Grille titre="Personnages" colonnes={3}>
     {VARIANTES.map((v, i) => (
       <div key={v} style={{ textAlign: 'center' }}>
-        <Personnage variante={v} hauteur={760} graine={i * 2 + 1} expression={(['content', 'malin', 'colere', 'neutre'] as Expression[])[i]} />
+        <Personnage variante={v} hauteur={660} graine={i * 2 + 1} expression={(['content', 'content', 'malin', 'colere', 'neutre'] as Expression[])[i]} />
         <Etiquette>{APPARENCES[v].nom}</Etiquette>
       </div>
     ))}
@@ -75,7 +75,7 @@ const SEQUENCE: { expression: Expression; pose: Pose; parle: boolean }[] = [
 ];
 export const DUREE_PLAN = 45; // 1,5 s par expression
 
-export const DemoPersonnage: React.FC = () => {
+export const DemoPersonnage: React.FC<{ variante?: Variante }> = ({ variante = 'heros' }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const i = Math.min(SEQUENCE.length - 1, Math.floor(frame / DUREE_PLAN));
@@ -91,7 +91,7 @@ export const DemoPersonnage: React.FC = () => {
         <Etiquette>{plan.expression} · {plan.pose}</Etiquette>
       </div>
       <div style={{ transform: `scale(${sursaut})`, transformOrigin: 'bottom center' }}>
-        <Personnage expression={plan.expression} pose={plan.pose} posePrecedente={precedent.pose} transition={transition} parle={plan.parle} hauteur={1500} />
+        <Personnage variante={variante} expression={plan.expression} pose={plan.pose} posePrecedente={precedent.pose} transition={transition} parle={plan.parle} hauteur={1500} />
       </div>
     </AbsoluteFill>
   );

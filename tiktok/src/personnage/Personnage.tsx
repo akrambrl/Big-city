@@ -7,7 +7,7 @@ import { angle, membre, versPoint } from './geometrie';
 import { EPAULE_DROITE, EPAULE_GAUCHE, POSES_BRAS, mixBras } from './poses';
 import type { Apparence, Bras, Expression, Point, Pose, Teinte, Variante } from './types';
 import { APPARENCES, CONTOUR, TRAIT, TRAIT_FIN } from './variantes';
-import { Visage } from './Visage';
+import { CheveuxDos, Visage } from './Visage';
 
 export type PersonnageProps = {
   variante?: Variante;
@@ -295,25 +295,34 @@ export const Personnage: React.FC<PersonnageProps> = ({
   const brasG = balance(mixBras(depart.gauche, cible.gauche, k), graine + 2);
   const gesteBras = (p: Pose) => (p === 'bras_leves' ? 'ouverte' : 'poing') as 'poing' | 'ouverte';
 
+  const corps = apparence.silhouette === 'fine' ? 'translate(200 0) scale(0.86 1) translate(-200 0)' : undefined;
   const inclinaison = { neutre: 0, choque: -1, content: 2, colere: -2, triste: 5, malin: -4 }[expression];
 
   return (
     <svg viewBox="0 0 400 800" width={hauteur / 2} height={hauteur} overflow="visible" style={{ transform: miroir ? 'scaleX(-1)' : undefined }}>
       {/* ombre au sol */}
       <ellipse cx={200} cy={790} rx={120} ry={13} fill="#000000" opacity={0.25} />
-      <Jambes apparence={apparence} />
+      {/* silhouette fine : corps resserré autour de l'axe central, tête inchangée */}
+      <g transform={corps}>
+        <Jambes apparence={apparence} />
+      </g>
       <g transform={`translate(0 ${-2.5 * souffle})`}>
-        <Cou apparence={apparence} />
-        <g transform={`translate(0 410) scale(1 ${1 + 0.01 * souffle}) translate(0 -410)`}>
-          <Torse apparence={apparence} />
+        <g transform={`translate(0 ${-1.2 * souffle}) rotate(${inclinaison} 200 170)`}>
+          <CheveuxDos apparence={apparence} />
         </g>
-        <BrasSvg epaule={EPAULE_DROITE} bras={brasD} apparence={apparence} geste={gesteBras(pose)} cote={-1} />
-        <BrasSvg epaule={EPAULE_GAUCHE} bras={brasG} apparence={apparence} geste={pose === 'pointe_doigt' ? 'index' : gesteBras(pose)} cote={1} />
+        <g transform={corps}>
+          <Cou apparence={apparence} />
+          <g transform={`translate(0 410) scale(1 ${1 + 0.01 * souffle}) translate(0 -410)`}>
+            <Torse apparence={apparence} />
+          </g>
+          <BrasSvg epaule={EPAULE_DROITE} bras={brasD} apparence={apparence} geste={gesteBras(pose)} cote={-1} />
+          <BrasSvg epaule={EPAULE_GAUCHE} bras={brasG} apparence={apparence} geste={pose === 'pointe_doigt' ? 'index' : gesteBras(pose)} cote={1} />
+        </g>
         <g transform={`translate(0 ${-1.2 * souffle}) rotate(${inclinaison} 200 170)`}>
           <Visage apparence={apparence} expression={expression} clignement={cligne} ouverture={bouche} lunettesSoleil={lunettesSoleil} />
         </g>
         {pose === 'telephone' && (
-          <g opacity={k}>
+          <g opacity={k} transform={corps}>
             <Telephone main={brasD.main} />
             <Main bras={brasD} peau={apparence.peau} geste="poing" cote={-1} />
           </g>

@@ -21,6 +21,18 @@ export const APPARENCES: Record<Variante, Apparence> = {
     chaussures: { dessus: '#F4F4F4', semelle: '#2A2A2E' },
     barbe: true,
   },
+  // Personnage principal féminin : la trentaine, cheveux longs, pull turquoise, jean clair
+  heroine: {
+    nom: 'Léa',
+    visage: 'femme',
+    silhouette: 'fine',
+    peau: t('#F0C29F', '#DBA27C', '#B07652'),
+    cheveux: { teinte: t('#9A5A38', '#5A3220', '#2E180E'), style: 'long' },
+    haut: { type: 'pull', teinte: t('#5FDDD0', '#1FA39A', '#0F6E68'), dessous: '#F4F4F4' },
+    bas: t('#A9C6EC', '#6F94CC', '#45679E'),
+    chaussures: { dessus: '#F4F4F4', semelle: '#2A2A2E' },
+    bouclesOreilles: true,
+  },
   patron: {
     nom: 'Le patron',
     visage: 'homme',
@@ -41,6 +53,7 @@ export const APPARENCES: Record<Variante, Apparence> = {
     chaussures: { dessus: '#3A2A22', semelle: '#1A120D' },
     lunettes: true,
     collier: true,
+    silhouette: 'fine',
   },
   conseiller: {
     nom: 'La conseillère',
@@ -51,5 +64,6 @@ export const APPARENCES: Record<Variante, Apparence> = {
     bas: t('#3A3A44', '#24242C', '#141418'),
     chaussures: { dessus: '#1A1A1E', semelle: '#0A0A0C' },
     lunettes: true,
+    silhouette: 'fine',
   },
 };

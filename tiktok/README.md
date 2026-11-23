@@ -17,8 +17,8 @@ npx remotion studio
 ```
 
 Dans le dossier **Etape1-Personnage** :
-- **Demo-Personnage** : animation de 9 s qui enchaîne expressions et poses ;
-- **Galerie-Expressions**, **Galerie-Poses**, **Galerie-Personnages** : planches fixes.
+- **Demo-Personnage** (Thomas) et **Demo-Lea** : animations de 9 s qui enchaînent expressions et poses ;
+- **Galerie-Expressions**, **Galerie-Poses** (et leurs versions **-Lea**), **Galerie-Personnages** : planches fixes.
 
 ## Le personnage
 
@@ -26,7 +26,7 @@ Composant React `src/personnage/Personnage.tsx`, entièrement en SVG, dans un st
 
 ```tsx
 <Personnage
-  variante="heros"           // heros | patron | proprietaire | conseiller
+  variante="heros"           // heros (Thomas) | heroine (Léa) | patron | proprietaire | conseiller
   expression="choque"        // neutre | choque | content | colere | triste | malin
   pose="pointe_doigt"        // debout | bras_leves | pointe_doigt | mains_hanches | telephone
   posePrecedente="debout"    // facultatif : transition douce entre deux poses…
