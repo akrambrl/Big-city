@@ -1,0 +1,21 @@
+{
+  "name": "tiktok-droits-argent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Générateur de vidéos TikTok animées (Remotion) : droits et argent du quotidien en France",
+  "scripts": {
+    "studio": "remotion studio",
+    "still": "remotion still",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.546",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.546"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "typescript": "5.9.3"
+  }
+}
