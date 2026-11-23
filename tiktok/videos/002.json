@@ -8,8 +8,9 @@
   ],
   "voix": {
     "moteur": "kyutai",
-    "voix": "9834_9697_000150-0003",
-    "vitesse": 1.1
+    "voix": "SSA150803",
+    "vitesse": 1.12,
+    "temperature": 0.75
   },
   "prononciation": {
     "PS5": "pé ès cinq",
@@ -22,7 +23,7 @@
     {
       "type": "accroche",
       "decor": "rue",
-      "voix": "Ton GTA VI précommandé n'est jamais arrivé, et le vendeur te renvoie vers le transporteur ? Stop, c'est faux !",
+      "voix": "Ton GTA VI précommandé n'est jamais arrivé ? Et le vendeur te renvoie vers le transporteur ? Stop ! C'est faux !",
       "declencheur": "Stop",
       "titre": "GTA VI perdu ?",
       "texte": "Le vendeur doit te rembourser",
@@ -38,7 +39,7 @@
     {
       "type": "explication",
       "decor": "magasin",
-      "voix": "Quand tu achètes en ligne, le vendeur est responsable de ton colis, jusqu'à ce que tu l'aies entre les mains.",
+      "voix": "Écoute bien : quand tu achètes en ligne, c'est le vendeur qui est responsable de ton colis, jusqu'à ce que tu l'aies entre les mains !",
       "declencheur": "responsable",
       "texte": "Achat en ligne : le vendeur est **responsable de ton colis** jusqu'à ce que tu le reçoives.",
       "personnage": {
@@ -57,7 +58,7 @@
     {
       "type": "explication",
       "decor": "rue",
-      "voix": "Même s'il a confié la livraison à un transporteur, c'est son problème, pas le tien. Il ne peut pas te renvoyer vers lui.",
+      "voix": "Même s'il passe par un transporteur, c'est son problème, pas le tien ! Il n'a pas le droit de te renvoyer vers lui.",
       "declencheur": "problème",
       "texte": "Le transporteur ? **C'est son problème**, pas le tien.",
       "personnage": {
@@ -69,7 +70,7 @@
     {
       "type": "explication",
       "decor": "appartement",
-      "voix": "Le suivi affiche livré, mais pas de GTA dans ta boîte aux lettres ? C'est au vendeur de prouver la livraison : signature, code ou photo.",
+      "voix": "Le suivi dit livré, mais ta boîte aux lettres est vide ? C'est au vendeur de prouver la livraison : signature, code ou photo !",
       "declencheur": "prouver",
       "texte": "Suivi « livré » mais pas de GTA VI ? C'est au vendeur de **prouver la livraison**.",
       "personnage": {
@@ -83,7 +84,7 @@
     {
       "type": "explication",
       "decor": "appartement",
-      "voix": "Étape un : écris au vendeur que tu n'as rien reçu, et garde une trace de tous vos échanges.",
+      "voix": "Alors, étape un : écris au vendeur que tu n'as rien reçu. Et garde une trace de tout !",
       "declencheur": "trace",
       "texte": "**Étape 1** : écris au vendeur et garde une trace écrite.",
       "personnage": {
@@ -95,7 +96,7 @@
     {
       "type": "document",
       "decor": "bureau",
-      "voix": "Étape deux : s'il ne fait rien, envoie-lui une mise en demeure en recommandé avec accusé de réception, en lui laissant quinze jours pour livrer.",
+      "voix": "Étape deux : il ne bouge pas ? Mise en demeure, en recommandé avec accusé de réception ! Tu lui laisses quinze jours pour livrer.",
       "declencheur": "quinze jours",
       "document": {
         "type": "courrier",
@@ -118,7 +119,7 @@
     {
       "type": "montant",
       "decor": "magasin",
-      "voix": "Étape trois : sans livraison, le contrat est annulé, et le vendeur te rembourse tout, frais de port compris : 84,98 euros.",
+      "voix": "Étape trois : toujours rien ? Le contrat est annulé, et le vendeur te rembourse tout, frais de port compris : 84,98 euros !",
       "declencheur": "84,98 euros",
       "montant": {
         "ancien": "0 €",
@@ -135,7 +136,7 @@
     {
       "type": "explication",
       "decor": "bureau",
-      "voix": "Et il a 14 jours maximum pour te rembourser.",
+      "voix": "Et il a 14 jours maximum pour le faire !",
       "declencheur": "14 jours",
       "texte": "Remboursement sous **14 jours** maximum.",
       "personnage": {
@@ -147,7 +148,7 @@
     {
       "type": "montant",
       "decor": "magasin",
-      "voix": "Et s'il traîne pour te rembourser, la somme est majorée automatiquement : jusqu'à 50 % en plus !",
+      "voix": "Et s'il traîne ? La somme est majorée automatiquement : jusqu'à 50 % en plus !",
       "declencheur": "50 %",
       "montant": {
         "ancien": "84,98 €",
@@ -165,7 +166,7 @@
     {
       "type": "explication",
       "decor": "bureau",
-      "voix": "Toujours bloqué ? Saisis le médiateur de la consommation ou un conciliateur de justice, c'est gratuit. Et signale le vendeur sur SignalConso.",
+      "voix": "Toujours bloqué ? Le médiateur de la consommation ou un conciliateur de justice, c'est gratuit ! Et signale le vendeur sur SignalConso.",
       "declencheur": "gratuit",
       "texte": "Toujours bloqué ? **Médiateur**, conciliateur de justice (gratuit) et **SignalConso**.",
       "personnage": {
@@ -183,7 +184,7 @@
     {
       "type": "explication",
       "decor": "rue",
-      "voix": "Retiens bien : ton GTA VI, c'est le vendeur qui en répond. Pas le transporteur, et surtout pas toi.",
+      "voix": "Retiens bien : ton GTA, c'est le vendeur qui en répond. Pas le transporteur, et surtout pas toi !",
       "declencheur": "vendeur",
       "texte": "Ton GTA VI, c'est **le vendeur** qui en répond. Pas le transporteur, pas toi.",
       "personnage": {
@@ -200,7 +201,7 @@
     {
       "type": "cta",
       "decor": "rue",
-      "voix": "Abonne-toi pour ne plus te faire avoir, et envoie cette vidéo à un pote qui attend encore son GTA !",
+      "voix": "Abonne-toi pour ne plus te faire avoir, et envoie ça à un pote qui attend encore son GTA !",
       "declencheur": "Abonne-toi",
       "titre": "Abonne-toi",
       "texte": "pour ne plus te faire avoir",
