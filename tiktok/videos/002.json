@@ -184,7 +184,7 @@
     {
       "type": "explication",
       "decor": "rue",
-      "voix": "Retiens bien : ton GTA, c'est le vendeur qui en répond. Pas le transporteur, et surtout pas toi !",
+      "voix": "Bref ! Ton colis, c'est le vendeur qui en répond. Pas le transporteur, et surtout pas toi !",
       "declencheur": "vendeur",
       "texte": "Ton GTA VI, c'est **le vendeur** qui en répond. Pas le transporteur, pas toi.",
       "personnage": {

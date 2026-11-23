@@ -43,21 +43,31 @@ def charger_16k(chemin: Path):
 
 
 def transcrire(chemin: Path, texte: str, cfg: dict) -> list[dict]:
-    """Mots de Whisper : [{texte, debut, fin, proba}]."""
+    """Mots de Whisper : [{texte, debut, fin, proba}].
+
+    Le texte du script est donné en « initial_prompt » pour que Whisper écrive les mots comme
+    le script. Ce prompt fait parfois halluciner Whisper (« Sous-titres réalisés par… ») :
+    si la transcription ne ressemble pas au texte attendu, on recommence sans prompt.
+    """
     model = charger_whisper(cfg)
-    segments, _info = model.transcribe(
-        charger_16k(chemin),
-        language="fr",
-        word_timestamps=True,
-        beam_size=5,
-        vad_filter=False,
-        condition_on_previous_text=False,
-        initial_prompt=texte,  # oriente l'orthographe vers celle du script
-    )
-    mots = []
-    for seg in segments:
-        for w in seg.words or []:
-            mots.append({"texte": w.word.strip(), "debut": float(w.start), "fin": float(w.end), "proba": float(w.probability)})
+    audio = charger_16k(chemin)
+
+    def lancer(prompt):
+        segments, _info = model.transcribe(
+            audio, language="fr", word_timestamps=True, beam_size=5,
+            vad_filter=False, condition_on_previous_text=False, initial_prompt=prompt,
+        )
+        return [
+            {"texte": w.word.strip(), "debut": float(w.start), "fin": float(w.end), "proba": float(w.probability)}
+            for seg in segments for w in (seg.words or [])
+        ]
+
+    mots = lancer(texte)
+    attendu = normaliser(texte)
+    if attendu:
+        obtenu = normaliser(" ".join(m["texte"] for m in mots))
+        if SequenceMatcher(a=attendu, b=obtenu, autojunk=False).ratio() < 0.6:
+            mots = lancer(None)
     return mots
 
 
