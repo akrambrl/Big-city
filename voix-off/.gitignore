@@ -1,6 +1,7 @@
 .venv/
 models/
 cache/
-build/
+build*/
+__pycache__/
 *.wav
 *.mp4
