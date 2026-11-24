@@ -4,6 +4,7 @@ import React from 'react';
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Decor } from '../decors/Decors';
 import { C, POLICE_TEXTE, POLICE_TITRE, texteAffiche } from '../theme';
+import { BoiteJeu } from './BoiteJeu';
 import { Bandeau, LignesVitesse, PersonnageEnScene, TexteSurligne, usePop } from './elements';
 import type { SceneData, TypeScene } from './types';
 
@@ -75,7 +76,12 @@ const Accroche: React.FC<{ s: SceneData; d: number }> = ({ s, d }) => {
     <AbsoluteFill style={{ transform: d > 10 && frame >= d ? secousse2 : secousse1 }}>
       <Decor nom={s.decor} assombrir={0.3} />
       <LignesVitesse opacite={interpolate(frame, [2, 10], [0, 0.22], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} couleur={C.jaune} />
-      <PersonnageEnScene p={s.personnage} x={540} hauteur={1220} declencheur={d} mots={s.mots} />
+      <PersonnageEnScene p={s.personnage} x={s.objet ? 330 : 540} hauteur={1220} declencheur={d} mots={s.mots} />
+      {s.objet && (
+        <div style={{ position: 'absolute', left: 620, top: 700 }}>
+          <BoiteJeu objet={s.objet} declencheur={d} />
+        </div>
+      )}
       <div style={{ position: 'absolute', top: 210, width: '100%', textAlign: 'center', padding: '0 50px' }}>
         <Bandeau texte={s.titre ?? ''} taille={170} debut={2} />
       </div>

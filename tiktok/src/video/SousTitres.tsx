@@ -28,7 +28,7 @@ export const SousTitres: React.FC<{ blocs: BlocSousTitre[] }> = ({ blocs }) => {
             key={i}
             style={{
               display: 'inline-block',
-              margin: '0 16px',
+              margin: '0 24px',
               fontFamily: POLICE_TEXTE,
               fontWeight: 900,
               fontSize: 76,

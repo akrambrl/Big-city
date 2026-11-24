@@ -56,6 +56,7 @@ La commande génère la voix off (ou la reprend en cache), vérifie que la vidé
 | `document` | document | `type` (`courrier`, `bail`, `fiche_paie`, `facture`), `titre`, `lignes` (5 lignes courtes), `surligne` (numéro de la ligne à surligner, à partir de 0). |
 | `personnage` | toutes | `variante` (`heros`, `heroine`, `patron`, `proprietaire`, `conseiller`), `expression`, `pose`. Avec `expressionApres` et `poseApres`, il réagit au déclencheur. `lunettesSoleil` est facultatif. |
 | `secondaire` | explication | Deuxième personnage, à droite. |
+| `objet` | accroche | Boîte de jeu dessinée : `{"type": "boite_jeu", "titre": "GTA VI", "sousTitre": "Édition standard", "tampon": "JAMAIS REÇU"}`. Le tampon tombe au mot déclencheur. `image` (fichier placé dans `public/`) remplace l'illustration : vérifie d'abord que tu as le droit d'utiliser l'image (les jaquettes officielles sont protégées). |
 | `duree_min` | toutes | Durée minimale de la scène en secondes (facultatif). |
 
 3. Au niveau de la vidéo :

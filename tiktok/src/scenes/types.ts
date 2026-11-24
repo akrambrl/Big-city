@@ -1,5 +1,6 @@
 // Description d'une scène, telle qu'elle sera lue dans videos/XXX.json (étape 4).
 import type { DecorNom } from '../decors/Decors';
+import type { ObjetBoite } from './BoiteJeu';
 import type { Expression, Pose, Variante } from '../personnage/types';
 
 export const TYPES_SCENE = ['accroche', 'montant', 'document', 'explication', 'cta'] as const;
@@ -36,6 +37,8 @@ export type SceneData = {
   /** Texte clé affiché (explication) ou sous-titre (accroche, cta). Les **mots** entre étoiles sont surlignés. */
   texte?: string;
   montant?: { ancien: string; nouveau: string; legende?: string };
+  /** accroche : objet mis en avant à côté du personnage (ex. boîte de jeu). */
+  objet?: ObjetBoite;
   document?: DocumentScene;
 
   // --- Calage temporel (en images, relatif au début de la scène) ---

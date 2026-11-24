@@ -35,6 +35,12 @@
         "expressionApres": "choque",
         "poseApres": "bras_leves",
         "lunettesSoleil": false
+      },
+      "objet": {
+        "type": "boite_jeu",
+        "titre": "GTA VI",
+        "sousTitre": "Édition standard",
+        "tampon": "JAMAIS REÇU"
       }
     },
     {
