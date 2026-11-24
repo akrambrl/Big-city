@@ -10,7 +10,8 @@
     "moteur": "kyutai",
     "voix": "SSA150803",
     "vitesse": 1.12,
-    "temperature": 0.75
+    "temperature": 0.75,
+    "acceleration": 1.16
   },
   "prononciation": {
     "PS5": "pé ès cinq",

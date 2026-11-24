@@ -1,5 +1,6 @@
 """Construit la voix off d'une vidéo : audio par scène, timings, déclencheurs, sous-titres."""
 import json
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -10,7 +11,7 @@ from .align import aligner, transcrire, _sous_mots
 from .cache import Cache, cle
 from .config import DEFAUTS, fusion
 from .textnorm import normaliser
-from .tts import (appliquer_prononciation, creer_moteur, duree_wav, ecrire_wav, identite_voix,
+from .tts import (accelerer, appliquer_prononciation, creer_moteur, duree_wav, ecrire_wav, identite_voix,
                   lire_wav, rogner_silences)
 
 
@@ -101,6 +102,21 @@ def construire(script: Path, sortie: Path, forcer=False, moteur=None, log=print)
                 break
             log(f"  ⚠ [{sid}] {round(reconnus * 100)} % des mots reconnus : la voix a mal lu, on recommence.")
             refaire = True
+        # Accélération appliquée APRÈS le cache : changer le débit ne relance pas la synthèse
+        acc = float(cfg["voix"].get("acceleration", 1.0))
+        if abs(acc - 1.0) > 0.01:
+            k_rapide = cle("rapide", k_audio, acc)
+            wav_rapide = cache.chemin(k_rapide, "wav")
+            if forcer or not cache.a(k_rapide, "wav"):
+                shutil.copy(wav, wav_rapide)
+                accelerer(wav_rapide, acc)
+            wav = wav_rapide
+            duree_voix = duree_wav(wav)
+            k_align2 = cle("whisper", k_rapide, texte, cfg["whisper"].get("modele"))
+            if forcer or not cache.a(k_align2, "json"):
+                log(f"  [{sid}] alignement Whisper (débit x{acc})…")
+                cache.ecrire_json(k_align2, {"whisper": transcrire(wav, texte, cfg["whisper"])})
+            mots_scene, reconnus = aligner(texte, cache.lire_json(k_align2)["whisper"], duree_voix)
         al = {"mots": mots_scene, "reconnus": reconnus}
         if reconnus < 0.8:
             log(f"  ⚠ [{sid}] seulement {round(reconnus * 100)} % des mots reconnus par Whisper : "

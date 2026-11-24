@@ -45,6 +45,7 @@ Ouvre `build/apercu.html` dans un navigateur pour vérifier le calage : la voix,
 "voix": { "moteur": "kyutai", "voix": "9834_9697_000150-0003", "vitesse": 1.1 }
 ```
 
+- **Débit** : `vitesse` accélère la voix au moment de la synthèse. `acceleration` (ex. `1.16`) l'accélère **après** le cache, sans relancer la synthèse : quelques secondes au lieu de plusieurs minutes. La hauteur de la voix ne change pas (ffmpeg requis).
 - **Kyutai TTS 1.6B** (recommandé) : voix d'hommes **français natifs** du corpus CML-TTS, sans compte à créer.
   - Voix testées : `9834_9697_000150-0003` (grave, par défaut) et `2216_1745_000007-0001` (un peu plus claire). Les autres voix sont listées dans [kyutai/tts-voices/cml-tts/fr](https://huggingface.co/kyutai/tts-voices/tree/main/cml-tts/fr).
   - Il prononce naturellement les nombres, les sigles (« GTA », « 50 % ») et « en plus ».
